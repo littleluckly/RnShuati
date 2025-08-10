@@ -2,7 +2,7 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 
 # Getting Started
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+> **Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
 
 ## Step 1: Start the Metro Server
 
@@ -67,6 +67,10 @@ You've successfully run and modified your React Native App. :partying_face:
 # Troubleshooting
 
 If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+
+安装了 react-native-vector-icons 字体图标，但是不显示，可能是字体没有被打包，手动复制一份
+`cp node_modules/react-native-vector-icons/Fonts/MaterialIcons.ttf android/app/src/main/assets/fonts/`
+如果目录不存在，可以先创建目录`android/app/src/main/assets/fonts/`
 
 # Learn More
 
