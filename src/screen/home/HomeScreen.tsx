@@ -1,11 +1,16 @@
 // src/screens/ProfileScreen/index.tsx
+import {useNavigation} from '@react-navigation/native';
 import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import {View, Text, StyleSheet, Button} from 'react-native';
 
 export default function HomeScreen() {
+  const navigation = useNavigation();
   return (
     <View style={styles.center}>
       <Text style={styles.title}>👤 home</Text>
+      <Button title="to Detail" onPress={() => navigation.navigate('Detail')}>
+        to detail
+      </Button>
     </View>
   );
 }
