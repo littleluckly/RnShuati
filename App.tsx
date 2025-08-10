@@ -5,6 +5,7 @@
  * @format
  */
 
+import ProfileScreen from '@/screen/profile/ProfileScreen';
 import React from 'react';
 import type {PropsWithChildren} from 'react';
 import {
@@ -72,6 +73,7 @@ function App(): React.JSX.Element {
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
         <Header />
+        <ProfileScreen />
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
