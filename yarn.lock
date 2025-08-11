@@ -5171,6 +5171,16 @@ loose-envify@^1.0.0, loose-envify@^1.1.0, loose-envify@^1.4.0:
   dependencies:
     js-tokens "^3.0.0 || ^4.0.0"
 
+lottie-ios@^4.5.1:
+  version "4.5.1"
+  resolved "https://mirrors.tencent.com/npm/lottie-ios/-/lottie-ios-4.5.1.tgz#df39d47db78221841490c37d26b43d08372c9928"
+  integrity sha512-LmFJG5ip7ZTuoMttmV6NyAY6dR8sEyVYEJOqJytS+fRAjpvqsF0tM/1VFt3lV7Ck7XB043QHwVelLag7fOx/TA==
+
+lottie-react-native@^7.3.1:
+  version "7.3.1"
+  resolved "https://mirrors.tencent.com/npm/lottie-react-native/-/lottie-react-native-7.3.1.tgz#f365f6505dc9dd148edbff052909c09204998701"
+  integrity sha512-VW0gtiP1i3Jv6+PaVaNg6QDIqAXwAqmxVp1UOJFqsB6FeBN0zc8M/XR8DE8YiayZzd149nlqGOgmwoV7FbRGDw==
+
 lru-cache@^10.2.0:
   version "10.4.3"
   resolved "https://mirrors.tencent.com/npm/lru-cache/-/lru-cache-10.4.3.tgz#410fc8a17b70e598013df257c2446b7f3383f119"
