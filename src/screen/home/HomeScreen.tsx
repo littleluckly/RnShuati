@@ -1,4 +1,5 @@
 // src/screens/ProfileScreen/index.tsx
+import AnimatedBox from '@/component/AnimatedBox';
 import {useNavigation} from '@react-navigation/native';
 import React from 'react';
 import {View, Text, StyleSheet, Button} from 'react-native';
@@ -10,6 +11,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.center}>
       <Text style={styles.title}>👤 home</Text>
+      <AnimatedBox />
       <Divider />
       <Button title="to Detail" onPress={() => navigation.navigate('Detail')}>
         to detail
