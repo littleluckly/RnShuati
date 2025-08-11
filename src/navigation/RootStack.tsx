@@ -1,24 +1,41 @@
-// navigation/RootStack.tsx
+import {
+  createBottomTabNavigator,
+  BottomTabBarProps,
+} from '@react-navigation/bottom-tabs';
 import React from 'react';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import HomeStack from './HomeStack';
+
+import CustomTabBar from './CustomTabBar';
 import ProfileScreen from '@/screen/profile/ProfileScreen';
+import DetailScreen from '@/screen/home/DetailScreen';
+import HomeStack from './HomeStack';
 
 const Tab = createBottomTabNavigator();
 
-export default function RootStack() {
+const RootTabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
-      screenOptions={({route}) => ({
-        tabBarIcon: ({color, size}) => {
-          const icons = {Home: 'home', Profile: 'person'};
-          return <Icon name={icons[route.name]} size={size} color={color} />;
-        },
-        headerShown: false,
-      })}>
-      <Tab.Screen name="Home" component={HomeStack} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      initialRouteName="HomeTab"
+      screenOptions={{headerShown: false}}
+      tabBar={({state, descriptors, navigation}: BottomTabBarProps) => (
+        <CustomTabBar
+          state={state}
+          descriptors={descriptors}
+          navigation={navigation}
+        />
+      )}>
+      <Tab.Screen name="HomeTab" component={HomeStack} />
+      <Tab.Screen
+        name="TwoTab"
+        options={{headerShown: true}}
+        component={ProfileScreen}
+      />
+      <Tab.Screen
+        name="ThisRouteDoesNotShowBecauseOnlyFourAreInTabs"
+        initialParams={{fromTab: 'bottom'}}
+        component={DetailScreen}
+      />
     </Tab.Navigator>
   );
-}
+};
+
+export default RootTabNavigator;
