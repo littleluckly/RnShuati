@@ -1,4 +1,5 @@
 // src/screens/ProfileScreen/index.tsx
+import {routeNameMap} from '@/navigation/constant';
 import {useNavigation} from '@react-navigation/native';
 import React from 'react';
 import {View, Text, StyleSheet, Button} from 'react-native';
@@ -12,7 +13,7 @@ export default function DetailScreen(props) {
       <Text>{propsStringify}</Text>
       <Button
         title="to HomePage"
-        onPress={() => navigation.navigate('HomePage')}></Button>
+        onPress={() => navigation.navigate(routeNameMap.homeScreen)}></Button>
     </View>
   );
 }

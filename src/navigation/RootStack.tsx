@@ -8,16 +8,17 @@ import ProfileScreen from '@/screen/profile/ProfileScreen';
 import DetailScreen from '@/screen/home/DetailScreen';
 import HomeStack from './HomeStack';
 import LottieView from 'lottie-react-native';
+import {routeNameMap} from './constant';
 
 const Tab = createBottomTabNavigator();
 
 const RootTabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
-      initialRouteName="HomeTab"
+      initialRouteName={routeNameMap.homeTab}
       screenOptions={{headerShown: false}}>
       <Tab.Screen
-        name="HomeTab"
+        name={routeNameMap.homeTab}
         component={HomeStack}
         options={{
           tabBarIcon: ({focused}) => (
@@ -35,7 +36,7 @@ const RootTabNavigator: React.FC = () => {
         }}
       />
       <Tab.Screen
-        name="TwoTab"
+        name={routeNameMap.profileTab}
         component={ProfileScreen}
         options={{
           headerShown: true,
