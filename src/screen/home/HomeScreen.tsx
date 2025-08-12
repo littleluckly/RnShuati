@@ -1,24 +1,15 @@
-import AnimatedBox from '@/component/AnimatedBox';
 import {useNavigation} from '@react-navigation/native';
-import React from 'react';
-import {View, Text, StyleSheet, Button} from 'react-native';
-import {Checkbox, Divider, IconButton, MD3Colors} from 'react-native-paper';
-import QuestionTypeSelector from './component/QuestionTypeSelector';
-import {routeNameMap} from '@/navigation/constant';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {RootStackParamList} from '@/navigation/Types';
 import LottieView from 'lottie-react-native';
+import React from 'react';
+import {StyleSheet, Text, View} from 'react-native';
+import QuestionTypeSelector from './component/QuestionTypeSelector';
 
-import globalStyles from '@/styles/globalStyles'; // 导入全局样式
-import Search from './component/SearchBar';
+import QuestionFilter from './component/QuestionFilter';
 export default function HomeScreen() {
   const navigation = useNavigation();
   return (
     <View style={styles.container}>
-      <View style={{marginVertical: 12}}>
-        <Search />
-      </View>
-      <Text style={{fontSize: 16, marginBottom: 12}}>题型选择</Text>
+      <QuestionFilter />
       <QuestionTypeSelector />
       <View
         style={[

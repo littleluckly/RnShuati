@@ -31,6 +31,7 @@ function QuestionTypeSelector() {
     <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 6}}>
       {questionTypes?.map(questionType => (
         <Chip
+          key={questionType.value}
           selected={questionType.selected}
           mode={questionType.selected ? 'flat' : 'outlined'}
           onPress={() => onSelectQuestionType(questionType)}

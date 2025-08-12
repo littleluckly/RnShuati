@@ -4,8 +4,12 @@ const GlobalStyles = StyleSheet.create({
   container: {
     padding: 12,
   },
-  center: {
+  centerContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  centerItem: {
     justifyContent: 'center',
     alignItems: 'center',
   },
