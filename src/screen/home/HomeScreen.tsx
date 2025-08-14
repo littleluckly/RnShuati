@@ -5,12 +5,19 @@ import {StyleSheet, Text, View} from 'react-native';
 import QuestionTypeSelector from './component/QuestionTypeSelector';
 
 import QuestionFilter from './component/QuestionFilter';
+import {Button} from 'react-native-paper';
+import {routeNameMap} from '@/navigation/constant';
 export default function HomeScreen() {
   const navigation = useNavigation();
   return (
     <View style={styles.container}>
       <QuestionFilter />
       <QuestionTypeSelector />
+      <Button
+        mode="contained"
+        onPress={() => navigation.navigate(routeNameMap.detailScreen)}>
+        to detail
+      </Button>
       <View
         style={[
           {

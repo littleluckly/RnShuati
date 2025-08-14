@@ -23,11 +23,7 @@ const RootTabNavigator: React.FC = () => {
         options={{
           tabBarIcon: ({focused}) => (
             <LottieView
-              source={
-                focused
-                  ? require('../asset/lottie/lottie-home.json')
-                  : require('../asset/lottie/lottie-home.json')
-              }
+              source={require('../asset/lottie/lottie-home.json')}
               autoPlay
               loop={true}
               style={{width: 40, height: 40}}

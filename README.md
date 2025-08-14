@@ -127,6 +127,15 @@ module.exports = {
 
 如果还报错再执行`yarn config set nodeLinker node-modules`
 
+#### 引入 gesture 后报错
+
+报一堆奇怪的错误，大概率就是版本和 react-native 不匹配，
+version react-native version
+2.28.0+ 0.79.0+
+2.26.0+ 0.78.0+
+2.25.0+ 0.76.0+
+2.24.0+ 0.75.0+
+
 # Learn More
 
 To learn more about React Native, take a look at the following resources:

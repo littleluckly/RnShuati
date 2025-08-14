@@ -1,4 +1,5 @@
 // src/screens/ProfileScreen/index.tsx
+import Quiz3DCard from '@/component/Quiz3DCard';
 import {routeNameMap} from '@/navigation/constant';
 import {useNavigation} from '@react-navigation/native';
 import React from 'react';
@@ -11,9 +12,7 @@ export default function DetailScreen(props) {
     <View style={styles.center}>
       <Text style={styles.title}>👤 detail</Text>
       <Text>{propsStringify}</Text>
-      <Button
-        title="to HomePage"
-        onPress={() => navigation.navigate(routeNameMap.homeScreen)}></Button>
+      <Quiz3DCard></Quiz3DCard>
     </View>
   );
 }
