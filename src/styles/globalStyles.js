@@ -1,6 +1,7 @@
 import {StyleSheet} from 'react-native';
 
 const GlobalStyles = StyleSheet.create({
+  bg: {backgroundColor: '#f8f8f8'},
   container: {
     padding: 12,
   },

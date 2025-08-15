@@ -1,3 +1,4 @@
+import GlobalStyles from '@/styles/globalStyles';
 import React, {useEffect, useMemo} from 'react';
 import {View, StyleSheet, Dimensions, ScrollView, Animated} from 'react-native';
 import {Card, Text, TouchableRipple} from 'react-native-paper';
@@ -70,7 +71,7 @@ const features = [
 
 const FeatureCards = () => {
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container]}>
       {features.map((feature, index) => (
         <BreathingCard
           key={feature.id}
