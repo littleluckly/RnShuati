@@ -2,12 +2,15 @@ import {useNavigation} from '@react-navigation/native';
 import React from 'react';
 import {StyleSheet, View} from 'react-native';
 import Filter from './component/Filter';
+import {SwipeableList} from './component/SwipeableList';
+import FlatList from './component/FlatList';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   return (
     // <View style={styles.container}>
-    <Filter />
+    // <Filter />
+    <FlatList></FlatList>
     // </View>
   );
 }
