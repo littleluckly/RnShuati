@@ -33,6 +33,10 @@ const SwipeableItem = forwardRef((props: Props, _) => {
             style={[
               styles.action,
               {backgroundColor: ['#4CAF50', '#2196F3', '#F44336'][idx]},
+              idx === buttons.length - 1 && {
+                borderTopRightRadius: 12,
+                borderBottomRightRadius: 12,
+              },
             ]}
             onPress={() => console.log(`${label} ${id}`)}>
             <Text style={styles.actionText}>{label}</Text>
