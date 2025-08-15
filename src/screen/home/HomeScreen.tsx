@@ -1,60 +1,94 @@
 import {useNavigation} from '@react-navigation/native';
-import LottieView from 'lottie-react-native';
 import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
-import QuestionTypeSelector from './component/QuestionTypeSelector';
+import {StyleSheet, View} from 'react-native';
+import Filter from './component/Filter';
 
-import QuestionFilter from './component/QuestionFilter';
-import {Button} from 'react-native-paper';
-import {routeNameMap} from '@/navigation/constant';
 export default function HomeScreen() {
   const navigation = useNavigation();
   return (
-    <View style={styles.container}>
-      <QuestionFilter />
-      <QuestionTypeSelector />
-      <Button
-        mode="contained"
-        onPress={() => navigation.navigate(routeNameMap.detailScreen)}>
-        to detail
-      </Button>
-      <View
-        style={[
-          {
-            marginTop: 24,
-            backgroundColor: 'white',
-            borderRadius: 12,
-            overflow: 'hidden',
-          },
-        ]}>
-        <View style={{margin: 'auto', paddingTop: 24}}>
-          <Text>请选择题型，筛选数据</Text>
-        </View>
-        <LottieView
-          source={require('../../asset/lottie/lottie-no-data.json')}
-          autoPlay
-          loop={true}
-          style={styles.lottieView}
-        />
-      </View>
-    </View>
+    // <View style={styles.container}>
+    <Filter />
+    // </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 12,
-    flex: 1,
-    justifyContent: 'flex-start',
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
-  lottieContainer: {
+  filterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 12,
+    backgroundColor: '#f8f8f8',
+  },
+  filterItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  filterActive: {
+    backgroundColor: '#e3f2fd',
+    borderColor: '#2196f3',
+  },
+  filterText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  filterTextActive: {
+    color: '#2196f3',
+    fontWeight: '500',
+  },
+  arrow: {
+    fontSize: 12,
+    color: '#999',
+    marginLeft: 4,
+  },
+  modalOverlay: {
     flex: 1,
-    justifyContent: 'flex-start',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  lottieView: {
-    width: '100%', // Adjust the width as needed
-    aspectRatio: 1, // Maintain aspect ratio
+  modalContent: {
+    width: 280,
+    maxHeight: 400,
+    backgroundColor: 'white',
     borderRadius: 12,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  optionItem: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  optionActive: {
+    backgroundColor: '#e3f2fd',
+  },
+  optionText: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'center',
+  },
+  optionTextActive: {
+    color: '#2196f3',
+    fontWeight: '600',
   },
 });

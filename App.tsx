@@ -4,13 +4,16 @@ import {NavigationContainer} from '@react-navigation/native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import RootStack from '@/navigation/RootStack';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {PaperProvider} from 'react-native-paper';
 export default function App() {
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView>
-        <NavigationContainer>
-          <RootStack />
-        </NavigationContainer>
+        <PaperProvider>
+          <NavigationContainer>
+            <RootStack />
+          </NavigationContainer>
+        </PaperProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>
   );

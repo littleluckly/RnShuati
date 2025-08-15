@@ -28,21 +28,12 @@ export default function HomeStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: true,
+        header: () => <SearchableHeader />,
       }}>
       <Stack.Screen
         name={routeNameMap.welcomeScreen}
         component={WelcomeScreen}
-        options={{
-          header: () => <SearchableHeader />,
-          // headerRight: () =>
-          //   isSearchFocused ? (
-          //     <SearchBar
-          //       onSearch={query => console.log('Searching for', query)}
-          //     />
-          //   ) : (
-          //     <Button title="搜索" onPress={() => setSearchFocused(true)} />
-          //   ),
-        }}
+        options={{}}
       />
       <Stack.Screen name={routeNameMap.homeScreen} component={HomeScreen} />
       <Stack.Screen name={routeNameMap.detailScreen} component={DetailScreen} />
