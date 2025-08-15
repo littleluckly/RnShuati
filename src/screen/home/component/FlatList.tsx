@@ -9,9 +9,7 @@ const data = Array.from({length: 20}, (_, i) => ({
 }));
 
 export default () => {
-  // Map<id, Swipeable>
   const refs = useRef(new Map<string, any>()).current;
-
   const onWillOpen = (openingId: string) => {
     refs.forEach((ref, id) => {
       if (id !== openingId && ref) ref.close(); // 立即关
