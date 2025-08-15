@@ -1,8 +1,7 @@
-import React, {forwardRef, useImperativeHandle} from 'react';
-import {View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
-import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import Animated, {useAnimatedStyle} from 'react-native-reanimated';
 import {useNavigation} from '@react-navigation/native';
+import React, {forwardRef, useImperativeHandle} from 'react';
+import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 
 interface Props {
   id: string;
@@ -44,7 +43,14 @@ const SwipeableItem = forwardRef((props: Props, _) => {
   };
 
   return (
-    <View style={{marginTop: 12, marginHorizontal: 12}}>
+    <View
+      style={{
+        marginTop: 12,
+        marginHorizontal: 12,
+        elevation: 4,
+        backgroundColor: '#fff',
+        borderRadius: 12,
+      }}>
       <Swipeable
         ref={swipeRef}
         renderRightActions={RightActions}

@@ -1,17 +1,14 @@
-import React, {useState, useRef, useMemo} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  ScrollView,
-} from 'react-native';
-import {Portal} from 'react-native-portalize';
-import {Modalize} from 'react-native-modalize';
-import {Host} from 'react-native-portalize';
-import GlobalStyles from '@/styles/globalStyles';
 import Icon from '@react-native-vector-icons/material-design-icons';
+import React, {useMemo, useRef, useState} from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import {Modalize} from 'react-native-modalize';
+import {Portal} from 'react-native-portalize';
 
 const DATA = Array.from({length: 30}, (_, i) => `商品 ${i + 1}`);
 
@@ -35,80 +32,69 @@ const Filter = () => {
     openFilter();
   };
   return (
-    <Host>
-      <View style={{flex: 1}}>
-        {/* 横向滚动筛选条 */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterBar}
-          contentContainerStyle={styles.filterBarContent}>
-          {filters.map(name => (
-            <TouchableOpacity
-              key={name}
-              style={[styles.chip, active === name && styles.chipActive]}
-              onPress={() => onClickFilter(name)}>
-              <Text
-                style={[
-                  styles.chipText,
-                  active === name && styles.chipTextActive,
-                ]}>
-                {name}
-              </Text>
-              <Icon
-                name="chevron-down"
-                size={14}
-                color="#666"
-                style={{marginLeft: 4}}
-              />
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-        {/* 顶部筛选条 */}
-        {/* <View style={[styles.header, {backgroundColor: 'gray'}]}>
-          <TouchableOpacity onPress={openFilter} style={styles.filterBtn}>
-            <Text style={[styles.filterText, GlobalStyles.border]}>
-              阿萨德{category} ↓
+    <View
+      style={[
+        {
+          zIndex: 1,
+          elevation: 4,
+          shadowColor: '#000',
+          shadowOffset: {width: 0, height: 1},
+          shadowOpacity: 0.1,
+          shadowRadius: 2,
+          backgroundColor: '#fff',
+        },
+      ]}>
+      {/* 横向滚动筛选条 */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterBar}
+        contentContainerStyle={styles.filterBarContent}>
+        {filters.map(name => (
+          <TouchableOpacity
+            key={name}
+            style={[styles.chip, active === name && styles.chipActive]}
+            onPress={() => onClickFilter(name)}>
+            <Text
+              style={[
+                styles.chipText,
+                active === name && styles.chipTextActive,
+              ]}>
+              {name}
             </Text>
+            <Icon
+              name="chevron-down"
+              size={14}
+              color="#666"
+              style={{marginLeft: 4}}
+            />
           </TouchableOpacity>
-        </View> */}
-
-        {/* 列表 */}
-        <FlatList
-          data={filtered}
-          keyExtractor={item => item}
-          renderItem={({item}) => (
-            <View style={styles.row}>
-              <Text>{item}</Text>
-            </View>
-          )}
+        ))}
+      </ScrollView>
+      {/* 弹窗 */}
+      <Portal>
+        <Modalize
+          ref={modalRef}
+          adjustToContentHeight
+          modalStyle={styles.modal}
+          flatListProps={{
+            data: ['全部', '商品 1', '商品 2', '商品 3'],
+            keyExtractor: item => item,
+            renderItem: ({item}) => (
+              <TouchableOpacity
+                style={styles.option}
+                onPress={() => {
+                  setCategory(item);
+                  closeFilter();
+                }}>
+                <Text>{item}</Text>
+              </TouchableOpacity>
+            ),
+            ItemSeparatorComponent: () => <View style={styles.divider} />,
+          }}
         />
-
-        {/* 弹窗 */}
-        <Portal>
-          <Modalize
-            ref={modalRef}
-            adjustToContentHeight
-            modalStyle={styles.modal}
-            flatListProps={{
-              data: ['全部', '商品 1', '商品 2', '商品 3'],
-              keyExtractor: item => item,
-              renderItem: ({item}) => (
-                <TouchableOpacity
-                  style={styles.option}
-                  onPress={() => {
-                    setCategory(item);
-                    closeFilter();
-                  }}>
-                  <Text>{item}</Text>
-                </TouchableOpacity>
-              ),
-              ItemSeparatorComponent: () => <View style={styles.divider} />,
-            }}
-          />
-        </Portal>
-      </View>
-    </Host>
+      </Portal>
+    </View>
   );
 };
 

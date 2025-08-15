@@ -31,33 +31,40 @@ export default function WelcomeScreen() {
         ]}
         accessibilityLabel="工作图片"
       />
-      <View style={[styles.list]}>
-        <Text>
-          <Text style={[styles.listItemTitle]}>听力刷题</Text>
-          ：首创“本地语音包映射 + 用户自定义答案朗读”机制，通勤也能刷。
-        </Text>
+      <View style={{paddingHorizontal: 12}}>
+        <View style={[styles.list]}>
+          <Text>
+            <Text style={[styles.listItemTitle]}>听力刷题</Text>
+            ：首创“本地语音包映射 + 用户自定义答案朗读”机制，通勤也能刷。
+          </Text>
+        </View>
+        <View style={[styles.list]}>
+          <Text>
+            <Text style={[styles.listItemTitle]}>智能组卷</Text>：10
+            秒生成一套“面试/考试”仿真卷，题型、题量、难度完全可配。
+          </Text>
+        </View>
+        <View style={[styles.list]}>
+          <Text>
+            <Text style={[styles.listItemTitle]}>3D 卡片</Text>
+            ：手势滑动，刷题像玩游戏；列表/卡片一键切换。
+          </Text>
+        </View>
+        <View style={[styles.list]}>
+          <Text>
+            <Text style={[styles.listItemTitle]}>众包答案</Text>
+            ：用户编辑的答案被官方采纳即可获得积分，积分可兑换奖励等。
+          </Text>
+        </View>
       </View>
 
-      <View style={[styles.list]}>
-        <Text>
-          <Text style={[styles.listItemTitle]}>智能组卷</Text>：10
-          秒生成一套“面试/考试”仿真卷，题型、题量、难度完全可配。
-        </Text>
-      </View>
-      <View style={[styles.list]}>
-        <Text>
-          <Text style={[styles.listItemTitle]}>3D 卡片</Text>
-          ：手势滑动，刷题像玩游戏；列表/卡片一键切换。
-        </Text>
-      </View>
-      <View style={[styles.list]}>
-        <Text>
-          <Text style={[styles.listItemTitle]}>众包答案</Text>
-          ：用户编辑的答案被官方采纳即可获得积分，积分可兑换奖励等。
-        </Text>
-      </View>
-
-      <View style={{flex: 1, justifyContent: 'flex-start', marginTop: 20}}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'flex-start',
+          marginTop: 20,
+          paddingHorizontal: 12,
+        }}>
         <Button
           mode="contained"
           onPress={() => navigation.navigate(routeNameMap.homeScreen)}>

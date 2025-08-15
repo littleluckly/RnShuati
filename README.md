@@ -136,6 +136,14 @@ version react-native version
 2.25.0+ 0.76.0+
 2.24.0+ 0.75.0+
 
+#### 加了阴影 elevation 没有效果
+
+android 端，elevation 必须和 backgroundColor 配套使用
+ios 端，使用 shadowColor
+shadowOffset
+shadowOpacity
+shadowRadius
+
 # Learn More
 
 To learn more about React Native, take a look at the following resources:

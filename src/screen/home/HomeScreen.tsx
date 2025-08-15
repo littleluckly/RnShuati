@@ -2,29 +2,32 @@ import {useNavigation} from '@react-navigation/native';
 import React from 'react';
 import {StyleSheet, View} from 'react-native';
 import Filter from './component/Filter';
-import {SwipeableList} from './component/SwipeableList';
 import FlatList from './component/FlatList';
+import GlobalStyles from '@/styles/globalStyles';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   return (
-    // <View style={styles.container}>
-    // <Filter />
-    <FlatList></FlatList>
-    // </View>
+    <View style={[{flex: 1}]}>
+      <Filter />
+      <View style={{flex: 1}}>
+        <FlatList></FlatList>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    // backgroundColor: '#fff',
+    // borderBottomWidth: 1,
+    // borderBottomColor: '#e0e0e0',
+    // elevation: 1,
+    // shadowColor: '#000',
+    // shadowOffset: {width: 0, height: 1},
+    // shadowOpacity: 0.1,
+    // shadowRadius: 2,
+    // flex: 1,
   },
   filterRow: {
     flexDirection: 'row',
