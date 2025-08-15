@@ -1,7 +1,10 @@
+'use client';
+
 import {useNavigation} from '@react-navigation/native';
 import React, {forwardRef, useImperativeHandle} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import LinearGradient from 'react-native-linear-gradient';
 
 interface Props {
   id: string;
@@ -22,24 +25,63 @@ const SwipeableItem = forwardRef((props: Props, _) => {
     setRef(swipeRef.current);
   }, [setRef]);
 
-  /* 右侧按钮 */
+  /* 右侧按钮 - 美化版本 */
   const RightActions = () => {
-    const buttons = ['收藏', '编辑', '不喜欢'];
+    const buttons = [
+      {
+        label: '收藏',
+        icon: '♥',
+        gradientColors: ['#FF6B6B', '#FF8E8E'],
+        shadowColor: '#FF6B6B',
+      },
+      {
+        label: '编辑',
+        icon: '✎',
+        gradientColors: ['#4ECDC4', '#44A08D'],
+        shadowColor: '#4ECDC4',
+      },
+      {
+        label: '删除',
+        icon: '✕',
+        gradientColors: ['#FF6B6B', '#FF4757'],
+        shadowColor: '#FF6B6B',
+      },
+    ];
+
     return (
       <View style={styles.rightActions}>
-        {buttons.map((label, idx) => (
+        {buttons.map((button, idx) => (
           <TouchableOpacity
             key={idx}
             style={[
-              styles.action,
-              {backgroundColor: ['#4CAF50', '#2196F3', '#F44336'][idx]},
-              idx === buttons.length - 1 && {
-                borderTopRightRadius: 12,
-                borderBottomRightRadius: 12,
-              },
+              styles.actionContainer,
+              idx === buttons.length - 1 && styles.lastAction,
             ]}
-            onPress={() => console.log(`${label} ${id}`)}>
-            <Text style={styles.actionText}>{label}</Text>
+            onPress={() => console.log(`${button.label} ${id}`)}
+            activeOpacity={0.8}>
+            <LinearGradient
+              colors={button.gradientColors}
+              style={[
+                styles.action,
+                {
+                  shadowColor: button.shadowColor,
+                  shadowOffset: {width: 0, height: 2},
+                  shadowOpacity: 0.25,
+                  shadowRadius: 4,
+                  elevation: 5,
+                },
+                idx === buttons.length - 1 && {
+                  borderTopRightRadius: 16,
+                  borderBottomRightRadius: 16,
+                },
+              ]}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 1}}>
+              <View style={styles.actionContent}>
+                <Text style={styles.actionIcon}>{button.icon}</Text>
+                <Text style={styles.actionText}>{button.label}</Text>
+              </View>
+            </LinearGradient>
           </TouchableOpacity>
         ))}
       </View>
@@ -47,14 +89,7 @@ const SwipeableItem = forwardRef((props: Props, _) => {
   };
 
   return (
-    <View
-      style={{
-        marginTop: 12,
-        marginHorizontal: 12,
-        elevation: 4,
-        backgroundColor: '#fff',
-        borderRadius: 12,
-      }}>
+    <View style={styles.container}>
       <Swipeable
         ref={swipeRef}
         renderRightActions={RightActions}
@@ -78,22 +113,87 @@ const SwipeableItem = forwardRef((props: Props, _) => {
   );
 });
 
-/* 样式不变 */
+/* 美化后的样式 */
 const styles = StyleSheet.create({
+  container: {
+    marginTop: 12,
+    marginHorizontal: 12,
+    elevation: 6,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
+    padding: 18,
+    borderRadius: 16,
   },
-  icon: {width: 48, height: 48, borderRadius: 8},
-  textBox: {flex: 1, marginLeft: 12},
-  title: {fontSize: 16, fontWeight: '600', color: '#000'},
-  subtitle: {fontSize: 14, color: '#666', marginTop: 2},
-  rightActions: {flexDirection: 'row'},
-  action: {width: 72, justifyContent: 'center', alignItems: 'center'},
-  actionText: {color: '#fff', fontSize: 12},
+  icon: {
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#f0f0f0',
+  },
+  textBox: {flex: 1, marginLeft: 16},
+  title: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    letterSpacing: 0.3,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+    lineHeight: 20,
+  },
+  rightActions: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    height: '100%',
+  },
+  actionContainer: {
+    width: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  action: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 0,
+  },
+  lastAction: {
+    borderTopRightRadius: 16,
+    borderBottomRightRadius: 16,
+    overflow: 'hidden',
+  },
+  actionContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  actionIcon: {
+    fontSize: 20,
+    color: '#fff',
+    marginBottom: 4,
+    fontWeight: 'bold',
+  },
+  actionText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
 });
 
 export default SwipeableItem;
