@@ -5,6 +5,8 @@ import React, {forwardRef, useImperativeHandle} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import LinearGradient from 'react-native-linear-gradient';
+// import {Icon} from 'react-native-paper';
+import Icon from '@react-native-vector-icons/material-design-icons';
 
 interface Props {
   id: string;
@@ -57,8 +59,7 @@ const SwipeableItem = forwardRef((props: Props, _) => {
               styles.actionContainer,
               idx === buttons.length - 1 && styles.lastAction,
             ]}
-            onPress={() => console.log(`${button.label} ${id}`)}
-            activeOpacity={0.8}>
+            onPress={() => console.log(`${button.label} ${id}`)}>
             <LinearGradient
               colors={button.gradientColors}
               style={[
@@ -99,13 +100,18 @@ const SwipeableItem = forwardRef((props: Props, _) => {
           style={styles.row}
           activeOpacity={0.8}
           onPress={() => navigation.navigate('Detail', {id})}>
-          <Image
-            source={{uri: 'https://via.placeholder.com/48'}}
-            style={styles.icon}
-          />
+          <View>
+            {/* pause-circle  play-circle*/}
+            <Icon name="play-circle" color="#d2d2d2" size={48}></Icon>
+          </View>
           <View style={styles.textBox}>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.subtitle}>{subtitle}</Text>
+            <Text style={styles.title} numberOfLines={3} ellipsizeMode="tail">
+              {title}
+            </Text>
+          </View>
+          <View
+            style={{backgroundColor: '#ffe8c7', padding: 8, borderRadius: 24}}>
+            <Icon name="lock" color="#ffb933" size={28}></Icon>
           </View>
         </TouchableOpacity>
       </Swipeable>
@@ -140,10 +146,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#f0f0f0',
   },
-  textBox: {flex: 1, marginLeft: 16},
+  textBox: {flex: 1, marginHorizontal: 12},
   title: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 14,
     color: '#1a1a1a',
     letterSpacing: 0.3,
   },
@@ -159,7 +164,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   actionContainer: {
-    width: 80,
+    width: 50,
     justifyContent: 'center',
     alignItems: 'center',
   },
