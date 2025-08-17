@@ -194,15 +194,10 @@ const SwipeableCard = ({
         transform: [{scale: 0.7}, {translateY: -20}],
       };
     }
-
-    // 根据堆叠位置计算更明显的缩放和位移效果
-    const scaleValue = 1 - stackIndex * 0.08;
-    const translateYValue = stackIndex * -12;
-    const opacityValue = 1 - stackIndex * 0.2;
-
+    // 卡片堆叠效果
     return {
-      transform: [{scale: scaleValue}, {translateY: translateYValue}],
-      opacity: opacityValue,
+      transform: [{translateY: index * 4}, {translateX: index * 4}],
+      opacity: 1 - index * 0.1,
     };
   });
 
