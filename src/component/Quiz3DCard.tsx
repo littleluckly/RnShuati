@@ -28,7 +28,7 @@ const ProgressCounter = ({current, total, answered}) => {
   const progress = (answered / total) * 100;
 
   return (
-    <View style={[styles.counterContainer, {marginTop: 12}]}>
+    <View style={styles.counterContainer}>
       <View style={styles.progressBar}>
         <View style={[styles.progressFill, {width: `${progress}%`}]} />
       </View>
@@ -313,10 +313,9 @@ const styles = StyleSheet.create({
   },
   counterContainer: {
     position: 'absolute',
-    top: 0, // 增加top值，避免被状态栏遮挡
+    top: 10, // 增加top值，避免被状态栏遮挡
     left: 20,
     right: 20,
-    zIndex: 9999, // 提高z-index确保在所有元素之上
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.95)', // 添加半透明背景
     paddingVertical: 12,
