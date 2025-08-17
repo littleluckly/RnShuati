@@ -1,167 +1,219 @@
+'use client';
+
 // SwipeableStack.js
-// 一个完整的、可滑动的卡片堆栈组件，类似 Tinder 的“喜欢/不喜欢”功能
+// 一个完整的、可滑动的卡片堆栈组件，类似 Tinder 的"喜欢/不喜欢"功能
 // 使用 react-native-gesture-handler 和 react-native-reanimated 实现流畅的手势动画
 
 import React, {useState, useRef} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  Platform, // 用于检测平台
-} from 'react-native';
+import {View, Text, StyleSheet, Dimensions} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withTiming, // 使用 withTiming 实现快速、可预测的动画
-  runOnJS, // 将函数调用从动画线程调度到 JS 线程
-  cancelAnimation, // 关键：立即中断正在进行的动画
+  withSpring,
+  runOnJS,
+  cancelAnimation,
+  interpolate,
+  Extrapolate,
+  withTiming,
 } from 'react-native-reanimated';
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView, // 推荐的根容器，确保手势正常工作
-} from 'react-native-gesture-handler';
+import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import QuestionCard from './QuestionCard';
 import DATA from './questions';
 
 // 获取屏幕尺寸
 const {width, height} = Dimensions.get('window');
 
+const ProgressCounter = ({current, total, answered}) => {
+  const remaining = current; // 当前剩余卡片数就是current
+  const progress = (answered / total) * 100;
+
+  return (
+    <View style={[styles.counterContainer, {marginTop: 12}]}>
+      <View style={styles.progressBar}>
+        <View style={[styles.progressFill, {width: `${progress}%`}]} />
+      </View>
+      <Text style={styles.counterText}>
+        进度: {answered}/{total} · 剩余 {remaining} 张
+      </Text>
+    </View>
+  );
+};
+
 // ✅ 核心组件：可滑动的卡片
 // 为每张卡片创建独立的动画状态，避免状态污染
-const SwipeableCard = ({card, onDismiss, index}) => {
+const SwipeableCard = ({
+  card,
+  onDismiss,
+  index,
+  totalCards,
+  isActive,
+  onCardTouch,
+}) => {
   // --- 动画值 (每个卡片独立拥有) ---
-  // 这些值在动画线程中更新，实现 60fps 流暢动画
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
-  const rotate = useSharedValue('0deg');
+  const rotate = useSharedValue(0);
   const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
 
-  // --- 防重复调用标记 (使用 useRef) ---
-  // 由于 onDismiss 可能被多次调用（理论上），用 ref 防止重复状态更新
-  // ref 的值在组件整个生命周期内保持不变，不受重渲染影响
+  // --- 防重复调用标记 ---
   const hasScheduledRemoval = useRef(false);
 
   // --- 移除卡片的回调函数 ---
-  // 使用 useCallback 确保函数引用稳定，避免不必要的重新创建
   const removeCard = React.useCallback(() => {
     if (hasScheduledRemoval.current) {
       console.log(`❌ 卡片 ${card.id} 阻止了重复移除调用！`);
-      return; // 如果已计划移除，则直接返回，防止多次调用 setCards
+      return;
     }
-    hasScheduledRemoval.current = true; // 标记为已计划移除
+    hasScheduledRemoval.current = true;
     console.log(`✅ 卡片 ${card.id} 已从状态中移除`);
-    // runOnJS 确保 onDismiss 在 JS 线程执行
-    runOnJS(onDismiss)();
+    onDismiss();
   }, [card.id, onDismiss]);
 
-  // --- 重置移除标记 ---
-  // 通常在卡片被卸载时调用，但在此模式下主要用于调试
   const resetRemovalFlag = React.useCallback(() => {
     hasScheduledRemoval.current = false;
     console.log(`🔄 卡片 ${card.id} 重置了移除标记`);
   }, [card.id]);
 
-  // --- 手势处理器 ---
-  // 使用 Pan 手势（拖拽手势）
   const gesture = Gesture.Pan()
-    // --- 手势开始 ---
     .onStart(() => {
-      // 🔑 关键步骤 1: 立即取消任何正在进行的动画
-      // 如果上一次有弹回动画 (withTiming) 正在执行，它会“霸占” sharedValue
-      // cancelAnimation 确保新的手势能立即、完全地控制卡片
-      // 这是解决“需要多次滑动才响应”问题的核心
+      runOnJS(onCardTouch)(index);
+
+      // 取消所有正在进行的动画
       cancelAnimation(translateX);
       cancelAnimation(translateY);
       cancelAnimation(rotate);
       cancelAnimation(scale);
+      cancelAnimation(opacity);
 
-      // 🔑 关键步骤 2: 强制重置所有动画值到初始状态
-      // 即使 cancelAnimation 已经中断了动画，我们仍然需要将值设为 0
-      // 确保手势从“干净”的状态开始
+      // 重置动画值
       translateX.value = 0;
       translateY.value = 0;
-      rotate.value = '0deg';
+      rotate.value = 0;
       scale.value = 1;
+      opacity.value = 1;
 
-      // 重置防重复标记（理论上在卡片创建时已重置，这里双重保险）
       runOnJS(resetRemovalFlag)();
       console.log(`🔄 手势开始 - 卡片 ${card.id}，已重置动画值`);
     })
-    // --- 手势更新 (手指移动时) ---
     .onUpdate(event => {
-      // 根据手指移动距离更新动画值
       translateX.value = event.translationX;
       translateY.value = event.translationY;
-      // 旋转角度与 X 位移成正比，增加视觉反馈
-      rotate.value = `${event.translationX * 0.2}deg`;
-      // 计算手指移动的总距离
+
+      // 优化旋转计算，使其更自然
+      rotate.value = interpolate(
+        event.translationX,
+        [-width * 0.5, 0, width * 0.5],
+        [-15, 0, 15],
+        Extrapolate.CLAMP,
+      );
+
+      // 根据滑动距离动态调整缩放
       const distance = Math.sqrt(
         event.translationX ** 2 + event.translationY ** 2,
       );
-      // 距离越远，卡片缩放越小（最小 0.9），提供深度感
-      scale.value = Math.max(1 - distance / 300, 0.9);
+      const maxDistance = width * 0.6;
+      scale.value = interpolate(
+        distance,
+        [0, maxDistance],
+        [1, 0.9],
+        Extrapolate.CLAMP,
+      );
+
+      // 根据滑动距离调整透明度
+      opacity.value = interpolate(
+        Math.abs(event.translationX),
+        [0, width * 0.3],
+        [1, 0.7],
+        Extrapolate.CLAMP,
+      );
     })
-    // --- 手势结束 (手指抬起时) ---
     .onEnd(event => {
-      // 判断是否应该移除卡片：X 方向移动距离超过屏幕宽度的 40%
-      const shouldDismiss = Math.abs(event.translationX) > width * 0.2;
+      const shouldDismiss =
+        Math.abs(event.translationX) > width * 0.25 ||
+        Math.abs(event.velocityX) > 800;
 
       if (shouldDismiss) {
         console.log(`🚀 卡片 ${card.id} 开始移除动画`);
 
-        // ✅ 优化策略：立即更新状态，提供即时反馈
-        // 虽然动画可能被截断，但用户体验是“滑一下就没了”，非常流畅
-        // 这是大多数社交应用（如 Tinder）采用的模式
-        runOnJS(removeCard)(); // 👈 立即调用，不再等待动画完成
-        console.log(`✅ 卡片 ${card.id} 状态已立即移除`);
+        // 立即调用移除回调
+        runOnJS(removeCard)();
 
-        // 启动快速移除动画 (withTiming)，即使组件可能被卸载
-        // 使用较短的持续时间 (300ms)，确保动画能快速开始
-        // 注意：一旦 removeCard() 执行，SwipeableCard 组件会被 React 卸载
-        // 因此，这个动画可能在完成前就被中断，但用户通常感知不到
-        translateX.value = withTiming(
-          event.translationX > 0 ? width * 2 : -width * 2, // 飞出屏幕外
-          {duration: 300},
-          // ❌ 移除了完成回调，因为我们已经立即移除了状态
-          // (finished) => { if (finished) { removeCard(); } }
+        // 执行退出动画
+        const exitDirection = event.translationX > 0 ? 1 : -1;
+        const exitDistance = width * 1.2;
+
+        translateX.value = withSpring(exitDirection * exitDistance, {
+          damping: 20,
+          stiffness: 200,
+          velocity: event.velocityX,
+        });
+
+        translateY.value = withSpring(
+          event.translationY + (Math.random() - 0.5) * 150,
+          {damping: 20, stiffness: 200},
         );
-      } else {
-        // 手势未达到移除阈值，卡片弹回原位
-        // 🔑 同样，先取消可能存在的动画，再启动新的弹回动画
-        cancelAnimation(translateX);
-        cancelAnimation(translateY);
-        cancelAnimation(rotate);
-        cancelAnimation(scale);
 
-        // 启动弹回动画
-        translateX.value = withTiming(0, {duration: 200});
-        translateY.value = withTiming(0, {duration: 200});
-        rotate.value = withTiming('0deg', {duration: 200});
-        scale.value = withTiming(1, {duration: 200});
+        rotate.value = withSpring(exitDirection * (30 + Math.random() * 20), {
+          damping: 20,
+          stiffness: 200,
+        });
+
+        opacity.value = withTiming(0, {duration: 300});
+        scale.value = withSpring(0.8, {damping: 20, stiffness: 200});
+      } else {
+        // 回弹动画，使用更自然的弹性效果
+        translateX.value = withSpring(0, {damping: 25, stiffness: 400});
+        translateY.value = withSpring(0, {damping: 25, stiffness: 400});
+        rotate.value = withSpring(0, {damping: 25, stiffness: 400});
+        scale.value = withSpring(1, {damping: 25, stiffness: 400});
+        opacity.value = withSpring(1, {damping: 25, stiffness: 400});
       }
     });
 
   // --- 动态样式 ---
-  // useAnimatedStyle 将 sharedValue 转换为可在 Animated.View 上使用的样式
-  // 这个函数在动画线程中运行，性能极高
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       {translateX: translateX.value},
       {translateY: translateY.value},
-      {rotate: rotate.value},
+      {rotate: `${rotate.value}deg`},
       {scale: scale.value},
     ],
+    opacity: opacity.value,
   }));
 
-  // --- 渲染 ---
-  // 使用 GestureDetector 包裹 Animated.View
-  // key={card.id} 确保当顶层卡片改变时，React 会创建一个新的 SwipeableCard 实例
-  // 这保证了每张新卡片都拥有全新的、重置过的动画状态
+  const backgroundStyle = useAnimatedStyle(() => {
+    if (isActive) return {}; // 活跃卡片不需要背景效果
+
+    const stackIndex = totalCards - 1 - index;
+    const maxVisible = 3; // 最多显示3张背景卡片
+
+    if (stackIndex >= maxVisible) {
+      return {
+        opacity: 0,
+        transform: [{scale: 0.7}, {translateY: -20}],
+      };
+    }
+
+    // 根据堆叠位置计算更明显的缩放和位移效果
+    const scaleValue = 1 - stackIndex * 0.08;
+    const translateYValue = stackIndex * -12;
+    const opacityValue = 1 - stackIndex * 0.2;
+
+    return {
+      transform: [{scale: scaleValue}, {translateY: translateYValue}],
+      opacity: opacityValue,
+    };
+  });
+
   return (
     <GestureDetector gesture={gesture}>
-      <Animated.View style={[styles.card, animatedStyle, {zIndex: index}]}>
+      <Animated.View
+        style={[
+          styles.card,
+          isActive ? animatedStyle : backgroundStyle,
+          {zIndex: Math.min(100 + totalCards - index, 9998)},
+        ]}>
         <QuestionCard
           onDislike={() => {}}
           onToggleFavorite={() => {}}
@@ -174,64 +226,84 @@ const SwipeableCard = ({card, onDismiss, index}) => {
 
 // --- 主组件 ---
 const Quiz3DCard = () => {
-  // 管理卡片数据的状态
   const [cards, setCards] = useState(DATA);
+  const [answeredCount, setAnsweredCount] = useState(0);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
 
-  // --- 移除卡片的回调 ---
-  // 使用 useCallback 缓存函数，避免在每次渲染时重新创建
-  // 这对于传递给子组件（如 SwipeableCard）很重要
   const onCardDismiss = React.useCallback(() => {
     setCards(prevCards => {
       if (prevCards.length > 0) {
         const newCards = prevCards.slice(1);
+        console.log(`📊 卡片移除后剩余: ${newCards.length}`);
         return newCards;
       }
-      return prevCards; // 安全兜底
+      return prevCards;
     });
+    setAnsweredCount(prev => {
+      const newCount = prev + 1;
+      console.log(`📈 已回答题目数: ${newCount}`);
+      return newCount;
+    });
+    setActiveCardIndex(0);
   }, []);
+
+  const onCardTouch = React.useCallback(
+    touchedIndex => {
+      if (touchedIndex === activeCardIndex) return;
+
+      setCards(prevCards => {
+        const newCards = [...prevCards];
+        // 将被触摸的卡片移到最前面
+        const touchedCard = newCards.splice(touchedIndex, 1)[0];
+        newCards.unshift(touchedCard);
+        console.log(`🎯 卡片 ${touchedCard.id} 被触摸，移到最前面`);
+        return newCards;
+      });
+      setActiveCardIndex(0);
+    },
+    [activeCardIndex],
+  );
 
   // 如果没有卡片了，显示结束提示
   if (cards.length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.endText}>太棒了！你已经滑完了所有卡片！</Text>
+        {/* <ProgressCounter
+          current={0}
+          total={DATA.length}
+          answered={answeredCount}
+        /> */}
+        <View style={styles.completionContainer}>
+          <Text style={styles.completionTitle}>🎉 恭喜完成！</Text>
+          <Text style={styles.endText}>
+            你已经完成了所有 {DATA.length} 道题目！
+          </Text>
+        </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* 背景卡片 (非交互) */}
-      {cards.slice(1)?.map((card, index) => (
-        // 使用 card.id 作为 key，确保列表更新的稳定性
-        <View
-          key={card.id}
-          style={[
-            styles.card,
-            styles.backgroundCard,
-            {
-              zIndex: cards.length - index - 1, // 确保正确的堆叠顺序
-            },
-          ]}>
-          <QuestionCard
-            onDislike={() => {}}
-            onToggleFavorite={() => {}}
-            {...card}
-          />
-        </View>
-      ))}
-      {/* 最顶层的可交互卡片 */}
-      {/* key={cards[cards.length - 1].id} 是关键！ */}
-      {/* 当顶层卡片 ID 改变时，React 会卸载旧的 SwipeableCard 并创建一个新的 */}
-      {/* 这确保了新的卡片拥有全新的动画状态，解决了“状态复用”问题 */}
-
-      <SwipeableCard
-        key={cards[0].id}
-        card={cards[0]}
-        onDismiss={onCardDismiss}
-        index={cards.length - 1}
+    <>
+      <ProgressCounter
+        current={cards.length}
+        total={DATA.length}
+        answered={answeredCount}
       />
-    </View>
+      <View style={styles.container}>
+        {cards.map((card, index) => (
+          <SwipeableCard
+            key={`${card.id}-${index}`}
+            card={card}
+            onDismiss={index === 0 ? onCardDismiss : () => {}}
+            index={index}
+            totalCards={cards.length}
+            isActive={index === activeCardIndex}
+            onCardTouch={onCardTouch}
+          />
+        ))}
+      </View>
+    </>
   );
 };
 
@@ -241,48 +313,80 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f5f7fa',
+    paddingTop: 60,
   },
-  card: {
-    // width: width * 0.9,
-    // height: height * 0.7,
-    marginLeft: 10,
-    marginRight: 10,
-    backgroundColor: 'white',
-    borderRadius: 15,
-    overflow: 'hidden', // 确保内容不超出圆角
-    position: 'absolute', // 使用绝对定位堆叠卡片
+  counterContainer: {
+    position: 'absolute',
+    top: 0, // 增加top值，避免被状态栏遮挡
+    left: 20,
+    right: 20,
+    zIndex: 9999, // 提高z-index确保在所有元素之上
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)', // 添加半透明背景
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5, // Android 阴影
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  backgroundCard: {
-    // 背景卡片的特殊样式（如果需要）
-    // 这里主要靠内联样式控制层次
-  },
-  image: {
+  progressBar: {
     width: '100%',
-    height: '80%',
-    resizeMode: 'cover',
+    height: 6,
+    backgroundColor: '#e1e8ed',
+    borderRadius: 3,
+    marginBottom: 10,
+    overflow: 'hidden',
   },
-  text: {
-    fontSize: 24,
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#1da1f2',
+    borderRadius: 3,
+  },
+  counterText: {
+    fontSize: 15,
+    color: '#657786',
+    fontWeight: '600',
+  },
+  card: {
+    marginLeft: 10,
+    marginRight: 10,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    overflow: 'hidden',
+    position: 'absolute',
+    zIndex: 100, // 基础z-index，会在SwipeableCard中动态调整
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  completionContainer: {
+    alignItems: 'center',
+    padding: 40,
+  },
+  completionTitle: {
+    fontSize: 32,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginVertical: 10,
+    color: '#1da1f2',
+    marginBottom: 16,
   },
   endText: {
     fontSize: 18,
-    color: '#666',
+    color: '#657786',
     textAlign: 'center',
-    margin: 20,
+    lineHeight: 24,
   },
 });
 
-// 导出组件
 export default Quiz3DCard;

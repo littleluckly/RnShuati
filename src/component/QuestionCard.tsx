@@ -1,6 +1,8 @@
+'use client';
+
 // src/components/QuestionCard.js
-import React, {useState} from 'react';
-import {View, StyleSheet, Share} from 'react-native';
+import {useState} from 'react';
+import {StyleSheet, Share, Dimensions} from 'react-native';
 import {
   Card,
   Text,
@@ -9,6 +11,8 @@ import {
   Snackbar,
   useTheme,
 } from 'react-native-paper';
+
+const {width, height} = Dimensions.get('window');
 
 export default function QuestionCard({
   question,
@@ -42,7 +46,7 @@ export default function QuestionCard({
   return (
     <Card style={[styles.card, {backgroundColor: theme.colors.surface}, style]}>
       {/* 题目 */}
-      <Card.Content>
+      <Card.Content style={styles.questionContent}>
         <Text variant="titleMedium" style={styles.question}>
           {question}
         </Text>
@@ -55,15 +59,13 @@ export default function QuestionCard({
           <Card.Content>
             <Text
               variant="labelLarge"
-              style={{color: theme.colors.primary}}
+              style={[styles.sectionTitle, {color: theme.colors.primary}]}
               onPress={() => setShowShort(!showShort)}>
               {'一般答案'}
             </Text>
-            {
-              <Text variant="bodyMedium" style={styles.answer}>
-                {shortAnswer}
-              </Text>
-            }
+            <Text variant="bodyMedium" style={styles.answer}>
+              {shortAnswer}
+            </Text>
           </Card.Content>
         </>
       )}
@@ -75,15 +77,13 @@ export default function QuestionCard({
           <Card.Content>
             <Text
               variant="labelLarge"
-              style={{color: theme.colors.primary}}
+              style={[styles.sectionTitle, {color: theme.colors.primary}]}
               onPress={() => setShowFull(!showFull)}>
               {'全面答案'}
             </Text>
-            {
-              <Text variant="bodyMedium" style={styles.answer}>
-                {fullAnswer}
-              </Text>
-            }
+            <Text variant="bodyMedium" style={styles.answer}>
+              {fullAnswer}
+            </Text>
           </Card.Content>
         </>
       )}
@@ -119,9 +119,31 @@ export default function QuestionCard({
 }
 
 const styles = StyleSheet.create({
-  card: {},
-  question: {marginBottom: 8},
-  divider: {marginVertical: 8},
-  answer: {marginTop: 6},
-  actions: {justifyContent: 'flex-end'},
+  card: {
+    width: width * 0.9,
+    height: height * 0.65,
+  },
+  questionContent: {
+    paddingVertical: 20,
+  },
+  question: {
+    marginBottom: 8,
+    lineHeight: 24, // 增加行高提升可读性
+    fontWeight: '600', // 增加字重
+  },
+  sectionTitle: {
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  divider: {
+    marginVertical: 8,
+  },
+  answer: {
+    marginTop: 6,
+    lineHeight: 20, // 优化答案文本行高
+  },
+  actions: {
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16, // 增加水平内边距
+  },
 });
