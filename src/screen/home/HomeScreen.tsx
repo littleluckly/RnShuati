@@ -1,17 +1,17 @@
 import {useNavigation} from '@react-navigation/native';
 import React from 'react';
 import {StyleSheet, View} from 'react-native';
-import Filter from './component/Filter';
-import FlatList from './component/FlatList';
+import QuestionFilter from './component/QuestionFilter';
+import QuestionList from './component/QuestionList';
 import GlobalStyles from '@/styles/globalStyles';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   return (
     <View style={[{flex: 1}]}>
-      <Filter />
+      <QuestionFilter />
       <View style={{flex: 1}}>
-        <FlatList></FlatList>
+        <QuestionList></QuestionList>
       </View>
     </View>
   );

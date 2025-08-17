@@ -12,8 +12,12 @@ import {useHeaderHeight} from '@react-navigation/elements';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Platform, StatusBar} from 'react-native';
 import GlobalStyles from '@/styles/globalStyles';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const SearchableHeader = () => {
+  const navigation = useNavigation<RootTabNavigation>();
+  const canGoBack = navigation.canGoBack();
+
   // 默认 header 高度和样式（跨平台）
   const getDefaultHeaderStyle = () => {
     const isIos = Platform.OS === 'ios';
@@ -30,7 +34,6 @@ const SearchableHeader = () => {
     };
   };
   const insets = useSafeAreaInsets(); // 获取安全区域
-  const navigation = useNavigation<RootTabNavigation>();
   const route = useRoute();
   const [isSearching, setIsSearching] = useState(false);
   const [query, setQuery] = useState('');
@@ -85,11 +88,23 @@ const SearchableHeader = () => {
 
   return (
     <View style={[styles.defaultHeader, getDefaultHeaderStyle()]}>
+      {/* 左侧：返回按钮（仅在可以返回时显示） */}
+      {canGoBack ? (
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back-outline" size={20}></Ionicons>
+        </TouchableOpacity>
+      ) : (
+        <View style={{width: 60}} /> // 占位，保持对齐
+      )}
       <Text style={styles.title}>{route.name}</Text>
       <TouchableOpacity onPress={() => setIsSearching(true)}>
-        {/* 可替换为图标，如: <Ionicons name="search" size={24} color="black" /> */}
-        <Text style={styles.searchIcon}>🔍</Text>
+        <Ionicons name="search" size={20} color="gray" />
       </TouchableOpacity>
+
+      {/* 右侧：其他按钮，如菜单 */}
+      {/* <TouchableOpacity>
+        <Ionicons name="ellipsis-vertical-sharp" size={20} color="gray" />
+      </TouchableOpacity> */}
     </View>
   );
 };

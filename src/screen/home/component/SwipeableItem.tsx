@@ -7,17 +7,24 @@ import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import LinearGradient from 'react-native-linear-gradient';
 // import {Icon} from 'react-native-paper';
 import Icon from '@react-native-vector-icons/material-design-icons';
+import Tts from 'react-native-tts';
+import {routeNameMap} from '@/navigation/constant';
+
+// 初始化 TTS
+Tts.setDefaultLanguage('zh-CN'); // 设置中文
+Tts.setDefaultRate(0.5); // 语速：0.1 ~ 1.0
+Tts.setDefaultPitch(1.0); // 音调
 
 interface Props {
   id: string;
   title: string;
-  subtitle: string;
+  subtitle?: string;
   onWillOpen: (id: string) => void;
   setRef: (ref: any) => void;
 }
 
 const SwipeableItem = forwardRef((props: Props, _) => {
-  const {id, title, subtitle, onWillOpen, setRef} = props;
+  const {id, title, onWillOpen, setRef} = props;
   const navigation = useNavigation();
   const swipeRef = React.useRef<any>();
 
@@ -89,6 +96,13 @@ const SwipeableItem = forwardRef((props: Props, _) => {
     );
   };
 
+  const handleSpeak = () => {
+    Tts.speak(title);
+  };
+
+  const handleStop = () => {
+    Tts.stop();
+  };
   return (
     <View style={styles.container}>
       <Swipeable
@@ -99,11 +113,11 @@ const SwipeableItem = forwardRef((props: Props, _) => {
         <TouchableOpacity
           style={styles.row}
           activeOpacity={0.8}
-          onPress={() => navigation.navigate('Detail', {id})}>
-          <View>
+          onPress={() => navigation.navigate(routeNameMap.detailScreen, {id})}>
+          <TouchableOpacity onPress={handleSpeak}>
             {/* pause-circle  play-circle*/}
             <Icon name="play-circle" color="#d2d2d2" size={48}></Icon>
-          </View>
+          </TouchableOpacity>
           <View style={styles.textBox}>
             <Text style={styles.title} numberOfLines={3} ellipsizeMode="tail">
               {title}

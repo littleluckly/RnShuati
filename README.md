@@ -139,10 +139,49 @@ version react-native version
 #### 加了阴影 elevation 没有效果
 
 android 端，elevation 必须和 backgroundColor 配套使用
-ios 端，使用 shadowColor
+ios 端，使用
+
+```
+shadowColor
 shadowOffset
 shadowOpacity
 shadowRadius
+```
+
+#### 图标
+
+首先安装依赖`yarn add react-native-vector-icons`, 不同图标有不同的使用方式
+
+```ts
+import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+```
+
+`https://oblador.github.io/react-native-vector-icons/`
+`https://ionic.io/ionicons`
+
+#### 语音合成
+
+python 环境安装 `brew install python`
+验证安装 `python3 --version
+pip3 --version`
+
+使用虚拟环境安装开源语音 edge-tts
+✅ 优点：安全、隔离、不污染系统、符合现代 Python 开发规范。
+
+```bash
+# 1. 创建一个虚拟环境（比如叫 venv 或 tts-env）
+python3 -m venv ~/venv-tts
+
+# 2. 激活它
+source ~/venv-tts/bin/activate
+
+# 3. 现在可以正常安装 edge-tts
+pip install edge-tts
+
+# 4. 使用完成后退出
+deactivate
+```
 
 # Learn More
 

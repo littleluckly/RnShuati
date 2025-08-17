@@ -1144,7 +1144,7 @@
     humps "^2.0.1"
     prop-types "^15.7.2"
 
-"@gorhom/bottom-sheet@5.x":
+"@gorhom/bottom-sheet@5.1.8":
   version "5.1.8"
   resolved "https://mirrors.tencent.com/npm/@gorhom/bottom-sheet/-/bottom-sheet-5.1.8.tgz#65547917f5b1dae5a1291dabd4ea8bfee09feba4"
   integrity sha512-QuYIVjn3K9bW20n5bgOSjvxBYoWG4YQXiLGOheEAMgISuoT6sMcA270ViSkkb0fenPxcIOwzCnFNuxmr739T9A==
@@ -6202,6 +6202,11 @@ react-native-svg@^15.12.1:
     css-select "^5.1.0"
     css-tree "^1.1.3"
     warn-once "0.1.1"
+
+react-native-tts@^4.1.1:
+  version "4.1.1"
+  resolved "https://mirrors.tencent.com/npm/react-native-tts/-/react-native-tts-4.1.1.tgz#a6caa23f3e955e913195d6342608cb4489dd8ed1"
+  integrity sha512-VL0TgCwkUWggbbFGIXAPKC3rM1baluAYtgOdgnaTm7UYsWf/y8n5VgmVB0J2Wa8qt1dldZ1cSsdQY9iz3evcAg==
 
 react-native-vector-icons@^10.3.0:
   version "10.3.0"
