@@ -1,6 +1,6 @@
 // src/components/QuestionCard.js
-import React, { useState } from 'react';
-import { View, StyleSheet, Share } from 'react-native';
+import React, {useState} from 'react';
+import {View, StyleSheet, Share} from 'react-native';
 import {
   Card,
   Text,
@@ -34,15 +34,13 @@ export default function QuestionCard({
   };
 
   const handleCopy = () => {
-    Share.share({ message: `${question}\n\n${fullAnswer}` });
+    Share.share({message: `${question}\n\n${fullAnswer}`});
     setSnackMsg('已复制到分享');
     setSnack(true);
   };
 
   return (
-    <Card
-      style={[styles.card, { backgroundColor: theme.colors.surface }, style]}
-    >
+    <Card style={[styles.card, {backgroundColor: theme.colors.surface}, style]}>
       {/* 题目 */}
       <Card.Content>
         <Text variant="titleMedium" style={styles.question}>
@@ -57,9 +55,8 @@ export default function QuestionCard({
           <Card.Content>
             <Text
               variant="labelLarge"
-              style={{ color: theme.colors.primary }}
-              onPress={() => setShowShort(!showShort)}
-            >
+              style={{color: theme.colors.primary}}
+              onPress={() => setShowShort(!showShort)}>
               {'一般答案'}
             </Text>
             {
@@ -78,9 +75,8 @@ export default function QuestionCard({
           <Card.Content>
             <Text
               variant="labelLarge"
-              style={{ color: theme.colors.primary }}
-              onPress={() => setShowFull(!showFull)}
-            >
+              style={{color: theme.colors.primary}}
+              onPress={() => setShowFull(!showFull)}>
               {'全面答案'}
             </Text>
             {
@@ -101,7 +97,7 @@ export default function QuestionCard({
           onPress={handleFavorite}
         />
         <IconButton
-          icon="thumb-down-outline"
+          icon="trash-can-outline"
           onPress={() => {
             onDislike?.();
             setSnackMsg('已点踩');
@@ -115,8 +111,7 @@ export default function QuestionCard({
       <Snackbar
         visible={snack}
         onDismiss={() => setSnack(false)}
-        duration={800}
-      >
+        duration={800}>
         {snackMsg}
       </Snackbar>
     </Card>
@@ -125,8 +120,8 @@ export default function QuestionCard({
 
 const styles = StyleSheet.create({
   card: {},
-  question: { marginBottom: 8 },
-  divider: { marginVertical: 8 },
-  answer: { marginTop: 6 },
-  actions: { justifyContent: 'flex-end' },
+  question: {marginBottom: 8},
+  divider: {marginVertical: 8},
+  answer: {marginTop: 6},
+  actions: {justifyContent: 'flex-end'},
 });
