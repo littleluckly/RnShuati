@@ -1,9 +1,5 @@
 'use client';
 
-// SwipeableStack.js
-// 一个完整的、可滑动的卡片堆栈组件，类似 Tinder 的"喜欢/不喜欢"功能
-// 使用 react-native-gesture-handler 和 react-native-reanimated 实现流畅的手势动画
-
 import React, {useState, useRef, useMemo, useCallback} from 'react';
 import {View, Text, StyleSheet, Dimensions} from 'react-native';
 import Animated, {
@@ -19,6 +15,7 @@ import Animated, {
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import QuestionCard from './QuestionCard';
 import DATA from './questions';
+import {Vibration} from 'react-native'; // 导入震动API
 
 const {width, height} = Dimensions.get('window');
 
@@ -39,9 +36,17 @@ const ProgressCounter = React.memo(({current, total, answered}) => {
 });
 
 // ✅ 核心组件：可滑动的卡片
-// 为每张卡片创建独立的动画状态，避免状态污染
 const SwipeableCard = React.memo(
-  ({card, onDismiss, index, totalCards, isActive, onCardTouch}) => {
+  ({
+    card,
+    onDismiss,
+    onSwipeBack,
+    index,
+    totalCards,
+    isActive,
+    onCardTouch,
+    canSwipeBack,
+  }) => {
     // 动画值
     const translateX = useSharedValue(0);
     const translateY = useSharedValue(0);
@@ -60,6 +65,16 @@ const SwipeableCard = React.memo(
       console.log(`✅ 卡片 ${card.id} 已从状态中移除`);
       onDismiss();
     }, [card.id, onDismiss]);
+
+    const swipeBackCard = useCallback(() => {
+      if (hasScheduledRemoval.current) {
+        console.log(`❌ 卡片 ${card.id} 阻止了重复回退调用！`);
+        return;
+      }
+      hasScheduledRemoval.current = true;
+      console.log(`↩️ 卡片 ${card.id} 已回退`);
+      onSwipeBack?.();
+    }, [card.id, onSwipeBack]);
 
     const resetRemovalFlag = useCallback(() => {
       hasScheduledRemoval.current = false;
@@ -94,10 +109,17 @@ const SwipeableCard = React.memo(
             // 只有活跃卡片才响应手势
             if (!isActive) return;
 
+            // 如果是第一张卡片且不能右滑，限制向右滑动
+            if (event.translationX > 0 && !canSwipeBack) {
+              translateX.value = 0;
+              translateY.value = event.translationY;
+              return;
+            }
+
             translateX.value = event.translationX;
             translateY.value = event.translationY;
 
-            // 优化旋转计算
+            // 根据滑动方向计算旋转角度（左滑向左偏，右滑向右偏）
             rotate.value = interpolate(
               event.translationX,
               [-width * 0.5, 0, width * 0.5],
@@ -105,7 +127,7 @@ const SwipeableCard = React.memo(
               Extrapolate.CLAMP,
             );
 
-            // 优化缩放计算
+            // 滑动距离越远，卡片越小
             const distance = Math.sqrt(
               event.translationX ** 2 + event.translationY ** 2,
             );
@@ -117,7 +139,7 @@ const SwipeableCard = React.memo(
               Extrapolate.CLAMP,
             );
 
-            // 优化透明度计算
+            // 滑动距离越远，透明度越低
             opacity.value = interpolate(
               Math.abs(event.translationX),
               [0, width * 0.3],
@@ -128,42 +150,58 @@ const SwipeableCard = React.memo(
           .onEnd(event => {
             if (!isActive) return;
 
-            const shouldDismiss =
-              Math.abs(event.translationX) > width * 0.25 ||
-              Math.abs(event.velocityX) > 800;
+            // 左滑判断：向左滑动距离足够或速度足够快
+            const shouldGoToNext =
+              event.translationX < -width * 0.25 || event.velocityX < -800;
 
-            if (shouldDismiss) {
-              console.log(`🚀 卡片 ${card.id} 开始移除动画`);
-              runOnJS(removeCard)();
+            // 右滑判断：向右滑动距离足够且允许回退
+            const shouldGoToPrevious =
+              event.translationX > width * 0.25 && canSwipeBack;
 
-              const exitDirection = event.translationX > 0 ? 1 : -1;
-              const exitDistance = width * 1.2;
+            if (shouldGoToPrevious) {
+              // 向右滑动 - 回到上一张卡片
+              console.log(`↩️ 向右滑动 - 回退到上一张卡片 ${card.id}`);
+              runOnJS(swipeBackCard)();
 
-              translateX.value = withSpring(exitDirection * exitDistance, {
+              // 向右退出动画
+              translateX.value = withSpring(width * 1.2, {
                 damping: 20,
                 stiffness: 200,
                 velocity: event.velocityX,
               });
-
               translateY.value = withSpring(
                 event.translationY + (Math.random() - 0.5) * 150,
-                {
-                  damping: 20,
-                  stiffness: 200,
-                },
+                {damping: 20, stiffness: 200},
               );
+              rotate.value = withSpring(30 + Math.random() * 20, {
+                damping: 20,
+                stiffness: 200,
+              });
+              opacity.value = withTiming(0, {duration: 300});
+              scale.value = withSpring(0.8, {damping: 20, stiffness: 200});
+            } else if (shouldGoToNext) {
+              // 向左滑动 - 前进到下一张卡片
+              console.log(`➡️ 向左滑动 - 前进到下一张卡片 ${card.id}`);
+              runOnJS(removeCard)();
 
-              rotate.value = withSpring(
-                exitDirection * (30 + Math.random() * 20),
-                {
-                  damping: 20,
-                  stiffness: 200,
-                },
+              // 向左退出动画
+              translateX.value = withSpring(-width * 1.2, {
+                damping: 20,
+                stiffness: 200,
+                velocity: event.velocityX,
+              });
+              translateY.value = withSpring(
+                event.translationY + (Math.random() - 0.5) * 150,
+                {damping: 20, stiffness: 200},
               );
-
+              rotate.value = withSpring(-30 - Math.random() * 20, {
+                damping: 20,
+                stiffness: 200,
+              });
               opacity.value = withTiming(0, {duration: 300});
               scale.value = withSpring(0.8, {damping: 20, stiffness: 200});
             } else {
+              // 滑动距离不足，回到原位
               translateX.value = withSpring(0, {damping: 25, stiffness: 400});
               translateY.value = withSpring(0, {damping: 25, stiffness: 400});
               rotate.value = withSpring(0, {damping: 25, stiffness: 400});
@@ -171,7 +209,16 @@ const SwipeableCard = React.memo(
               opacity.value = withSpring(1, {damping: 25, stiffness: 400});
             }
           }),
-      [isActive, index, card.id, onCardTouch, removeCard, resetRemovalFlag],
+      [
+        isActive,
+        index,
+        card.id,
+        onCardTouch,
+        removeCard,
+        swipeBackCard,
+        resetRemovalFlag,
+        canSwipeBack,
+      ],
     );
 
     const animatedStyle = useAnimatedStyle(() => {
@@ -229,7 +276,8 @@ const SwipeableCard = React.memo(
       prevProps.card.id === nextProps.card.id &&
       prevProps.index === nextProps.index &&
       prevProps.isActive === nextProps.isActive &&
-      prevProps.totalCards === nextProps.totalCards
+      prevProps.totalCards === nextProps.totalCards &&
+      prevProps.canSwipeBack === nextProps.canSwipeBack
     );
   },
 );
@@ -238,16 +286,29 @@ const Quiz3DCard = () => {
   const [cards, setCards] = useState(DATA);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const [dismissedCards, setDismissedCards] = useState([]);
 
   const visibleCards = useMemo(() => {
-    const maxVisible = 4; // 只渲染前4张卡片
+    const maxVisible = 4;
     return cards.slice(0, maxVisible);
+  }, [cards]);
+
+  const canSwipeBack = useMemo(() => {
+    // 只有当有已移除的卡片时才能右滑回退
+    return dismissedCards.length > 0;
+  }, [dismissedCards]);
+
+  const remainingCards = useMemo(() => {
+    return cards.length;
   }, [cards]);
 
   const onCardDismiss = useCallback(() => {
     setCards(prevCards => {
       if (prevCards.length > 0) {
+        const dismissedCard = prevCards[0];
         const newCards = prevCards.slice(1);
+
+        setDismissedCards(prev => [...prev, dismissedCard]);
         console.log(`📊 卡片移除后剩余: ${newCards.length}`);
         return newCards;
       }
@@ -261,10 +322,27 @@ const Quiz3DCard = () => {
     setActiveCardIndex(0);
   }, []);
 
+  const onSwipeBack = useCallback(() => {
+    setDismissedCards(prevCards => {
+      if (prevCards.length > 0) {
+        const lastDismissedCard = prevCards[prevCards.length - 1];
+        const newDismissedCards = prevCards.slice(0, -1);
+
+        setCards(prevCards => [lastDismissedCard, ...prevCards]);
+        console.log(`↩️ 回退到上一张卡片，剩余卡片: ${prevCards.length + 1}`);
+
+        return newDismissedCards;
+      }
+      return prevCards;
+    });
+
+    // 减少已回答计数
+    setAnsweredCount(prev => Math.max(0, prev - 1));
+  }, []);
+
   const onCardTouch = useCallback(
     touchedIndex => {
       if (touchedIndex === activeCardIndex || touchedIndex !== 0) return;
-      // 只允许触摸最顶层的卡片
       setActiveCardIndex(0);
     },
     [activeCardIndex],
@@ -286,7 +364,7 @@ const Quiz3DCard = () => {
   return (
     <>
       <ProgressCounter
-        current={cards.length}
+        current={remainingCards}
         total={DATA.length}
         answered={answeredCount}
       />
@@ -296,10 +374,12 @@ const Quiz3DCard = () => {
             key={`${card.id}-${index}`}
             card={card}
             onDismiss={index === 0 ? onCardDismiss : () => {}}
+            onSwipeBack={index === 0 ? onSwipeBack : () => {}}
             index={index}
             totalCards={visibleCards.length}
             isActive={index === activeCardIndex}
             onCardTouch={onCardTouch}
+            canSwipeBack={index === 0 ? canSwipeBack : false}
           />
         ))}
       </View>
