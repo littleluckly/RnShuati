@@ -9,6 +9,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Icon from '@react-native-vector-icons/material-design-icons';
 import Tts from 'react-native-tts';
 import {routeNameMap} from '@/navigation/constant';
+import {HomeStackNavigation} from '@/navigation/Types';
 
 // 初始化 TTS
 Tts.setDefaultLanguage('zh-CN'); // 设置中文
@@ -25,7 +26,7 @@ interface Props {
 
 const SwipeableItem = forwardRef((props: Props, _) => {
   const {id, title, onWillOpen, setRef} = props;
-  const navigation = useNavigation();
+  const navigation = useNavigation<HomeStackNavigation>();
   const swipeRef = React.useRef<any>();
 
   // 把内部 swipeRef 抛给父组件
@@ -109,7 +110,8 @@ const SwipeableItem = forwardRef((props: Props, _) => {
         ref={swipeRef}
         renderRightActions={RightActions}
         onSwipeableWillOpen={() => onWillOpen(id)}
-        friction={2}>
+        friction={2}
+        rightThreshold={20}>
         <TouchableOpacity
           style={styles.row}
           activeOpacity={0.8}
