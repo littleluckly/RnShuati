@@ -1,19 +1,30 @@
 // App.tsx
-import React from 'react';
+import 'react-native-get-random-values'; // ✅ 必须放在最前面
+import React, {forwardRef} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import RootStack from '@/navigation/RootStack';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {PaperProvider} from 'react-native-paper';
+import Toast from 'react-native-toast-message';
+
+// 使用forwardRef转发Toast组件的ref
+const ToastComponent = forwardRef((props, ref) => {
+  return <Toast ref={ref} {...props} />;
+});
+
 export default function App() {
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView>
-        <PaperProvider>
-          <NavigationContainer>
-            <RootStack />
-          </NavigationContainer>
-        </PaperProvider>
+        <>
+          <PaperProvider>
+            <NavigationContainer>
+              <RootStack />
+            </NavigationContainer>
+          </PaperProvider>
+          <ToastComponent />
+        </>
       </GestureHandlerRootView>
     </SafeAreaProvider>
   );

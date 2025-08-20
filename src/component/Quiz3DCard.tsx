@@ -15,7 +15,7 @@ import Animated, {
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import QuestionCard from './QuestionCard';
 import DATA from './questions';
-import {Vibration} from 'react-native'; // 导入震动API
+import Toast from 'react-native-toast-message';
 
 const {width, height} = Dimensions.get('window');
 
@@ -81,6 +81,38 @@ const SwipeableCard = React.memo(
       console.log(`🔄 卡片 ${card.id} 重置了移除标记`);
     }, [card.id]);
 
+    // 显示边界提示
+    const showSwipeLimitToast = () => {
+      // 显示提示
+      Toast.show({
+        type: 'info', // 内置类型：success/error/info
+        text1: '提示',
+        text2: '已经是第一张卡片啦',
+        position: 'top', // 顶部显示
+        visibilityTime: 2000, // 显示2秒
+        autoHide: true,
+        // 自定义样式
+        customStyles: {
+          container: {
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            borderRadius: 20,
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+          },
+          text1: {
+            color: '#fff',
+            fontSize: 14,
+            fontWeight: '500',
+            marginBottom: 4,
+          },
+          text2: {
+            color: '#fff',
+            fontSize: 13,
+          },
+        },
+      });
+    };
+
     const gesture = useMemo(
       () =>
         Gesture.Pan()
@@ -111,6 +143,7 @@ const SwipeableCard = React.memo(
 
             // 如果是第一张卡片且不能右滑，限制向右滑动
             if (event.translationX > 0 && !canSwipeBack) {
+              runOnJS(showSwipeLimitToast)();
               translateX.value = 0;
               translateY.value = event.translationY;
               return;

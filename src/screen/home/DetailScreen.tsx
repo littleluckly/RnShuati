@@ -10,8 +10,7 @@ export default function DetailScreen(props) {
   const propsStringify = JSON.stringify(props);
   return (
     <View style={styles.center}>
-      {/* <Text style={styles.title}>👤 detail</Text>
-      <Text>{propsStringify}</Text> */}
+      {/* <Text>{propsStringify}</Text> */}
       <Quiz3DCard></Quiz3DCard>
     </View>
   );
