@@ -10,19 +10,22 @@ import {
   Snackbar,
   useTheme,
 } from 'react-native-paper';
+import {QuestionCardProps} from './types';
 
 const {width, height} = Dimensions.get('window');
 
 const QuestionCard = React.memo(
   ({
+    id,
     question,
     shortAnswer,
     fullAnswer,
     initialFavorite = false,
     onDislike,
     onToggleFavorite,
+    onDelete,
     style = {},
-  }) => {
+  }: QuestionCardProps) => {
     const theme = useTheme();
     const [showShort, setShowShort] = useState(false);
     const [showFull, setShowFull] = useState(false);
@@ -48,6 +51,12 @@ const QuestionCard = React.memo(
       setSnackMsg('已点踩1');
       setSnack(true);
     }, [onDislike]);
+
+    const handleDelete = useCallback(() => {
+      onDelete?.(id);
+      setSnackMsg('已删除');
+      setSnack(true);
+    }, [onDelete, id]);
 
     const cardStyle = useMemo(
       () => [styles.card, {backgroundColor: theme.colors.surface}, style],
@@ -112,7 +121,7 @@ const QuestionCard = React.memo(
             iconColor={favorite ? theme.colors.primary : undefined}
             onPress={handleFavorite}
           />
-          <IconButton icon="trash-can-outline" onPress={handleDislike} />
+          <IconButton icon="trash-can-outline" onPress={handleDelete} />
           <IconButton icon="content-copy" onPress={handleCopy} />
         </Card.Actions>
 
@@ -126,7 +135,7 @@ const QuestionCard = React.memo(
       </Card>
     );
   },
-  (prevProps, nextProps) => {
+  (prevProps: QuestionCardProps, nextProps: QuestionCardProps) => {
     return (
       prevProps.question === nextProps.question &&
       prevProps.shortAnswer === nextProps.shortAnswer &&

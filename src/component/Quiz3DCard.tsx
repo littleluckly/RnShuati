@@ -16,37 +16,41 @@ import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import QuestionCard from './QuestionCard';
 import DATA from './questions';
 import Toast from 'react-native-toast-message';
+import {Card, ProgressCounterProps, SwipeableCardProps} from './types';
 
 const {width, height} = Dimensions.get('window');
 
-const ProgressCounter = React.memo(({current, total, answered}) => {
-  const remaining = current;
-  const progress = (answered / total) * 100;
+const ProgressCounter = React.memo(
+  ({current, total, answered}: ProgressCounterProps) => {
+    const remaining = current;
+    const progress = (answered / total) * 100;
 
-  return (
-    <View style={styles.counterContainer}>
-      <View style={styles.progressBar}>
-        <View style={[styles.progressFill, {width: `${progress}%`}]} />
+    return (
+      <View style={styles.counterContainer}>
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, {width: `${progress}%`}]} />
+        </View>
+        <Text style={styles.counterText}>
+          进度: {answered}/{total} · 剩余 {remaining} 张
+        </Text>
       </View>
-      <Text style={styles.counterText}>
-        进度: {answered}/{total} · 剩余 {remaining} 张
-      </Text>
-    </View>
-  );
-});
+    );
+  },
+);
 
 // ✅ 核心组件：可滑动的卡片
 const SwipeableCard = React.memo(
   ({
     card,
     onDismiss,
+    onCardDelete,
     onSwipeBack,
     index,
     totalCards,
     isActive,
     onCardTouch,
     canSwipeBack,
-  }) => {
+  }: SwipeableCardProps) => {
     // 动画值
     const translateX = useSharedValue(0);
     const translateY = useSharedValue(0);
@@ -92,6 +96,7 @@ const SwipeableCard = React.memo(
         visibilityTime: 2000, // 显示2秒
         autoHide: true,
         // 自定义样式
+        // @ts-ignore 忽略类型检查，因为 ToastShowParams 中可能缺少 customStyles 属性
         customStyles: {
           container: {
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -251,6 +256,7 @@ const SwipeableCard = React.memo(
         swipeBackCard,
         resetRemovalFlag,
         canSwipeBack,
+        onCardDelete,
       ],
     );
 
@@ -296,8 +302,8 @@ const SwipeableCard = React.memo(
             {zIndex: Math.min(100 + totalCards - index, 9998)},
           ]}>
           <QuestionCard
-            onDislike={() => {}}
             onToggleFavorite={() => {}}
+            onDelete={onCardDelete}
             {...card}
           />
         </Animated.View>
@@ -316,10 +322,10 @@ const SwipeableCard = React.memo(
 );
 
 const Quiz3DCard = () => {
-  const [cards, setCards] = useState(DATA);
-  const [answeredCount, setAnsweredCount] = useState(0);
-  const [activeCardIndex, setActiveCardIndex] = useState(0);
-  const [dismissedCards, setDismissedCards] = useState([]);
+  const [cards, setCards] = useState<Card[]>(DATA);
+  const [answeredCount, setAnsweredCount] = useState<number>(0);
+  const [activeCardIndex, setActiveCardIndex] = useState<number>(0);
+  const [dismissedCards, setDismissedCards] = useState<Card[]>([]);
 
   const visibleCards = useMemo(() => {
     const maxVisible = 4;
@@ -373,8 +379,21 @@ const Quiz3DCard = () => {
     setAnsweredCount(prev => Math.max(0, prev - 1));
   }, []);
 
+  const onCardDelete = useCallback(() => {
+    setCards(prevCards => {
+      if (prevCards.length > 0) {
+        // 只从卡片列表中移除第一张卡片，不添加到dismissedCards，也不更新answeredCount
+        const newCards = prevCards.slice(1);
+        console.log(`🗑️ 卡片被直接删除，剩余: ${newCards.length}`);
+        return newCards;
+      }
+      return prevCards;
+    });
+    setActiveCardIndex(0);
+  }, []);
+
   const onCardTouch = useCallback(
-    touchedIndex => {
+    (touchedIndex: number) => {
       if (touchedIndex === activeCardIndex || touchedIndex !== 0) return;
       setActiveCardIndex(0);
     },
@@ -387,7 +406,7 @@ const Quiz3DCard = () => {
         <View style={styles.completionContainer}>
           <Text style={styles.completionTitle}>🎉 恭喜完成！</Text>
           <Text style={styles.endText}>
-            你已经完成了所有 {DATA.length} 道题目！
+            你已经完成了所有 {dismissedCards.length} 道题目！
           </Text>
         </View>
       </View>
@@ -398,7 +417,7 @@ const Quiz3DCard = () => {
     <>
       <ProgressCounter
         current={remainingCards}
-        total={DATA.length}
+        total={cards.length}
         answered={answeredCount}
       />
       <View style={styles.container}>
@@ -408,6 +427,7 @@ const Quiz3DCard = () => {
             card={card}
             onDismiss={index === 0 ? onCardDismiss : () => {}}
             onSwipeBack={index === 0 ? onSwipeBack : () => {}}
+            onCardDelete={index === 0 ? onCardDelete : () => {}}
             index={index}
             totalCards={visibleCards.length}
             isActive={index === activeCardIndex}
