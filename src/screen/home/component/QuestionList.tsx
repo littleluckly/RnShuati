@@ -1,6 +1,7 @@
-import React, {useRef} from 'react';
-import {FlatList} from 'react-native';
+import React, {useEffect, useRef} from 'react';
+import {FlatList, Platform} from 'react-native';
 import SwipeableItem from './SwipeableItem';
+import Sound from 'react-native-sound';
 
 const data = Array.from({length: 20}, (_, i) => ({
   id: String(i + 1),
@@ -11,6 +12,23 @@ const data = Array.from({length: 20}, (_, i) => ({
 }));
 
 export default () => {
+  // 声明音频实例
+  let beepSound: Sound | null = null;
+
+  useEffect(() => {
+    // 使用 Android res/raw 中的资源名（不带扩展名）
+    const filename =
+      Platform.OS === 'android' ? 'audio_analysis' : 'audio_analysis.mp3';
+    const sound = new Sound(filename, Sound.MAIN_BUNDLE, err => {
+      if (err) {
+        console.log('Failed to load the sound', err);
+        return;
+      }
+      sound.play(() => sound.release());
+      console.log('Sound played');
+    });
+  }, []);
+
   const refs = useRef(new Map<string, any>()).current;
   const onWillOpen = (openingId: string) => {
     refs.forEach((ref, id) => {

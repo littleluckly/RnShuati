@@ -1,11 +1,16 @@
-const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
-
 /**
  * Metro configuration
  * https://reactnative.dev/docs/metro
  *
  * @type {import('metro-config').MetroConfig}
  */
-const config = {};
+const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
 
-module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+const defaultConfig = getDefaultConfig(__dirname);
+
+module.exports = mergeConfig(defaultConfig, {
+  resolver: {
+    // 追加自定义扩展，不覆盖默认列表（mp3 等默认已包含）
+    assetExts: [...defaultConfig.resolver.assetExts, 'md'],
+  },
+});
