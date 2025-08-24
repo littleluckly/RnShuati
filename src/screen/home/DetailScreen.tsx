@@ -1,17 +1,29 @@
 // src/screens/ProfileScreen/index.tsx
 import Quiz3DCard from '@/component/Quiz3DCard';
 import {routeNameMap} from '@/navigation/constant';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import React from 'react';
 import {View, Text, StyleSheet, Button} from 'react-native';
+import {HomeStackParamList} from '@/navigation/Types';
 
-export default function DetailScreen(props) {
+type DetailScreenRouteProp = RouteProp<
+  HomeStackParamList,
+  typeof routeNameMap.detailScreen
+>;
+
+export default function DetailScreen() {
   const navigation = useNavigation();
-  const propsStringify = JSON.stringify(props);
+  const route = useRoute<DetailScreenRouteProp>();
+
+  // 安全地解构 route.params，处理可能为 undefined 的情况
+  const params = route.params || {id: '', currentIndex: 0};
+  const {id, currentIndex = 0} = params;
+
+  console.log('DetailScreen received params:', {id, currentIndex});
+
   return (
     <View style={styles.center}>
-      {/* <Text>{propsStringify}</Text> */}
-      <Quiz3DCard></Quiz3DCard>
+      <Quiz3DCard initialAnsweredCount={currentIndex} startFromQuestion={id} />
     </View>
   );
 }

@@ -1,0 +1,1 @@
+Vue2 用 Object.defineProperty；Vue3 用 Proxy。

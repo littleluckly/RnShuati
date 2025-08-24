@@ -14,11 +14,21 @@ import Animated, {
 } from 'react-native-reanimated';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import QuestionCard from './QuestionCard';
-import DATA from './questions';
 import Toast from 'react-native-toast-message';
-import {Card, ProgressCounterProps, SwipeableCardProps} from './types';
+import {ProgressCounterProps, SwipeableCardProps} from './types';
+import metadata from '@/data/importQuestion';
+import {QuestionMeta} from '@/models/QuestionMeta';
 
 const {width, height} = Dimensions.get('window');
+
+// 直接使用 QuestionMeta 数据
+const QUESTION_DATA = metadata.map(item => new QuestionMeta(item));
+
+// Quiz3DCard 组件的属性接口
+interface Quiz3DCardProps {
+  initialAnsweredCount?: number; // 初始已回答题目数
+  startFromQuestion?: string; // 从哪个题目开始（暂时保留，可用于未来定位到特定题目）
+}
 
 const ProgressCounter = React.memo(
   ({current, total, answered}: ProgressCounterProps) => {
@@ -41,7 +51,7 @@ const ProgressCounter = React.memo(
 // ✅ 核心组件：可滑动的卡片
 const SwipeableCard = React.memo(
   ({
-    card,
+    questionMeta,
     onDismiss,
     onCardDelete,
     onSwipeBack,
@@ -51,6 +61,8 @@ const SwipeableCard = React.memo(
     onCardTouch,
     canSwipeBack,
   }: SwipeableCardProps) => {
+    // 🔧 修复 Reanimated 错误：提取基本类型的 id 避免在 worklet 中访问复杂对象
+    const cardId = questionMeta.id;
     // 动画值
     const translateX = useSharedValue(0);
     const translateY = useSharedValue(0);
@@ -62,28 +74,28 @@ const SwipeableCard = React.memo(
 
     const removeCard = useCallback(() => {
       if (hasScheduledRemoval.current) {
-        console.log(`❌ 卡片 ${card.id} 阻止了重复移除调用！`);
+        console.log(`❌ 卡片 ${cardId} 阻止了重复移除调用！`);
         return;
       }
       hasScheduledRemoval.current = true;
-      console.log(`✅ 卡片 ${card.id} 已从状态中移除`);
+      console.log(`✅ 卡片 ${cardId} 已从状态中移除`);
       onDismiss();
-    }, [card.id, onDismiss]);
+    }, [cardId, onDismiss]);
 
     const swipeBackCard = useCallback(() => {
       if (hasScheduledRemoval.current) {
-        console.log(`❌ 卡片 ${card.id} 阻止了重复回退调用！`);
+        console.log(`❌ 卡片 ${cardId} 阻止了重复回退调用！`);
         return;
       }
       hasScheduledRemoval.current = true;
-      console.log(`↩️ 卡片 ${card.id} 已回退`);
+      console.log(`↩️ 卡片 ${cardId} 已回退`);
       onSwipeBack?.();
-    }, [card.id, onSwipeBack]);
+    }, [cardId, onSwipeBack]);
 
     const resetRemovalFlag = useCallback(() => {
       hasScheduledRemoval.current = false;
-      console.log(`🔄 卡片 ${card.id} 重置了移除标记`);
-    }, [card.id]);
+      console.log(`🔄 卡片 ${cardId} 重置了移除标记`);
+    }, [cardId]);
 
     // 显示边界提示
     const showSwipeLimitToast = () => {
@@ -140,7 +152,7 @@ const SwipeableCard = React.memo(
             }
 
             runOnJS(resetRemovalFlag)();
-            console.log(`🔄 手势开始 - 卡片 ${card.id}，已重置动画值`);
+            console.log(`🔄 手势开始 - 卡片 ${cardId}，已重置动画值`);
           })
           .onUpdate(event => {
             // 只有活跃卡片才响应手势
@@ -198,7 +210,7 @@ const SwipeableCard = React.memo(
 
             if (shouldGoToPrevious) {
               // 向右滑动 - 回到上一张卡片
-              console.log(`↩️ 向右滑动 - 回退到上一张卡片 ${card.id}`);
+              console.log(`↩️ 向右滑动 - 回退到上一张卡片 ${cardId}`);
               runOnJS(swipeBackCard)();
 
               // 向右退出动画
@@ -219,7 +231,7 @@ const SwipeableCard = React.memo(
               scale.value = withSpring(0.8, {damping: 20, stiffness: 200});
             } else if (shouldGoToNext) {
               // 向左滑动 - 前进到下一张卡片
-              console.log(`➡️ 向左滑动 - 前进到下一张卡片 ${card.id}`);
+              console.log(`➡️ 向左滑动 - 前进到下一张卡片 ${cardId}`);
               runOnJS(removeCard)();
 
               // 向左退出动画
@@ -250,7 +262,7 @@ const SwipeableCard = React.memo(
       [
         isActive,
         index,
-        card.id,
+        cardId,
         onCardTouch,
         removeCard,
         swipeBackCard,
@@ -302,9 +314,12 @@ const SwipeableCard = React.memo(
             {zIndex: Math.min(100 + totalCards - index, 9998)},
           ]}>
           <QuestionCard
+            id={questionMeta.id}
+            question={questionMeta.question_markdown}
+            shortAnswer={questionMeta.answer_simple_markdown}
+            fullAnswer={questionMeta.answer_analysis_markdown}
             onToggleFavorite={() => {}}
             onDelete={onCardDelete}
-            {...card}
           />
         </Animated.View>
       </GestureDetector>
@@ -312,7 +327,7 @@ const SwipeableCard = React.memo(
   },
   (prevProps, nextProps) => {
     return (
-      prevProps.card.id === nextProps.card.id &&
+      prevProps.questionMeta.id === nextProps.questionMeta.id &&
       prevProps.index === nextProps.index &&
       prevProps.isActive === nextProps.isActive &&
       prevProps.totalCards === nextProps.totalCards &&
@@ -321,11 +336,35 @@ const SwipeableCard = React.memo(
   },
 );
 
-const Quiz3DCard = () => {
-  const [cards, setCards] = useState<Card[]>(DATA);
-  const [answeredCount, setAnsweredCount] = useState<number>(0);
+const Quiz3DCard = ({
+  initialAnsweredCount = 0,
+  startFromQuestion,
+}: Quiz3DCardProps = {}) => {
+  const [cards, setCards] = useState<QuestionMeta[]>(QUESTION_DATA);
+  const [answeredCount, setAnsweredCount] =
+    useState<number>(initialAnsweredCount);
   const [activeCardIndex, setActiveCardIndex] = useState<number>(0);
-  const [dismissedCards, setDismissedCards] = useState<Card[]>([]);
+  const [dismissedCards, setDismissedCards] = useState<QuestionMeta[]>([]);
+
+  // 如果有初始已回答数，需要调整卡片列表和已移除列表
+  React.useEffect(() => {
+    if (
+      initialAnsweredCount > 0 &&
+      initialAnsweredCount < QUESTION_DATA.length
+    ) {
+      // 从原始数据中移除前 initialAnsweredCount 个项目
+      const answeredCards = QUESTION_DATA.slice(0, initialAnsweredCount);
+      const remainingCards = QUESTION_DATA.slice(initialAnsweredCount);
+
+      setCards(remainingCards);
+      setDismissedCards(answeredCards);
+      setAnsweredCount(initialAnsweredCount);
+
+      console.log(
+        `📊 初始化状态: 已回答 ${initialAnsweredCount} 道题，剩余 ${remainingCards.length} 道题`,
+      );
+    }
+  }, [initialAnsweredCount]);
 
   const visibleCards = useMemo(() => {
     const maxVisible = 4;
@@ -417,14 +456,14 @@ const Quiz3DCard = () => {
     <>
       <ProgressCounter
         current={remainingCards}
-        total={cards.length}
+        total={QUESTION_DATA.length} // 使用与列表组件一致的数据源
         answered={answeredCount}
       />
       <View style={styles.container}>
-        {visibleCards.map((card, index) => (
+        {visibleCards.map((questionMeta, index) => (
           <SwipeableCard
-            key={`${card.id}-${index}`}
-            card={card}
+            key={`${questionMeta.id}-${index}`}
+            questionMeta={questionMeta}
             onDismiss={index === 0 ? onCardDismiss : () => {}}
             onSwipeBack={index === 0 ? onSwipeBack : () => {}}
             onCardDelete={index === 0 ? onCardDelete : () => {}}

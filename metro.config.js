@@ -10,7 +10,7 @@ const defaultConfig = getDefaultConfig(__dirname);
 
 module.exports = mergeConfig(defaultConfig, {
   resolver: {
-    // 追加自定义扩展，不覆盖默认列表（mp3 等默认已包含）
-    assetExts: [...defaultConfig.resolver.assetExts, 'md'],
+    // 追加自定义扩展，不覆盖默认列表
+    assetExts: [...defaultConfig.resolver.assetExts, 'md', 'json'],
   },
 });

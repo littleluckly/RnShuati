@@ -1,0 +1,18 @@
+{
+  "id": 3,
+  "type": "unknown",
+  "difficulty": "medium",
+  "tags": [],
+  "question_length": 23,
+  "simple_answer_length": 55,
+  "detailed_analysis_length": 352,
+  "created_at": null,
+  "files": {
+    "question": "question.md",
+    "simple_answer": "answer_simple.md",
+    "detailed_analysis": "answer_analysis.md",
+    "audio_simple": "audio_simple.mp3",
+    "audio_question": "audio_question.mp3",
+    "audio_analysis": "audio_analysis.mp3"
+  }
+}

@@ -12,6 +12,6 @@ export type RootNavigation = NavigationProp<RootStackParamList>;
 
 export type HomeStackParamList = {
   [routeNameMap.homeTab]: undefined;
-  [routeNameMap.detailScreen]: { id: string };
+  [routeNameMap.detailScreen]: { id: string; currentIndex?: number };
 };
 export type HomeStackNavigation = NavigationProp<HomeStackParamList>;
