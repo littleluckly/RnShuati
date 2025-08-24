@@ -528,7 +528,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f5f7fa',
-    paddingTop: 60,
   },
   // 🚀 性能优化：加载状态样式
   loadingContainer: {
@@ -587,7 +586,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     position: 'absolute',
-    zIndex: 100,
+    top: 80, // 添加顶部偏移，确保卡片不与计数器重叠
+    zIndex: 100, // 降低卡片的 zIndex，确保计数器能显示在上方
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
