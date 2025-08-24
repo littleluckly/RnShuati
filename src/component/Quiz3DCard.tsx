@@ -1,7 +1,21 @@
 'use client';
 
-import React, {useState, useRef, useMemo, useCallback} from 'react';
-import {View, Text, StyleSheet, Dimensions} from 'react-native';
+import React, {
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+  Suspense,
+  startTransition,
+} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  InteractionManager,
+  ActivityIndicator,
+} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -21,8 +35,15 @@ import {QuestionMeta} from '@/models/QuestionMeta';
 
 const {width, height} = Dimensions.get('window');
 
-// 直接使用 QuestionMeta 数据
-const QUESTION_DATA = metadata.map(item => new QuestionMeta(item));
+// 🚀 性能优化：延迟初始化 QuestionMeta 数据
+let _cachedQuestionData: QuestionMeta[] | null = null;
+const getQuestionData = (): QuestionMeta[] => {
+  if (!_cachedQuestionData) {
+    // 只在需要时才创建 QuestionMeta 对象
+    _cachedQuestionData = metadata.map(item => new QuestionMeta(item));
+  }
+  return _cachedQuestionData;
+};
 
 // Quiz3DCard 组件的属性接口
 interface Quiz3DCardProps {
@@ -340,30 +361,41 @@ const Quiz3DCard = ({
   initialAnsweredCount = 0,
   startFromQuestion,
 }: Quiz3DCardProps = {}) => {
-  const [cards, setCards] = useState<QuestionMeta[]>(QUESTION_DATA);
+  // 🚀 性能优化：使用 lazy 初始化减少初始渲染延迟
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [cards, setCards] = useState<QuestionMeta[]>([]);
   const [answeredCount, setAnsweredCount] =
     useState<number>(initialAnsweredCount);
   const [activeCardIndex, setActiveCardIndex] = useState<number>(0);
   const [dismissedCards, setDismissedCards] = useState<QuestionMeta[]>([]);
 
-  // 如果有初始已回答数，需要调整卡片列表和已移除列表
+  // 延迟加载数据以优化初始渲染性能
   React.useEffect(() => {
-    if (
-      initialAnsweredCount > 0 &&
-      initialAnsweredCount < QUESTION_DATA.length
-    ) {
-      // 从原始数据中移除前 initialAnsweredCount 个项目
-      const answeredCards = QUESTION_DATA.slice(0, initialAnsweredCount);
-      const remainingCards = QUESTION_DATA.slice(initialAnsweredCount);
+    const loadData = () => {
+      const questionData = getQuestionData();
 
-      setCards(remainingCards);
-      setDismissedCards(answeredCards);
-      setAnsweredCount(initialAnsweredCount);
+      // 🚀 性能优化：使用 startTransition 延迟非关键更新
+      startTransition(() => {
+        if (
+          initialAnsweredCount > 0 &&
+          initialAnsweredCount < questionData.length
+        ) {
+          const answeredCards = questionData.slice(0, initialAnsweredCount);
+          const remainingCards = questionData.slice(initialAnsweredCount);
 
-      console.log(
-        `📊 初始化状态: 已回答 ${initialAnsweredCount} 道题，剩余 ${remainingCards.length} 道题`,
-      );
-    }
+          setCards(remainingCards);
+          setDismissedCards(answeredCards);
+          setAnsweredCount(initialAnsweredCount);
+        } else {
+          setCards(questionData);
+        }
+
+        setIsDataLoaded(true);
+      });
+    };
+
+    // 使用 InteractionManager 在主线程闲置时加载数据
+    InteractionManager.runAfterInteractions(loadData);
   }, [initialAnsweredCount]);
 
   const visibleCards = useMemo(() => {
@@ -439,6 +471,16 @@ const Quiz3DCard = ({
     [activeCardIndex],
   );
 
+  // 🚀 性能优化：显示加载状态
+  if (!isDataLoaded) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1da1f2" />
+        <Text style={styles.loadingText}>加载中...</Text>
+      </View>
+    );
+  }
+
   if (cards.length === 0) {
     return (
       <View style={styles.container}>
@@ -456,7 +498,7 @@ const Quiz3DCard = ({
     <>
       <ProgressCounter
         current={remainingCards}
-        total={QUESTION_DATA.length} // 使用与列表组件一致的数据源
+        total={getQuestionData().length} // 使用缓存的数据源
         answered={answeredCount}
       />
       <View style={styles.container}>
@@ -487,6 +529,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f5f7fa',
     paddingTop: 60,
+  },
+  // 🚀 性能优化：加载状态样式
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f7fa',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#657786',
+    fontWeight: '500',
   },
   counterContainer: {
     position: 'absolute',

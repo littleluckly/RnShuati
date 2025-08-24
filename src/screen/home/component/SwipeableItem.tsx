@@ -7,7 +7,14 @@ import React, {
   useState,
   useEffect,
 } from 'react';
-import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  InteractionManager,
+} from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import LinearGradient from 'react-native-linear-gradient';
 // import {Icon} from 'react-native-paper';
@@ -25,187 +32,212 @@ interface Props {
   index?: number; // 添加索引参数
 }
 
-const SwipeableItem = forwardRef((props: Props, _) => {
-  const {id, question_markdown} = props.metadata;
-  const {onWillOpen, setRef, index = 0} = props;
-  const navigation = useNavigation<HomeStackNavigation>();
-  const swipeRef = React.useRef<any>();
+const SwipeableItem = React.memo(
+  forwardRef((props: Props, _) => {
+    const {id, question_markdown} = props.metadata;
+    const {onWillOpen, setRef, index = 0} = props;
+    const navigation = useNavigation<HomeStackNavigation>();
+    const swipeRef = React.useRef<any>();
 
-  // 音频播放状态
-  const [playbackInfo, setPlaybackInfo] = useState<AudioPlaybackInfo>({
-    currentItemId: null,
-    state: 'idle',
-    currentAudioIndex: 0,
-    totalAudios: 0,
-  });
+    // 音频播放状态
+    const [playbackInfo, setPlaybackInfo] = useState<AudioPlaybackInfo>({
+      currentItemId: null,
+      state: 'idle',
+      currentAudioIndex: 0,
+      totalAudios: 0,
+    });
 
-  // 当前项是否正在播放
-  const isCurrentlyPlaying =
-    playbackInfo.currentItemId === id && playbackInfo.state === 'playing';
-  const isCurrentlyPaused =
-    playbackInfo.currentItemId === id && playbackInfo.state === 'paused';
-  const hasAnyPlayback = isCurrentlyPlaying || isCurrentlyPaused;
+    // 当前项是否正在播放
+    const isCurrentlyPlaying =
+      playbackInfo.currentItemId === id && playbackInfo.state === 'playing';
+    const isCurrentlyPaused =
+      playbackInfo.currentItemId === id && playbackInfo.state === 'paused';
+    const hasAnyPlayback = isCurrentlyPlaying || isCurrentlyPaused;
 
-  // 把内部 swipeRef 抛给父组件
-  useImperativeHandle(_, () => swipeRef.current);
-  React.useEffect(() => {
-    setRef(swipeRef.current);
-  }, [setRef]);
+    // 把内部 swipeRef 抛给父组件
+    useImperativeHandle(_, () => swipeRef.current);
+    React.useEffect(() => {
+      setRef(swipeRef.current);
+    }, [setRef]);
 
-  // 监听音频播放状态变化
-  useEffect(() => {
-    const handlePlaybackUpdate = (info: AudioPlaybackInfo) => {
-      setPlaybackInfo(info);
-    };
+    // 监听音频播放状态变化
+    useEffect(() => {
+      const handlePlaybackUpdate = (info: AudioPlaybackInfo) => {
+        setPlaybackInfo(info);
+      };
 
-    AudioManager.addListener(id, handlePlaybackUpdate);
+      AudioManager.addListener(id, handlePlaybackUpdate);
 
-    // 初始化状态
-    setPlaybackInfo(AudioManager.getCurrentPlaybackInfo());
+      // 初始化状态
+      setPlaybackInfo(AudioManager.getCurrentPlaybackInfo());
 
-    return () => {
-      AudioManager.removeListener(id);
-    };
-  }, [id]);
+      return () => {
+        AudioManager.removeListener(id);
+      };
+    }, [id]);
 
-  /* 右侧按钮 - 美化版本 */
-  const RightActions = () => {
-    const buttons = [
-      {
-        label: '收藏',
-        icon: '♥',
-        gradientColors: ['#FF6B6B', '#FF8E8E'],
-        shadowColor: '#FF6B6B',
-      },
-      {
-        label: '编辑',
-        icon: '✎',
-        gradientColors: ['#4ECDC4', '#44A08D'],
-        shadowColor: '#4ECDC4',
-      },
-      {
-        label: '删除',
-        icon: '✕',
-        gradientColors: ['#FF6B6B', '#FF4757'],
-        shadowColor: '#FF6B6B',
-      },
-    ];
+    /* 右侧按钮 - 美化版本 */
+    const RightActions = () => {
+      const buttons = [
+        {
+          label: '收藏',
+          icon: '♥',
+          gradientColors: ['#FF6B6B', '#FF8E8E'],
+          shadowColor: '#FF6B6B',
+        },
+        {
+          label: '编辑',
+          icon: '✎',
+          gradientColors: ['#4ECDC4', '#44A08D'],
+          shadowColor: '#4ECDC4',
+        },
+        {
+          label: '删除',
+          icon: '✕',
+          gradientColors: ['#FF6B6B', '#FF4757'],
+          shadowColor: '#FF6B6B',
+        },
+      ];
 
-    return (
-      <View style={styles.rightActions}>
-        {buttons.map((button, idx) => (
-          <TouchableOpacity
-            key={idx}
-            style={[
-              styles.actionContainer,
-              idx === buttons.length - 1 && styles.lastAction,
-            ]}
-            onPress={() => console.log(`${button.label} ${id}`)}>
-            <LinearGradient
-              colors={button.gradientColors}
+      return (
+        <View style={styles.rightActions}>
+          {buttons.map((button, idx) => (
+            <TouchableOpacity
+              key={idx}
               style={[
-                styles.action,
-                {
-                  shadowColor: button.shadowColor,
-                  shadowOffset: {width: 0, height: 2},
-                  shadowOpacity: 0.25,
-                  shadowRadius: 4,
-                  elevation: 5,
-                },
-                idx === buttons.length - 1 && {
-                  borderTopRightRadius: 16,
-                  borderBottomRightRadius: 16,
-                },
+                styles.actionContainer,
+                idx === buttons.length - 1 && styles.lastAction,
               ]}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 1}}>
-              <View style={styles.actionContent}>
-                <Text style={styles.actionIcon}>{button.icon}</Text>
-                <Text style={styles.actionText}>{button.label}</Text>
-              </View>
-            </LinearGradient>
+              onPress={() => console.log(`${button.label} ${id}`)}>
+              <LinearGradient
+                colors={button.gradientColors}
+                style={[
+                  styles.action,
+                  {
+                    shadowColor: button.shadowColor,
+                    shadowOffset: {width: 0, height: 2},
+                    shadowOpacity: 0.25,
+                    shadowRadius: 4,
+                    elevation: 5,
+                  },
+                  idx === buttons.length - 1 && {
+                    borderTopRightRadius: 16,
+                    borderBottomRightRadius: 16,
+                  },
+                ]}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 1}}>
+                <View style={styles.actionContent}>
+                  <Text style={styles.actionIcon}>{button.icon}</Text>
+                  <Text style={styles.actionText}>{button.label}</Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          ))}
+        </View>
+      );
+    };
+
+    // 处理播放/暂停点击
+    const handlePlayPause = () => {
+      const audioFiles = props.metadata.getAudioFiles();
+
+      console.log('Audio files available:', audioFiles);
+
+      // 开始播放序列：题目 → 精简答案 → 详细解析
+      AudioManager.startPlayback(id, {
+        audio_question: audioFiles.audio_question,
+        audio_simple: audioFiles.audio_simple,
+        audio_analysis: audioFiles.audio_analysis,
+      });
+    };
+
+    // 处理列表项点击导航 - 高性能优化版本
+    const handleNavigateToDetail = React.useCallback(() => {
+      // 立即停止音频以提供即时反馈
+      AudioManager.stopCurrent();
+
+      // 🚀 性能优化：使用 requestAnimationFrame + InteractionManager 双重优化
+      // 确保在下一帧开始时导航，避免阻塞当前渲染
+      requestAnimationFrame(() => {
+        InteractionManager.runAfterInteractions(() => {
+          // 导航到详情页，传递当前项的索引
+          navigation.navigate(routeNameMap.detailScreen, {
+            id,
+            currentIndex: index, // 传递当前项的索引
+          });
+        });
+      });
+    }, [navigation, id, index]);
+    return (
+      <View style={styles.container}>
+        <Swipeable
+          ref={swipeRef}
+          renderRightActions={RightActions}
+          onSwipeableWillOpen={() => onWillOpen(id)}
+          friction={2}
+          rightThreshold={20}>
+          <TouchableOpacity
+            style={styles.row}
+            activeOpacity={0.8}
+            onPress={handleNavigateToDetail}>
+            <TouchableOpacity
+              onPress={handlePlayPause}
+              style={styles.playButton}>
+              {isCurrentlyPlaying ? (
+                <View style={styles.playingContainer}>
+                  <WaveformAnimation
+                    isPlaying={true}
+                    size={48}
+                    color="#4ECDC4"
+                  />
+                  <View style={styles.playingOverlay}>
+                    <Icon name="pause-circle" color="#4ECDC4" size={48} />
+                  </View>
+                </View>
+              ) : (
+                <Icon
+                  name="play-circle"
+                  color={hasAnyPlayback ? '#4ECDC4' : '#d2d2d2'}
+                  size={48}
+                />
+              )}
+              {/* 显示播放进度指示器 */}
+              {hasAnyPlayback && (
+                <View style={styles.progressIndicator}>
+                  <Text style={styles.progressText}>
+                    {playbackInfo.currentAudioIndex + 1}/
+                    {playbackInfo.totalAudios}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <View style={styles.textBox}>
+              <Text style={styles.title} numberOfLines={3} ellipsizeMode="tail">
+                {question_markdown}
+              </Text>
+            </View>
+            <View
+              style={{
+                backgroundColor: '#ffe8c7',
+                padding: 8,
+                borderRadius: 24,
+              }}>
+              <Icon name="lock" color="#ffb933" size={28}></Icon>
+            </View>
           </TouchableOpacity>
-        ))}
+        </Swipeable>
       </View>
     );
-  };
-
-  // 处理播放/暂停点击
-  const handlePlayPause = () => {
-    const audioFiles = props.metadata.getAudioFiles();
-
-    console.log('Audio files available:', audioFiles);
-
-    // 开始播放序列：题目 → 精简答案 → 详细解析
-    AudioManager.startPlayback(id, {
-      audio_question: audioFiles.audio_question,
-      audio_simple: audioFiles.audio_simple,
-      audio_analysis: audioFiles.audio_analysis,
-    });
-  };
-
-  // 处理列表项点击导航
-  const handleNavigateToDetail = () => {
-    // 在导航之前停止当前播放的音频
-    AudioManager.stopCurrent();
-
-    // 导航到详情页，传递当前项的索引
-    navigation.navigate(routeNameMap.detailScreen, {
-      id,
-      currentIndex: index, // 传递当前项的索引
-    });
-  };
-  return (
-    <View style={styles.container}>
-      <Swipeable
-        ref={swipeRef}
-        renderRightActions={RightActions}
-        onSwipeableWillOpen={() => onWillOpen(id)}
-        friction={2}
-        rightThreshold={20}>
-        <TouchableOpacity
-          style={styles.row}
-          activeOpacity={0.8}
-          onPress={handleNavigateToDetail}>
-          <TouchableOpacity onPress={handlePlayPause} style={styles.playButton}>
-            {isCurrentlyPlaying ? (
-              <View style={styles.playingContainer}>
-                <WaveformAnimation isPlaying={true} size={48} color="#4ECDC4" />
-                <View style={styles.playingOverlay}>
-                  <Icon name="pause-circle" color="#4ECDC4" size={48} />
-                </View>
-              </View>
-            ) : (
-              <Icon
-                name="play-circle"
-                color={hasAnyPlayback ? '#4ECDC4' : '#d2d2d2'}
-                size={48}
-              />
-            )}
-            {/* 显示播放进度指示器 */}
-            {hasAnyPlayback && (
-              <View style={styles.progressIndicator}>
-                <Text style={styles.progressText}>
-                  {playbackInfo.currentAudioIndex + 1}/
-                  {playbackInfo.totalAudios}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-          <View style={styles.textBox}>
-            <Text style={styles.title} numberOfLines={3} ellipsizeMode="tail">
-              {question_markdown}
-            </Text>
-          </View>
-          <View
-            style={{backgroundColor: '#ffe8c7', padding: 8, borderRadius: 24}}>
-            <Icon name="lock" color="#ffb933" size={28}></Icon>
-          </View>
-        </TouchableOpacity>
-      </Swipeable>
-    </View>
-  );
-});
+  }),
+  (prevProps, nextProps) => {
+    // 🚀 性能优化：防止不必要的重新渲染
+    return (
+      prevProps.metadata.id === nextProps.metadata.id &&
+      prevProps.index === nextProps.index
+    );
+  },
+);
 
 /* 美化后的样式 */
 const styles = StyleSheet.create({

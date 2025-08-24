@@ -2,8 +2,8 @@
 import Quiz3DCard from '@/component/Quiz3DCard';
 import {routeNameMap} from '@/navigation/constant';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
-import React from 'react';
-import {View, Text, StyleSheet, Button} from 'react-native';
+import React, {Suspense} from 'react';
+import {View, Text, StyleSheet, ActivityIndicator} from 'react-native';
 import {HomeStackParamList} from '@/navigation/Types';
 
 type DetailScreenRouteProp = RouteProp<
@@ -23,7 +23,18 @@ export default function DetailScreen() {
 
   return (
     <View style={styles.center}>
-      <Quiz3DCard initialAnsweredCount={currentIndex} startFromQuestion={id} />
+      <Suspense
+        fallback={
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#1da1f2" />
+            <Text style={styles.loadingText}>加载中...</Text>
+          </View>
+        }>
+        <Quiz3DCard
+          initialAnsweredCount={currentIndex}
+          startFromQuestion={id}
+        />
+      </Suspense>
     </View>
   );
 }
@@ -31,4 +42,15 @@ export default function DetailScreen() {
 const styles = StyleSheet.create({
   center: {flex: 1, alignItems: 'center', justifyContent: 'center'},
   title: {fontSize: 24},
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#657786',
+    fontWeight: '500',
+  },
 });
