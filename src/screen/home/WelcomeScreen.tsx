@@ -22,7 +22,7 @@ export default function WelcomeScreen() {
         backgroundColor: '#f8f8f8',
       }}>
       <Image
-        source={require('../../asset/image/work.png')}
+        source={require('../../assets/image/work.png')}
         style={[
           {
             width: width - 30,

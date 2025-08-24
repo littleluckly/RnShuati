@@ -7,25 +7,20 @@ import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import LinearGradient from 'react-native-linear-gradient';
 // import {Icon} from 'react-native-paper';
 import Icon from '@react-native-vector-icons/material-design-icons';
-import Tts from 'react-native-tts';
 import {routeNameMap} from '@/navigation/constant';
 import {HomeStackNavigation} from '@/navigation/Types';
-
-// 初始化 TTS
-Tts.setDefaultLanguage('zh-CN'); // 设置中文
-Tts.setDefaultRate(0.5); // 语速：0.1 ~ 1.0
-Tts.setDefaultPitch(1.0); // 音调
+import {QuestionMeta} from '@/models/QuestionMeta';
+import Sound from 'react-native-sound';
 
 interface Props {
-  id: string;
-  title: string;
-  subtitle?: string;
+  metadata: QuestionMeta;
   onWillOpen: (id: string) => void;
   setRef: (ref: any) => void;
 }
 
 const SwipeableItem = forwardRef((props: Props, _) => {
-  const {id, title, onWillOpen, setRef} = props;
+  const {id, question_markdown} = props.metadata;
+  const {onWillOpen, setRef} = props;
   const navigation = useNavigation<HomeStackNavigation>();
   const swipeRef = React.useRef<any>();
 
@@ -97,12 +92,27 @@ const SwipeableItem = forwardRef((props: Props, _) => {
     );
   };
 
+  let beepSound: Sound | null = null;
   const handleSpeak = () => {
-    Tts.speak(title);
+    const filename = props.metadata.getAudioFiles().audio_question;
+    console.log('filename', filename);
+    beepSound = new Sound(filename, Sound.MAIN_BUNDLE, err => {
+      if (err) {
+        console.log('Failed to load the sound', err);
+        return;
+      }
+      beepSound?.play(() => {
+        beepSound?.release();
+        beepSound = null;
+      });
+      console.log('Sound played');
+    });
+    // Tts.speak(question);
   };
 
   const handleStop = () => {
-    Tts.stop();
+    beepSound?.pause();
+    // Tts.stop();
   };
   return (
     <View style={styles.container}>
@@ -122,7 +132,7 @@ const SwipeableItem = forwardRef((props: Props, _) => {
           </TouchableOpacity>
           <View style={styles.textBox}>
             <Text style={styles.title} numberOfLines={3} ellipsizeMode="tail">
-              {title}
+              {question_markdown}
             </Text>
           </View>
           <View
