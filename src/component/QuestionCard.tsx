@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
 
   // 问题区域 - 设置最大高度，自适应内容
   questionContent: {
-    paddingVertical: 8,
+    paddingTop: 8,
     paddingHorizontal: 16,
     maxHeight: 60, // 最大高度：2行文本 + padding
   },
