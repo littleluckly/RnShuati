@@ -14,6 +14,7 @@ import {QuestionCardProps} from './types';
 import Markdown from 'react-native-markdown-display';
 import GlobalStyles from '@/styles/globalStyles';
 import {showSuccessToast, showInfoToast} from '@/utils/toastUtils';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 const {width, height} = Dimensions.get('window');
 
@@ -33,6 +34,7 @@ export default React.memo(
     const [showShort, setShowShort] = useState(false);
     const [showFull, setShowFull] = useState(false);
     const [favorite, setFavorite] = useState(initialFavorite);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const handleFavorite = useCallback(() => {
       setFavorite(prev => !prev);
@@ -54,10 +56,20 @@ export default React.memo(
     }, [onDislike]);
 
     const handleDelete = useCallback(() => {
+      // ✅ 显示二次确认对话框
+      setShowDeleteConfirm(true);
+    }, []);
+
+    const handleConfirmDelete = useCallback(() => {
       onDelete?.(id);
+      setShowDeleteConfirm(false);
       // ✅ 使用封装的 Toast 工具
       showSuccessToast('已删除');
     }, [onDelete, id]);
+
+    const handleCancelDelete = useCallback(() => {
+      setShowDeleteConfirm(false);
+    }, []);
 
     const cardStyle = useMemo(
       () => [styles.card, {backgroundColor: theme.colors.surface}, style],
@@ -134,6 +146,17 @@ export default React.memo(
             <IconButton icon="content-copy" onPress={handleCopy} />
           </View>
         </View>
+
+        {/* ✅ 删除确认对话框 */}
+        <ConfirmDialog
+          visible={showDeleteConfirm}
+          title="确定要删除这道题目吗？"
+          message="删除后可在「我的页面 - 已删除菜单」中找回。"
+          confirmText="删除"
+          cancelText="取消"
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
       </View>
     );
   },
