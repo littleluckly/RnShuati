@@ -11,11 +11,12 @@ import {
   useTheme,
 } from 'react-native-paper';
 import {QuestionCardProps} from './types';
+import Markdown from 'react-native-markdown-display';
 import GlobalStyles from '@/styles/globalStyles';
 
 const {width, height} = Dimensions.get('window');
 
-const QuestionCard = React.memo(
+export default React.memo(
   ({
     id,
     question,
@@ -33,6 +34,9 @@ const QuestionCard = React.memo(
     const [favorite, setFavorite] = useState(initialFavorite);
     const [snack, setSnack] = useState(false);
     const [snackMsg, setSnackMsg] = useState('');
+
+    // 动态问题文本高度状态
+    const [questionHeight, setQuestionHeight] = useState(44); // 默认为2行高度
 
     const handleFavorite = useCallback(() => {
       setFavorite(prev => !prev);
@@ -69,19 +73,35 @@ const QuestionCard = React.memo(
       [theme.colors.primary],
     );
 
-    // 计算 scrollableAnswerArea 的高度
+    // 动态计算 scrollableAnswerArea 的高度 - 基于实际问题文本高度
     const scrollableAreaHeight = useMemo(() => {
       // 总卡片高度减去固定区域的高度
-      const fixedQuestionAreaHeight = 60; // 估算或根据实际样式计算
-      const fixedActionsAreaHeight = 70;
-      const paddingAndSpacing = 20; // 额外的内边距和间距
-      return (
-        height -
-        220 -
-        fixedQuestionAreaHeight -
-        fixedActionsAreaHeight -
-        paddingAndSpacing
-      );
+      const questionContentPadding = 16; // questionContent 的上下 padding (8*2)
+      const topDividerHeight = 1; // 上方 Divider 高度
+      const bottomDividerHeight = 1; // 下方 Divider 高度
+      const fixedActionsAreaHeight = 60; // 操作区域高度 (增加到60px确保足够空间)
+
+      // 使用实际测量的问题文本高度
+      const actualQuestionAreaHeight = questionHeight + questionContentPadding;
+
+      const totalCardHeight = height - 220; // 卡片总高度
+      const usedHeight =
+        actualQuestionAreaHeight +
+        topDividerHeight +
+        bottomDividerHeight +
+        fixedActionsAreaHeight;
+      const availableScrollHeight = totalCardHeight - usedHeight;
+
+      // 确保最小高度，防止负数
+      return Math.max(availableScrollHeight, 100);
+    }, [questionHeight]);
+
+    // 处理问题文本高度测量
+    const handleQuestionLayout = useCallback((event: any) => {
+      const {height: measuredHeight} = event.nativeEvent.layout;
+      // 更新问题文本的实际高度
+      setQuestionHeight(measuredHeight);
+      console.log('📏 问题文本高度测量:', measuredHeight);
     }, []);
 
     return (
@@ -91,10 +111,12 @@ const QuestionCard = React.memo(
             variant="titleMedium"
             style={styles.question}
             numberOfLines={2}
-            ellipsizeMode="tail">
+            ellipsizeMode="tail"
+            onLayout={handleQuestionLayout}>
             {question}
           </Text>
         </View>
+        <Divider bold style={[GlobalStyles.shadow, {elevation: 4}]} />
 
         {/* 可滚动答案区域 */}
         <View
@@ -110,26 +132,10 @@ const QuestionCard = React.memo(
             showsVerticalScrollIndicator={true}
             scrollEventThrottle={16}
             nestedScrollEnabled={true}
-            keyboardShouldPersistTaps="handled"
-            onScroll={event => {
-              console.log(
-                '📝 ScrollView滚动事件触发:',
-                event.nativeEvent.contentOffset.y,
-              );
-            }}
-            onContentSizeChange={(contentWidth, contentHeight) => {
-              console.log('📏 ScrollView内容尺寸变化:', {
-                contentWidth,
-                contentHeight,
-              });
-            }}
-            onLayout={event => {
-              console.log('📐 ScrollView布局信息:', event.nativeEvent.layout);
-            }}>
+            keyboardShouldPersistTaps="handled">
             {/* 精简答案 */}
             {shortAnswer && (
               <>
-                <Divider bold style={{marginBottom: 12}} />
                 <View style={styles.contentPadding}>
                   <Text
                     variant="labelLarge"
@@ -137,9 +143,10 @@ const QuestionCard = React.memo(
                     onPress={() => setShowShort(!showShort)}>
                     {'精简答案'}
                   </Text>
-                  <Text variant="bodyMedium" style={styles.answer}>
+                  {/* <Text variant="bodyMedium" style={styles.answer}>
                     {shortAnswer}
-                  </Text>
+                  </Text> */}
+                  <Markdown>{shortAnswer}</Markdown>
                 </View>
               </>
             )}
@@ -147,7 +154,7 @@ const QuestionCard = React.memo(
             {/* 详细解析 */}
             {fullAnswer && (
               <>
-                <Divider bold style={{marginVertical: 12}} />
+                {/* <Divider bold style={{marginVertical: 12}} /> */}
                 <View style={styles.contentPadding}>
                   <Text
                     variant="labelLarge"
@@ -155,43 +162,19 @@ const QuestionCard = React.memo(
                     onPress={() => setShowFull(!showFull)}>
                     {'详细解析'}
                   </Text>
-                  <Text variant="bodyMedium" style={styles.answer}>
+                  {/* <Text variant="bodyMedium" style={styles.answer}>
                     {fullAnswer}
-                  </Text>
+                  </Text> */}
+
+                  <Markdown>{fullAnswer}</Markdown>
                 </View>
               </>
             )}
-
-            {/* 测试用的额外内容，确保ScrollView有足够高度可以滚动 */}
-            <View style={styles.contentPadding}>
-              <Text style={styles.answer}>
-                🧪 测试滚动内容 -
-                这里是额外添加的内容来测试ScrollView是否可以正常滚动。
-                如果你能看到这段文字并且可以上下滚动，说明ScrollView工作正常。
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam, quis nostrud exercitation ullamco laboris
-                nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-                in reprehenderit in voluptate velit esse cillum dolore eu fugiat
-                nulla pariatur. Excepteur sint occaecat cupidatat non proident,
-                sunt in culpa qui officia deserunt mollit anim id est laborum.
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-                accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
-                quae ab illo inventore veritatis et quasi architecto beatae
-                vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia
-                voluptas sit aspernatur aut odit aut fugit, sed quia
-                consequuntur magni dolores eos qui ratione voluptatem sequi
-                nesciunt. At vero eos et accusamus et iusto odio dignissimos
-                ducimus qui blanditiis praesentium voluptatum deleniti atque
-                corrupti quos dolores et quas molestias excepturi sint occaecati
-                cupiditate non provident.
-              </Text>
-            </View>
           </ScrollView>
         </View>
 
-        {/* 固定高度操作区域 (60px) */}
-        <View style={styles.fixedActionsArea}>
+        {/* 固定高度操作区域 - 绝对定位在底部 */}
+        <View style={[styles.fixedActionsArea]}>
           <View style={styles.actions}>
             <IconButton
               icon={favorite ? 'star' : 'star-outline'}
@@ -204,12 +187,12 @@ const QuestionCard = React.memo(
         </View>
 
         {/* 轻提示 */}
-        <Snackbar
+        {/* <Snackbar
           visible={snack}
           onDismiss={() => setSnack(false)}
           duration={800}>
           {snackMsg}
-        </Snackbar>
+        </Snackbar> */}
       </View>
     );
   },
@@ -229,6 +212,7 @@ const styles = StyleSheet.create({
     // 调整高度：计数器(60px) + 间距(12px) + 额外空间(18px) + 底部空间(30px) = 120px
     height: height - 220,
     flexDirection: 'column',
+    position: 'relative', // 为绝对定位的子元素提供参考
     backgroundColor: 'white',
     borderRadius: 12,
     shadowColor: '#000',
@@ -271,9 +255,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  // 固定高度操作区域 (70px) - 增加高度避免被压缩
+  // 固定高度操作区域 - 使用绝对定位确保始终在底部
   fixedActionsArea: {
-    height: 70,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+    backgroundColor: 'white', // 与卡片背景一致
+    justifyContent: 'center',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    // 添加上边框以与内容区分离
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
   },
   sectionTitle: {
     fontWeight: '600',
@@ -290,5 +285,3 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
 });
-
-export default QuestionCard;
