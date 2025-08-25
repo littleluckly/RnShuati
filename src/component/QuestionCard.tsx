@@ -1,9 +1,9 @@
 'use client';
 
 import React, {useState, useCallback, useMemo} from 'react';
-import {StyleSheet, Share, Dimensions, ScrollView, View} from 'react-native';
+import {StyleSheet, Share, Dimensions, View} from 'react-native';
+import {ScrollView} from 'react-native-gesture-handler';
 import {
-  Card,
   Text,
   IconButton,
   Divider,
@@ -69,12 +69,23 @@ const QuestionCard = React.memo(
       [theme.colors.primary],
     );
 
-    const scrollableAnswerAreaHeight = useMemo(() => {
-      return Dimensions.get('window').height - 360;
+    // 计算 scrollableAnswerArea 的高度
+    const scrollableAreaHeight = useMemo(() => {
+      // 总卡片高度减去固定区域的高度
+      const fixedQuestionAreaHeight = 60; // 估算或根据实际样式计算
+      const fixedActionsAreaHeight = 70;
+      const paddingAndSpacing = 20; // 额外的内边距和间距
+      return (
+        height -
+        220 -
+        fixedQuestionAreaHeight -
+        fixedActionsAreaHeight -
+        paddingAndSpacing
+      );
     }, []);
 
     return (
-      <Card style={cardStyle}>
+      <View style={cardStyle} pointerEvents="auto">
         <View style={styles.questionContent}>
           <Text
             variant="titleMedium"
@@ -89,19 +100,37 @@ const QuestionCard = React.memo(
         <View
           style={[
             styles.scrollableAnswerArea,
-            GlobalStyles.border,
-            {minHeight: scrollableAnswerAreaHeight},
-          ]}>
+            {height: scrollableAreaHeight}, // ✅ 明确设置高度
+          ]}
+          pointerEvents="auto">
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             bounces={true}
-            showsVerticalScrollIndicator={true}>
+            showsVerticalScrollIndicator={true}
+            scrollEventThrottle={16}
+            nestedScrollEnabled={true}
+            keyboardShouldPersistTaps="handled"
+            onScroll={event => {
+              console.log(
+                '📝 ScrollView滚动事件触发:',
+                event.nativeEvent.contentOffset.y,
+              );
+            }}
+            onContentSizeChange={(contentWidth, contentHeight) => {
+              console.log('📏 ScrollView内容尺寸变化:', {
+                contentWidth,
+                contentHeight,
+              });
+            }}
+            onLayout={event => {
+              console.log('📐 ScrollView布局信息:', event.nativeEvent.layout);
+            }}>
             {/* 精简答案 */}
             {shortAnswer && (
               <>
                 <Divider bold style={{marginBottom: 12}} />
-                <Card.Content>
+                <View style={styles.contentPadding}>
                   <Text
                     variant="labelLarge"
                     style={sectionTitleStyle}
@@ -111,7 +140,7 @@ const QuestionCard = React.memo(
                   <Text variant="bodyMedium" style={styles.answer}>
                     {shortAnswer}
                   </Text>
-                </Card.Content>
+                </View>
               </>
             )}
 
@@ -119,7 +148,7 @@ const QuestionCard = React.memo(
             {fullAnswer && (
               <>
                 <Divider bold style={{marginVertical: 12}} />
-                <Card.Content>
+                <View style={styles.contentPadding}>
                   <Text
                     variant="labelLarge"
                     style={sectionTitleStyle}
@@ -129,15 +158,41 @@ const QuestionCard = React.memo(
                   <Text variant="bodyMedium" style={styles.answer}>
                     {fullAnswer}
                   </Text>
-                </Card.Content>
+                </View>
               </>
             )}
+
+            {/* 测试用的额外内容，确保ScrollView有足够高度可以滚动 */}
+            <View style={styles.contentPadding}>
+              <Text style={styles.answer}>
+                🧪 测试滚动内容 -
+                这里是额外添加的内容来测试ScrollView是否可以正常滚动。
+                如果你能看到这段文字并且可以上下滚动，说明ScrollView工作正常。
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+                enim ad minim veniam, quis nostrud exercitation ullamco laboris
+                nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
+                in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+                nulla pariatur. Excepteur sint occaecat cupidatat non proident,
+                sunt in culpa qui officia deserunt mollit anim id est laborum.
+                Sed ut perspiciatis unde omnis iste natus error sit voluptatem
+                accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
+                quae ab illo inventore veritatis et quasi architecto beatae
+                vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia
+                voluptas sit aspernatur aut odit aut fugit, sed quia
+                consequuntur magni dolores eos qui ratione voluptatem sequi
+                nesciunt. At vero eos et accusamus et iusto odio dignissimos
+                ducimus qui blanditiis praesentium voluptatum deleniti atque
+                corrupti quos dolores et quas molestias excepturi sint occaecati
+                cupiditate non provident.
+              </Text>
+            </View>
           </ScrollView>
         </View>
 
         {/* 固定高度操作区域 (60px) */}
         <View style={styles.fixedActionsArea}>
-          <Card.Actions style={styles.actions}>
+          <View style={styles.actions}>
             <IconButton
               icon={favorite ? 'star' : 'star-outline'}
               iconColor={favorite ? theme.colors.primary : undefined}
@@ -145,7 +200,7 @@ const QuestionCard = React.memo(
             />
             <IconButton icon="trash-can-outline" onPress={handleDelete} />
             <IconButton icon="content-copy" onPress={handleCopy} />
-          </Card.Actions>
+          </View>
         </View>
 
         {/* 轻提示 */}
@@ -155,7 +210,7 @@ const QuestionCard = React.memo(
           duration={800}>
           {snackMsg}
         </Snackbar>
-      </Card>
+      </View>
     );
   },
   (prevProps: QuestionCardProps, nextProps: QuestionCardProps) => {
@@ -174,6 +229,16 @@ const styles = StyleSheet.create({
     // 调整高度：计数器(60px) + 间距(12px) + 额外空间(18px) + 底部空间(30px) = 120px
     height: height - 220,
     flexDirection: 'column',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
   fixedQuestionArea: {
     justifyContent: 'center',
@@ -193,8 +258,7 @@ const styles = StyleSheet.create({
   },
   // 可滚动答案区域 - 占用剩余空间
   scrollableAnswerArea: {
-    flex: 1, // 占用题目区域和操作区域之间的所有剩余空间
-    minHeight: 200, // 设置最小高度确保答案区域可见
+    // flex: 1, // 占用题目区域和操作区域之间的所有剩余空间
     backgroundColor: '#fafafa', // 添加背景色以便调试和视觉区分
   },
   scrollView: {
@@ -202,6 +266,10 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 20, // 底部留白，避免内容贴边
+  },
+  contentPadding: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   // 固定高度操作区域 (70px) - 增加高度避免被压缩
   fixedActionsArea: {
@@ -216,6 +284,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   actions: {
+    flexDirection: 'row',
     justifyContent: 'flex-end',
     paddingHorizontal: 16,
     paddingVertical: 8,
