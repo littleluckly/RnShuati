@@ -498,7 +498,7 @@ const Quiz3DCard = ({
     <>
       <ProgressCounter
         current={remainingCards}
-        total={getQuestionData().length} // 使用缓存的数据源
+        total={remainingCards + answeredCount} // ✅ 简单计算：剩余 + 已答 = 总数
         answered={answeredCount}
       />
       <View style={styles.container}>
