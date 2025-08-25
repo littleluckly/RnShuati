@@ -55,21 +55,14 @@ export default React.memo(
       showInfoToast('已点踩');
     }, [onDislike]);
 
-    const handleDelete = useCallback(() => {
-      // ✅ 显示二次确认对话框
-      setShowDeleteConfirm(true);
-    }, []);
-
     const handleConfirmDelete = useCallback(() => {
       onDelete?.(id);
-      setShowDeleteConfirm(false);
       // ✅ 使用封装的 Toast 工具
-      showSuccessToast('已删除');
+      showSuccessToast({
+        message: '已删除，可以我的->已删除中找回',
+        duration: 1500,
+      });
     }, [onDelete, id]);
-
-    const handleCancelDelete = useCallback(() => {
-      setShowDeleteConfirm(false);
-    }, []);
 
     const cardStyle = useMemo(
       () => [styles.card, {backgroundColor: theme.colors.surface}, style],
@@ -142,21 +135,13 @@ export default React.memo(
               iconColor={favorite ? theme.colors.primary : undefined}
               onPress={handleFavorite}
             />
-            <IconButton icon="trash-can-outline" onPress={handleDelete} />
+            <IconButton
+              icon="trash-can-outline"
+              onPress={handleConfirmDelete}
+            />
             <IconButton icon="content-copy" onPress={handleCopy} />
           </View>
         </View>
-
-        {/* ✅ 删除确认对话框 */}
-        <ConfirmDialog
-          visible={showDeleteConfirm}
-          title="确定要删除这道题目吗？"
-          message="删除后可在「我的页面 - 已删除菜单」中找回。"
-          confirmText="删除"
-          cancelText="取消"
-          onConfirm={handleConfirmDelete}
-          onCancel={handleCancelDelete}
-        />
       </View>
     );
   },

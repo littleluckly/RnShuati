@@ -80,11 +80,12 @@ export const showToast = ({
  * @param message 提示消息
  * @param title 标题（可选）
  */
-export const showSuccessToast = (message: string, title?: string) => {
+export const showSuccessToast = ({ message, title, duration }: { message: string, title?: string, duration?: number }) => {
   showToast({
     title: title || '成功',
     message,
     type: 'success',
+    duration
   });
 };
 
