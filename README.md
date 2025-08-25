@@ -1,72 +1,74 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# TestApp React Native 项目
 
-# Getting Started
+这是一个新的 [**React Native**](https://reactnative.dev) 项目，使用 [`@react-native-community/cli`](https://github.com/react-native-community/cli) 脚手架创建。
 
-> **Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+# 开始使用
 
-## Step 1: Start the Metro Server
+> **注意**: 在继续之前，请确保您已完成 [React Native - 环境设置](https://reactnative.dev/docs/environment-setup) 说明中"创建新应用程序"步骤之前的所有内容。
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+## 步骤 1: 启动 Metro 服务器
 
-To start Metro, run the following command from the _root_ of your React Native project:
+首先，您需要启动 **Metro**，这是 React Native 自带的 JavaScript _打包工具_。
+
+要启动 Metro，请从 React Native 项目的 _根目录_ 运行以下命令：
 
 ```bash
-# using npm
+# 使用 npm
 npm start
 
-# OR using Yarn
+# 或者使用 Yarn
 yarn start
 ```
 
-## Step 2: Start your Application
+## 步骤 2: 启动您的应用程序
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
+让 Metro 打包工具在其 _自己的终端_ 中运行。从 React Native 项目的 _根目录_ 打开一个 _新的终端_。运行以下命令来启动您的 _Android_ 或 _iOS_ 应用：
 
-### For Android
+### Android 版本
 
 ```bash
-# using npm
+# 使用 npm
 npm run android
 
-# OR using Yarn
+# 或者使用 Yarn
 yarn android
 ```
 
-### For iOS
+### iOS 版本
 
 ```bash
-# using npm
+# 使用 npm
 npm run ios
 
-# OR using Yarn
+# 或者使用 Yarn
 yarn ios
 ```
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+如果一切设置 _正确_，您应该很快就能在 _Android 模拟器_ 或 _iOS 模拟器_ 中看到您的新应用运行，前提是您已正确设置了模拟器。
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+这是运行应用的一种方式——您也可以分别从 Android Studio 和 Xcode 中直接运行它。
 
-## Step 3: Modifying your App
+## 步骤 3: 修改您的应用
 
-Now that you have successfully run the app, let's modify it.
+现在您已经成功运行了应用，让我们来修改它。
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+1. 在您选择的文本编辑器中打开 `App.tsx` 并编辑一些行。
+2. **Android**: 按 <kbd>R</kbd> 键两次或从 **开发者菜单** 中选择 **"重新加载"** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows 和 Linux) 或 <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS)) 来查看您的更改！
 
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+   **iOS**: 在 iOS 模拟器中按 <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> 重新加载应用并查看您的更改！
 
-## Congratulations! :tada:
+## 恭喜！ :tada:
 
-You've successfully run and modified your React Native App. :partying_face:
+您已成功运行并修改了您的 React Native 应用。 :partying_face:
 
-### Now what?
+### 接下来做什么？
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
+- 如果您想将此新的 React Native 代码添加到现有应用程序中，请查看 [集成指南](https://reactnative.dev/docs/integration-with-existing-apps)。
+- 如果您想了解更多关于 React Native 的信息，请查看 [React Native 介绍](https://reactnative.dev/docs/getting-started)。
 
-# Troubleshooting
+# 故障排除
 
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+如果您无法使其正常工作，请查看 [故障排除](https://reactnative.dev/docs/troubleshooting) 页面。
 
 #### 字体图标问题
 
@@ -183,12 +185,12 @@ pip install edge-tts
 deactivate
 ```
 
-# Learn More
+# 了解更多
 
-To learn more about React Native, take a look at the following resources:
+要了解更多关于 React Native 的信息，请查看以下资源：
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+- [React Native 官网](https://reactnative.dev) - 了解更多关于 React Native 的信息。
+- [入门指南](https://reactnative.dev/docs/environment-setup) - React Native **概述**以及如何设置您的环境。
+- [学习基础知识](https://reactnative.dev/docs/getting-started) - React Native **基础知识**的**引导教程**。
+- [博客](https://reactnative.dev/blog) - 阅读最新的官方 React Native **博客**文章。
+- [`@facebook/react-native`](https://github.com/facebook/react-native) - React Native 的开源 GitHub **代码库**。
