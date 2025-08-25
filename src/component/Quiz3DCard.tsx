@@ -32,6 +32,7 @@ import Toast from 'react-native-toast-message';
 import {ProgressCounterProps, SwipeableCardProps} from './types';
 import metadata from '@/data/importQuestion';
 import {QuestionMeta} from '@/models/QuestionMeta';
+import {showSwipeLimitToast} from '@/utils/toastUtils';
 
 const {width, height} = Dimensions.get('window');
 
@@ -118,38 +119,10 @@ const SwipeableCard = React.memo(
       console.log(`🔄 卡片 ${cardId} 重置了移除标记`);
     }, [cardId]);
 
-    // 显示边界提示
-    const showSwipeLimitToast = () => {
-      // 显示提示
-      Toast.show({
-        type: 'info', // 内置类型：success/error/info
-        text1: '提示',
-        text2: '已经是第一张卡片啦',
-        position: 'top', // 顶部显示
-        visibilityTime: 2000, // 显示2秒
-        autoHide: true,
-        // 自定义样式
-        // @ts-ignore 忽略类型检查，因为 ToastShowParams 中可能缺少 customStyles 属性
-        customStyles: {
-          container: {
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            borderRadius: 20,
-            paddingVertical: 10,
-            paddingHorizontal: 16,
-          },
-          text1: {
-            color: '#fff',
-            fontSize: 14,
-            fontWeight: '500',
-            marginBottom: 4,
-          },
-          text2: {
-            color: '#fff',
-            fontSize: 13,
-          },
-        },
-      });
-    };
+    // 显示边界提示 - 使用封装的工具函数
+    // const showSwipeLimitToast = () => {
+    //   // 已移至 @/utils/toastUtils 中统一管理
+    // };
 
     const gesture = useMemo(
       () =>

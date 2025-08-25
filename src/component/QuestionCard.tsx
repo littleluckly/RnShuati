@@ -13,6 +13,7 @@ import {
 import {QuestionCardProps} from './types';
 import Markdown from 'react-native-markdown-display';
 import GlobalStyles from '@/styles/globalStyles';
+import {showSuccessToast, showInfoToast} from '@/utils/toastUtils';
 
 const {width, height} = Dimensions.get('window');
 
@@ -32,32 +33,30 @@ export default React.memo(
     const [showShort, setShowShort] = useState(false);
     const [showFull, setShowFull] = useState(false);
     const [favorite, setFavorite] = useState(initialFavorite);
-    const [snack, setSnack] = useState(false);
-    const [snackMsg, setSnackMsg] = useState('');
 
     const handleFavorite = useCallback(() => {
       setFavorite(prev => !prev);
       onToggleFavorite?.(!favorite);
-      setSnackMsg(!favorite ? '已收藏' : '已取消收藏');
-      setSnack(true);
+      // ✅ 使用封装的 Toast 工具
+      showSuccessToast(!favorite ? '已收藏' : '已取消收藏');
     }, [favorite, onToggleFavorite]);
 
     const handleCopy = useCallback(() => {
       Share.share({message: `${question}\n\n${fullAnswer}`});
-      setSnackMsg('已复制到分享');
-      setSnack(true);
+      // ✅ 使用封装的 Toast 工具
+      showInfoToast('已复制到分享');
     }, [question, fullAnswer]);
 
     const handleDislike = useCallback(() => {
       onDislike?.();
-      setSnackMsg('已点踩1');
-      setSnack(true);
+      // ✅ 使用封装的 Toast 工具
+      showInfoToast('已点踩');
     }, [onDislike]);
 
     const handleDelete = useCallback(() => {
       onDelete?.(id);
-      setSnackMsg('已删除');
-      setSnack(true);
+      // ✅ 使用封装的 Toast 工具
+      showSuccessToast('已删除');
     }, [onDelete, id]);
 
     const cardStyle = useMemo(
