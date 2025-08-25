@@ -294,7 +294,7 @@ const SwipeableCard = React.memo(
       }
 
       return {
-        transform: [{translateY: stackIndex * 4}, {translateX: stackIndex * 2}],
+        transform: [{translateY: stackIndex * 4}, {translateX: stackIndex * 4}],
         opacity: Math.max(0.3, 1 - stackIndex * 0.15),
       };
     }, [isActive, index]);
