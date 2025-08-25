@@ -3,6 +3,7 @@
   "compilerOptions": {
     // ... 其他配置
     "baseUrl": "./", // 基准路径，通常为项目根目录
+    "typeRoots": ["./types", "./node_modules/@types"], // 包含自定义类型声明
     "paths": {
       "@/*": ["src/*"], // 将 @/* 映射到 src/* 下的所有文件
       // 与 babel-plugin-module-resolver 的配置保持一致

@@ -17,8 +17,16 @@ export default function ProfileScreen() {
           paddingVertical: 30,
         }}>
         <View
-          style={{padding: 0.5, backgroundColor: '#f2f2f2', borderRadius: 48}}>
-          <Ionicons name="person-circle-outline" size={96}></Ionicons>
+          style={{
+            padding: 0.5,
+            backgroundColor: '#f2f2f2',
+            width: 96,
+            height: 96,
+            borderRadius: 48,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <Ionicons name="person-circle-outline" size={96} color="#666" />
         </View>
         <View
           style={{
@@ -32,61 +40,30 @@ export default function ProfileScreen() {
         </View>
       </View>
       <View style={styles.setItem}>
-        <Ionicons name="heart" size={24} style={{marginRight: 6}}></Ionicons>
-        <Text>我的收藏</Text>
         <Ionicons
-          name="chevron-forward-outline"
+          name="heart"
           size={24}
-          style={{
-            alignSelf: 'right',
-            alignContent: 'right',
-            marginLeft: 'auto',
-          }}></Ionicons>
+          color="#e74c3c"
+          style={{marginRight: 6}}
+        />
+        <Text style={{flex: 1}}>我的收藏</Text>
+        <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
       </View>
       <View style={styles.setItem}>
         <Ionicons
           name="trash-outline"
           size={24}
           style={{marginRight: 6}}></Ionicons>
-        <Text>我的删除</Text>
-        <Ionicons
-          name="chevron-forward-outline"
-          size={24}
-          style={{
-            alignSelf: 'right',
-            alignContent: 'right',
-            marginLeft: 'auto',
-          }}></Ionicons>
+        <Text style={{flex: 1}}>我的删除</Text>
+        <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
       </View>
       <View style={styles.setItem}>
         <Ionicons
           name="create-outline"
           size={24}
           style={{marginRight: 6}}></Ionicons>
-        <Text>我的编辑</Text>
-        <Ionicons
-          name="chevron-forward-outline"
-          size={24}
-          style={{
-            alignSelf: 'right',
-            alignContent: 'right',
-            marginLeft: 'auto',
-          }}></Ionicons>
-      </View>
-      <View style={styles.setItem}>
-        <MaterialDesignIcons
-          name="account-tie-voice"
-          size={24}
-          style={{marginRight: 6}}></MaterialDesignIcons>
-        <Text>我的语音包</Text>
-        <Ionicons
-          name="chevron-forward-outline"
-          size={24}
-          style={{
-            alignSelf: 'right',
-            alignContent: 'right',
-            marginLeft: 'auto',
-          }}></Ionicons>
+        <Text style={{flex: 1}}>我的编辑</Text>
+        <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
       </View>
     </View>
   );
