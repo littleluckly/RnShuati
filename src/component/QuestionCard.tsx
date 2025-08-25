@@ -35,9 +35,6 @@ export default React.memo(
     const [snack, setSnack] = useState(false);
     const [snackMsg, setSnackMsg] = useState('');
 
-    // 动态问题文本高度状态
-    const [questionHeight, setQuestionHeight] = useState(44); // 默认为2行高度
-
     const handleFavorite = useCallback(() => {
       setFavorite(prev => !prev);
       onToggleFavorite?.(!favorite);
@@ -73,58 +70,23 @@ export default React.memo(
       [theme.colors.primary],
     );
 
-    // 动态计算 scrollableAnswerArea 的高度 - 基于实际问题文本高度
-    const scrollableAreaHeight = useMemo(() => {
-      // 总卡片高度减去固定区域的高度
-      const questionContentPadding = 16; // questionContent 的上下 padding (8*2)
-      const topDividerHeight = 1; // 上方 Divider 高度
-      const bottomDividerHeight = 1; // 下方 Divider 高度
-      const fixedActionsAreaHeight = 60; // 操作区域高度 (增加到60px确保足够空间)
-
-      // 使用实际测量的问题文本高度
-      const actualQuestionAreaHeight = questionHeight + questionContentPadding;
-
-      const totalCardHeight = height - 220; // 卡片总高度
-      const usedHeight =
-        actualQuestionAreaHeight +
-        topDividerHeight +
-        bottomDividerHeight +
-        fixedActionsAreaHeight;
-      const availableScrollHeight = totalCardHeight - usedHeight;
-
-      // 确保最小高度，防止负数
-      return Math.max(availableScrollHeight, 100);
-    }, [questionHeight]);
-
-    // 处理问题文本高度测量
-    const handleQuestionLayout = useCallback((event: any) => {
-      const {height: measuredHeight} = event.nativeEvent.layout;
-      // 更新问题文本的实际高度
-      setQuestionHeight(measuredHeight);
-      console.log('📏 问题文本高度测量:', measuredHeight);
-    }, []);
-
     return (
       <View style={cardStyle} pointerEvents="auto">
+        {/* 固定高度问题区域 */}
         <View style={styles.questionContent}>
           <Text
             variant="titleMedium"
             style={styles.question}
             numberOfLines={2}
-            ellipsizeMode="tail"
-            onLayout={handleQuestionLayout}>
+            ellipsizeMode="tail">
             {question}
           </Text>
         </View>
+
         <Divider bold style={[GlobalStyles.shadow, {elevation: 4}]} />
 
-        {/* 可滚动答案区域 */}
-        <View
-          style={[
-            styles.scrollableAnswerArea,
-            {height: scrollableAreaHeight}, // ✅ 明确设置高度
-          ]}
-          pointerEvents="auto">
+        {/* 可滚动答案区域 - 使用 flex: 1 自动占满剩余空间 */}
+        <View style={styles.scrollableAnswerArea} pointerEvents="auto">
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
@@ -135,46 +97,34 @@ export default React.memo(
             keyboardShouldPersistTaps="handled">
             {/* 精简答案 */}
             {shortAnswer && (
-              <>
-                <View style={styles.contentPadding}>
-                  <Text
-                    variant="labelLarge"
-                    style={sectionTitleStyle}
-                    onPress={() => setShowShort(!showShort)}>
-                    {'精简答案'}
-                  </Text>
-                  {/* <Text variant="bodyMedium" style={styles.answer}>
-                    {shortAnswer}
-                  </Text> */}
-                  <Markdown>{shortAnswer}</Markdown>
-                </View>
-              </>
+              <View style={styles.contentPadding}>
+                <Text
+                  variant="labelLarge"
+                  style={sectionTitleStyle}
+                  onPress={() => setShowShort(!showShort)}>
+                  {'精简答案'}
+                </Text>
+                <Markdown>{shortAnswer}</Markdown>
+              </View>
             )}
 
             {/* 详细解析 */}
             {fullAnswer && (
-              <>
-                {/* <Divider bold style={{marginVertical: 12}} /> */}
-                <View style={styles.contentPadding}>
-                  <Text
-                    variant="labelLarge"
-                    style={sectionTitleStyle}
-                    onPress={() => setShowFull(!showFull)}>
-                    {'详细解析'}
-                  </Text>
-                  {/* <Text variant="bodyMedium" style={styles.answer}>
-                    {fullAnswer}
-                  </Text> */}
-
-                  <Markdown>{fullAnswer}</Markdown>
-                </View>
-              </>
+              <View style={styles.contentPadding}>
+                <Text
+                  variant="labelLarge"
+                  style={sectionTitleStyle}
+                  onPress={() => setShowFull(!showFull)}>
+                  {'详细解析'}
+                </Text>
+                <Markdown>{fullAnswer}</Markdown>
+              </View>
             )}
           </ScrollView>
         </View>
 
         {/* 固定高度操作区域 - 绝对定位在底部 */}
-        <View style={[styles.fixedActionsArea]}>
+        <View style={styles.fixedActionsArea}>
           <View style={styles.actions}>
             <IconButton
               icon={favorite ? 'star' : 'star-outline'}
@@ -185,14 +135,6 @@ export default React.memo(
             <IconButton icon="content-copy" onPress={handleCopy} />
           </View>
         </View>
-
-        {/* 轻提示 */}
-        {/* <Snackbar
-          visible={snack}
-          onDismiss={() => setSnack(false)}
-          duration={800}>
-          {snackMsg}
-        </Snackbar> */}
       </View>
     );
   },
@@ -207,11 +149,11 @@ export default React.memo(
 );
 
 const styles = StyleSheet.create({
+  // 卡片容器 - 固定总高度，使用 flexDirection: 'column'
   card: {
     width: width * 0.9,
-    // 调整高度：计数器(60px) + 间距(12px) + 额外空间(18px) + 底部空间(30px) = 120px
-    height: height - 220,
-    flexDirection: 'column',
+    height: height - 220, // 固定总高度
+    flexDirection: 'column', // 垂直布局
     position: 'relative', // 为绝对定位的子元素提供参考
     backgroundColor: 'white',
     borderRadius: 12,
@@ -224,14 +166,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
   },
-  fixedQuestionArea: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+
+  // 问题区域 - 设置最大高度，自适应内容
   questionContent: {
     paddingVertical: 8,
     paddingHorizontal: 16,
+    maxHeight: 60, // 最大高度：2行文本 + padding
   },
+
   question: {
     marginBottom: 8,
     lineHeight: 22,
@@ -240,28 +182,35 @@ const styles = StyleSheet.create({
     maxHeight: 44, // 2行的高度：22 * 2 = 44px
     overflow: 'hidden',
   },
-  // 可滚动答案区域 - 占用剩余空间
+
+  // 可滚动答案区域 - 使用 flex: 1 自动占满剩余空间
   scrollableAnswerArea: {
-    // flex: 1, // 占用题目区域和操作区域之间的所有剩余空间
+    flex: 1, // ✅ 关键：自动占用剩余空间
     backgroundColor: '#fafafa', // 添加背景色以便调试和视觉区分
+    // 为绝对定位的底部按钮预留空间
+    marginBottom: 60, // 底部按钮高度
   },
+
   scrollView: {
     flex: 1,
   },
+
   scrollContent: {
     paddingBottom: 20, // 底部留白，避免内容贴边
   },
+
   contentPadding: {
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  // 固定高度操作区域 - 使用绝对定位确保始终在底部
+
+  // 固定高度操作区域 - 绝对定位在底部
   fixedActionsArea: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: 60,
+    height: 60, // ✅ 固定高度
     backgroundColor: 'white', // 与卡片背景一致
     justifyContent: 'center',
     borderBottomLeftRadius: 12,
@@ -270,14 +219,17 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
   },
+
   sectionTitle: {
     fontWeight: '600',
     marginBottom: 4,
   },
+
   answer: {
     marginTop: 6,
     lineHeight: 20,
   },
+
   actions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
