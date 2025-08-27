@@ -36,9 +36,6 @@ export default () => {
   // 处理列表项点击事件
   const onItemPress = useCallback((itemId: string) => {
     setSelectedItemId(itemId);
-
-    // 注意：不在这里重置状态，而是在页面返回时重置
-    // 或者通过navigation listener来处理状态重置
   }, []);
 
   return (
