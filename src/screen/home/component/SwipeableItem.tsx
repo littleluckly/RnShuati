@@ -3,44 +3,55 @@
 import {useNavigation} from '@react-navigation/native';
 import React, {
   forwardRef,
-  useImperativeHandle,
-  useState,
   useEffect,
+  useImperativeHandle,
   useRef,
+  useState,
 } from 'react';
 import {
-  Image,
+  InteractionManager,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  InteractionManager,
 } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import LinearGradient from 'react-native-linear-gradient';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 // import {Icon} from 'react-native-paper';
-import Icon from '@react-native-vector-icons/material-design-icons';
+import {useSharedTransition} from '@/contexts/sharedTransitionContext';
+import {QuestionMeta} from '@/models/QuestionMeta';
 import {routeNameMap} from '@/navigation/constant';
 import {HomeStackNavigation} from '@/navigation/Types';
-import {QuestionMeta} from '@/models/QuestionMeta';
 import {AudioManager, AudioPlaybackInfo} from '@/services/AudioManager';
-import WaveformAnimation from '@/components/WaveformAnimation';
-import {useSharedTransition} from '@/contexts/sharedTransitionContext';
+import Icon from '@react-native-vector-icons/material-design-icons';
 
 interface Props {
   metadata: QuestionMeta;
   onWillOpen: (id: string) => void;
   setRef: (ref: any) => void;
   index?: number; // 添加索引参数
+  selectedItemId?: string | null; // 当前被选中的列表项ID
+  onItemPress?: (itemId: string) => void; // 列表项点击回调
 }
 
 const SwipeableItem = React.memo(
   forwardRef((props: Props, _) => {
     const {id, question_markdown} = props.metadata;
-    const {onWillOpen, setRef, index = 0} = props;
+    const {onWillOpen, setRef, index = 0, selectedItemId, onItemPress} = props;
     const navigation = useNavigation<HomeStackNavigation>();
     const swipeRef = React.useRef<any>();
     const itemRef = useRef<React.ComponentRef<typeof TouchableOpacity>>(null);
+
+    // 动画值初始化
+    const opacity = useSharedValue(1);
+    const scale = useSharedValue(1);
+    const translateY = useSharedValue(0);
 
     // 音频播放状态
     const [playbackInfo, setPlaybackInfo] = useState<AudioPlaybackInfo>({
@@ -48,6 +59,32 @@ const SwipeableItem = React.memo(
       state: 'idle',
       currentAudioIndex: 0,
       totalAudios: 0,
+    });
+
+    // 判断是否应该隐藏（当有选中项且不是自己时）
+    const shouldHide = selectedItemId && selectedItemId !== id;
+
+    // 动画效果管理
+    useEffect(() => {
+      if (shouldHide) {
+        // 隐藏动画：透明度降低、缩放、上移
+        opacity.value = withTiming(0.3, {duration: 250});
+        scale.value = withTiming(0.95, {duration: 250});
+        translateY.value = withTiming(-10, {duration: 250});
+      } else {
+        // 显示动画：恢复原状
+        opacity.value = withSpring(1, {damping: 20, stiffness: 300});
+        scale.value = withSpring(1, {damping: 20, stiffness: 300});
+        translateY.value = withSpring(0, {damping: 20, stiffness: 300});
+      }
+    }, [shouldHide, opacity, scale, translateY]);
+
+    // 动画样式
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        opacity: opacity.value,
+        transform: [{scale: scale.value}, {translateY: translateY.value}],
+      };
     });
 
     // 当前项是否正在播放
@@ -157,69 +194,84 @@ const SwipeableItem = React.memo(
 
     const {dispatch} = useSharedTransition();
     const handleNavigateToDetail = React.useCallback(() => {
+      // 触发隐藏动画
+      if (onItemPress) {
+        onItemPress(id);
+      }
+
       // 立即停止音频以提供即时反馈
       AudioManager.stopCurrent();
       dispatch({type: 'START'});
-      // 测量当前列表项的布局信息
-      if (itemRef.current) {
-        itemRef.current.measure(
-          (
-            x: number,
-            y: number,
-            width: number,
-            height: number,
-            pageX: number,
-            pageY: number,
-          ) => {
-            // 验证测量值有效性
-            if (isNaN(pageX) || isNaN(pageY) || isNaN(width) || isNaN(height)) {
-              console.warn('❌ 测量值包含 NaN，使用备用导航方式');
-              // 备用导航方式
-              navigation.navigate(routeNameMap.detailScreen, {
-                id,
-                currentIndex: index,
-              });
-              return;
-            }
 
-            console.log('📏 列表项布局测量:', {
-              pageX,
-              pageY,
-              width,
-              height,
-              itemId: id,
-              screenDimensions: {screenWidth: width, screenHeight: height},
-            });
-
-            // 🚀 性能优化：使用 requestAnimationFrame + InteractionManager 双重优化
-            requestAnimationFrame(() => {
-              InteractionManager.runAfterInteractions(() => {
-                // 导航到详情页，传递当前项的索引和布局信息
+      // 缩短延迟时间，在动画开始后就立即跳转
+      // 这样可以避免用户看到状态重置的闪烁
+      setTimeout(() => {
+        // 测量当前列表项的布局信息
+        if (itemRef.current) {
+          itemRef.current.measure(
+            (
+              x: number,
+              y: number,
+              width: number,
+              height: number,
+              pageX: number,
+              pageY: number,
+            ) => {
+              // 验证测量值有效性
+              if (
+                isNaN(pageX) ||
+                isNaN(pageY) ||
+                isNaN(width) ||
+                isNaN(height)
+              ) {
+                console.warn('❌ 测量值包含 NaN，使用备用导航方式');
+                // 备用导航方式
                 navigation.navigate(routeNameMap.detailScreen, {
                   id,
                   currentIndex: index,
-                  sourceLayout: {
-                    x: pageX,
-                    y: pageY,
-                    width,
-                    height,
-                  },
+                });
+                return;
+              }
+
+              console.log('📏 列表项布局测量:', {
+                pageX,
+                pageY,
+                width,
+                height,
+                itemId: id,
+                screenDimensions: {screenWidth: width, screenHeight: height},
+              });
+
+              // 🚀 性能优化：使用 requestAnimationFrame + InteractionManager 双重优化
+              requestAnimationFrame(() => {
+                InteractionManager.runAfterInteractions(() => {
+                  // 导航到详情页，传递当前项的索引和布局信息
+                  navigation.navigate(routeNameMap.detailScreen, {
+                    id,
+                    currentIndex: index,
+                    sourceLayout: {
+                      x: pageX,
+                      y: pageY,
+                      width,
+                      height,
+                    },
+                  });
                 });
               });
-            });
-          },
-        );
-      } else {
-        console.warn('❌ itemRef.current 为空，使用备用导航方式');
-        // 备用导航方式
-        navigation.navigate(routeNameMap.detailScreen, {
-          id,
-          currentIndex: index,
-        });
-      }
-    }, [navigation, id, index]);
+            },
+          );
+        } else {
+          console.warn('❌ itemRef.current 为空，使用备用导航方式');
+          // 备用导航方式
+          navigation.navigate(routeNameMap.detailScreen, {
+            id,
+            currentIndex: index,
+          });
+        }
+      }, 100); // 缩短延迟到100ms，减少状态重置的可见性
+    }, [navigation, id, index, onItemPress]);
     return (
-      <View style={styles.container}>
+      <Animated.View style={[styles.container, animatedStyle]}>
         <Swipeable
           ref={swipeRef}
           renderRightActions={RightActions}
@@ -272,14 +324,15 @@ const SwipeableItem = React.memo(
             </View>
           </TouchableOpacity>
         </Swipeable>
-      </View>
+      </Animated.View>
     );
   }),
-  (prevProps, nextProps) => {
+  (prevProps: Props, nextProps: Props) => {
     // 🚀 性能优化：防止不必要的重新渲染
     return (
       prevProps.metadata.id === nextProps.metadata.id &&
-      prevProps.index === nextProps.index
+      prevProps.index === nextProps.index &&
+      prevProps.selectedItemId === nextProps.selectedItemId
     );
   },
 );
