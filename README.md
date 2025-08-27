@@ -185,6 +185,38 @@ pip install edge-tts
 deactivate
 ```
 
+可以参见项目https://github.com/littleluckly/text-to-speech-demo
+
+#### github 突然提交失败，提示 Git: ssh: connect to host github.com port 22: Operation timed out
+
+GitHub 同时支持在 443 端口上提供 SSH 服务，可绕过 22 端口封锁：
+编辑 SSH 配置文件：
+
+```bash
+# Linux/Mac
+vi ~/.ssh/config
+
+# Windows (在 Git Bash 中)
+vi ~/.ssh/config
+```
+
+添加以下内容：
+
+```plaintext
+Host github.com
+  Hostname ssh.github.com
+  Port 443
+  User git
+```
+
+保存后测试连接：
+
+```bash
+ssh -T git@github.com
+```
+
+如果成功，会显示 "Hi 用户名！You've successfully authenticated..."
+
 # 了解更多
 
 要了解更多关于 React Native 的信息，请查看以下资源：
