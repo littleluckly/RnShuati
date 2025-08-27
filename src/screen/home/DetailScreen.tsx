@@ -1,8 +1,7 @@
-// src/screens/ProfileScreen/index.tsx
 import Quiz3DCard from '@/component/Quiz3DCard';
 import {routeNameMap} from '@/navigation/constant';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
-import React, {Suspense} from 'react';
+import React, {Suspense, useState} from 'react';
 import {View, Text, StyleSheet, ActivityIndicator} from 'react-native';
 import {HomeStackParamList} from '@/navigation/Types';
 
@@ -17,9 +16,7 @@ export default function DetailScreen() {
 
   // 安全地解构 route.params，处理可能为 undefined 的情况
   const params = route.params || {id: '', currentIndex: 0};
-  const {id, currentIndex = 0} = params;
-
-  console.log('DetailScreen received params:', {id, currentIndex});
+  const {id, currentIndex = 0, sourceLayout} = params;
 
   return (
     <View style={styles.center}>
@@ -33,6 +30,7 @@ export default function DetailScreen() {
         <Quiz3DCard
           initialAnsweredCount={currentIndex}
           startFromQuestion={id}
+          sourceLayout={sourceLayout}
         />
       </Suspense>
     </View>

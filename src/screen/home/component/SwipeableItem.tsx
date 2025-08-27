@@ -6,6 +6,7 @@ import React, {
   useImperativeHandle,
   useState,
   useEffect,
+  useRef,
 } from 'react';
 import {
   Image,
@@ -24,6 +25,7 @@ import {HomeStackNavigation} from '@/navigation/Types';
 import {QuestionMeta} from '@/models/QuestionMeta';
 import {AudioManager, AudioPlaybackInfo} from '@/services/AudioManager';
 import WaveformAnimation from '@/components/WaveformAnimation';
+import {useSharedTransition} from '@/contexts/sharedTransitionContext';
 
 interface Props {
   metadata: QuestionMeta;
@@ -38,6 +40,7 @@ const SwipeableItem = React.memo(
     const {onWillOpen, setRef, index = 0} = props;
     const navigation = useNavigation<HomeStackNavigation>();
     const swipeRef = React.useRef<any>();
+    const itemRef = useRef<React.ComponentRef<typeof TouchableOpacity>>(null);
 
     // 音频播放状态
     const [playbackInfo, setPlaybackInfo] = useState<AudioPlaybackInfo>({
@@ -152,22 +155,68 @@ const SwipeableItem = React.memo(
       });
     };
 
-    // 处理列表项点击导航 - 高性能优化版本
+    const {dispatch} = useSharedTransition();
     const handleNavigateToDetail = React.useCallback(() => {
       // 立即停止音频以提供即时反馈
       AudioManager.stopCurrent();
+      dispatch({type: 'START'});
+      // 测量当前列表项的布局信息
+      if (itemRef.current) {
+        itemRef.current.measure(
+          (
+            x: number,
+            y: number,
+            width: number,
+            height: number,
+            pageX: number,
+            pageY: number,
+          ) => {
+            // 验证测量值有效性
+            if (isNaN(pageX) || isNaN(pageY) || isNaN(width) || isNaN(height)) {
+              console.warn('❌ 测量值包含 NaN，使用备用导航方式');
+              // 备用导航方式
+              navigation.navigate(routeNameMap.detailScreen, {
+                id,
+                currentIndex: index,
+              });
+              return;
+            }
 
-      // 🚀 性能优化：使用 requestAnimationFrame + InteractionManager 双重优化
-      // 确保在下一帧开始时导航，避免阻塞当前渲染
-      requestAnimationFrame(() => {
-        InteractionManager.runAfterInteractions(() => {
-          // 导航到详情页，传递当前项的索引
-          navigation.navigate(routeNameMap.detailScreen, {
-            id,
-            currentIndex: index, // 传递当前项的索引
-          });
+            console.log('📏 列表项布局测量:', {
+              pageX,
+              pageY,
+              width,
+              height,
+              itemId: id,
+              screenDimensions: {screenWidth: width, screenHeight: height},
+            });
+
+            // 🚀 性能优化：使用 requestAnimationFrame + InteractionManager 双重优化
+            requestAnimationFrame(() => {
+              InteractionManager.runAfterInteractions(() => {
+                // 导航到详情页，传递当前项的索引和布局信息
+                navigation.navigate(routeNameMap.detailScreen, {
+                  id,
+                  currentIndex: index,
+                  sourceLayout: {
+                    x: pageX,
+                    y: pageY,
+                    width,
+                    height,
+                  },
+                });
+              });
+            });
+          },
+        );
+      } else {
+        console.warn('❌ itemRef.current 为空，使用备用导航方式');
+        // 备用导航方式
+        navigation.navigate(routeNameMap.detailScreen, {
+          id,
+          currentIndex: index,
         });
-      });
+      }
     }, [navigation, id, index]);
     return (
       <View style={styles.container}>
@@ -178,6 +227,7 @@ const SwipeableItem = React.memo(
           friction={2}
           rightThreshold={20}>
           <TouchableOpacity
+            ref={itemRef}
             style={styles.row}
             activeOpacity={0.8}
             onPress={handleNavigateToDetail}>
@@ -186,11 +236,6 @@ const SwipeableItem = React.memo(
               style={styles.playButton}>
               {isCurrentlyPlaying ? (
                 <View style={styles.playingContainer}>
-                  <WaveformAnimation
-                    isPlaying={true}
-                    size={48}
-                    color="#4ECDC4"
-                  />
                   <View style={styles.playingOverlay}>
                     <Icon name="pause-circle" color="#4ECDC4" size={48} />
                   </View>

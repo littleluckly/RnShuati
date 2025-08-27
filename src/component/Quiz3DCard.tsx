@@ -7,6 +7,7 @@ import React, {
   useCallback,
   Suspense,
   startTransition,
+  useEffect,
 } from 'react';
 import {
   View,
@@ -23,7 +24,7 @@ import Animated, {
   runOnJS,
   cancelAnimation,
   interpolate,
-  Extrapolate,
+  Extrapolation,
   withTiming,
 } from 'react-native-reanimated';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
@@ -33,6 +34,8 @@ import {ProgressCounterProps, SwipeableCardProps} from './types';
 import metadata from '@/data/importQuestion';
 import {QuestionMeta} from '@/models/QuestionMeta';
 import {showSwipeLimitToast} from '@/utils/toastUtils';
+import {useSharedTransition} from '@/contexts/sharedTransitionContext';
+import {SharedElement} from '@/contexts/ShareElement';
 
 const {width, height} = Dimensions.get('window');
 
@@ -50,6 +53,12 @@ const getQuestionData = (): QuestionMeta[] => {
 interface Quiz3DCardProps {
   initialAnsweredCount?: number; // 初始已回答题目数
   startFromQuestion?: string; // 从哪个题目开始（暂时保留，可用于未来定位到特定题目）
+  sourceLayout?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 }
 
 const ProgressCounter = React.memo(
@@ -82,15 +91,59 @@ const SwipeableCard = React.memo(
     isActive,
     onCardTouch,
     canSwipeBack,
+    sourceLayout,
   }: SwipeableCardProps) => {
+    const {height: screenHeight} = Dimensions.get('window');
     // 🔧 修复 Reanimated 错误：提取基本类型的 id 避免在 worklet 中访问复杂对象
     const cardId = questionMeta.id;
     // 动画值
     const translateX = useSharedValue(0);
     const translateY = useSharedValue(0);
     const rotate = useSharedValue(0);
-    const scale = useSharedValue(1);
+    const scale = useSharedValue(
+      sourceLayout ? sourceLayout.width / (width * 0.9) : 1,
+    );
+    const {state, dispatch} = useSharedTransition();
+    const sharedElementOpacity = useSharedValue(state.isTransitioning ? 1 : 0);
     const opacity = useSharedValue(1);
+    const targetHeight = screenHeight - 220;
+    const height = useSharedValue(
+      state.isTransitioning ? sourceLayout?.height || 0 : targetHeight,
+    );
+    const top = useSharedValue(
+      state.isTransitioning ? sourceLayout.y - 59 || 59 : 80,
+    );
+
+    // 从sourceLayout位置平滑过渡到正常位置
+    React.useEffect(() => {
+      setTimeout(() => {
+        if (sourceLayout && isActive && state.isTransitioning) {
+          sharedElementOpacity.value = withTiming(0, {duration: 200});
+          height.value = withSpring(
+            targetHeight,
+            {
+              damping: 20,
+              stiffness: 200,
+            },
+            finished => {
+              if (finished) {
+                runOnJS(dispatch)({type: 'STOP'});
+                console.log('高度动画完成');
+              }
+            },
+          );
+          // 80 卡片距离顶部高度
+          top.value = withSpring(80, {
+            damping: 20,
+            stiffness: 200,
+          });
+        }
+      }, 350);
+
+      () => {
+        dispatch({type: 'STOP'});
+      };
+    }, [sourceLayout, isActive, state.isTransitioning]);
 
     const hasScheduledRemoval = useRef(false);
 
@@ -118,11 +171,6 @@ const SwipeableCard = React.memo(
       hasScheduledRemoval.current = false;
       console.log(`🔄 卡片 ${cardId} 重置了移除标记`);
     }, [cardId]);
-
-    // 显示边界提示 - 使用封装的工具函数
-    // const showSwipeLimitToast = () => {
-    //   // 已移至 @/utils/toastUtils 中统一管理
-    // };
 
     const gesture = useMemo(
       () =>
@@ -168,7 +216,7 @@ const SwipeableCard = React.memo(
               event.translationX,
               [-width * 0.5, 0, width * 0.5],
               [-15, 0, 15],
-              Extrapolate.CLAMP,
+              Extrapolation.CLAMP,
             );
 
             // 滑动距离越远，卡片越小
@@ -180,7 +228,7 @@ const SwipeableCard = React.memo(
               distance,
               [0, maxDistance],
               [1, 0.9],
-              Extrapolate.CLAMP,
+              Extrapolation.CLAMP,
             );
 
             // 滑动距离越远，透明度越低
@@ -188,7 +236,7 @@ const SwipeableCard = React.memo(
               Math.abs(event.translationX),
               [0, width * 0.3],
               [1, 0.7],
-              Extrapolate.CLAMP,
+              Extrapolation.CLAMP,
             );
           })
           .onEnd(event => {
@@ -266,6 +314,20 @@ const SwipeableCard = React.memo(
       ],
     );
 
+    const animatedSharedElementStye = useAnimatedStyle(() => {
+      return {
+        opacity: sharedElementOpacity.value,
+        transform: [
+          {translateX: translateX.value},
+          {translateY: translateY.value},
+          {rotate: `${rotate.value}deg`},
+          // {scale: scale.value},
+        ],
+        top: top.value,
+        height: height.value,
+        bottom: 80,
+      };
+    });
     const animatedStyle = useAnimatedStyle(() => {
       if (!isActive) return {};
 
@@ -274,9 +336,12 @@ const SwipeableCard = React.memo(
           {translateX: translateX.value},
           {translateY: translateY.value},
           {rotate: `${rotate.value}deg`},
-          {scale: scale.value},
+          // {scale: scale.value},
         ],
-        opacity: opacity.value,
+        top: top.value,
+        height: height.value,
+        bottom: 80,
+        // opacity: opacity.value,
       };
     }, [isActive]);
 
@@ -301,21 +366,29 @@ const SwipeableCard = React.memo(
 
     return (
       <GestureDetector gesture={gesture}>
-        <Animated.View
-          style={[
-            styles.card,
-            isActive ? animatedStyle : backgroundStyle,
-            {zIndex: Math.min(100 + totalCards - index, 9998)},
-          ]}>
-          <QuestionCard
-            id={questionMeta.id}
-            question={questionMeta.question_markdown}
-            shortAnswer={questionMeta.answer_simple_markdown}
-            fullAnswer={questionMeta.answer_analysis_markdown}
-            onToggleFavorite={() => {}}
-            onDelete={onCardDelete}
-          />
-        </Animated.View>
+        <>
+          {state.isTransitioning && (
+            <SharedElement
+              style={[animatedSharedElementStye]}
+              question={questionMeta.question_markdown}
+              sourceLayout={sourceLayout!}></SharedElement>
+          )}
+          <Animated.View
+            style={[
+              styles.card,
+              isActive ? animatedStyle : backgroundStyle,
+              {zIndex: Math.min(100 + totalCards - index, 9998)},
+            ]}>
+            <QuestionCard
+              id={questionMeta.id}
+              question={questionMeta.question_markdown}
+              shortAnswer={questionMeta.answer_simple_markdown}
+              fullAnswer={questionMeta.answer_analysis_markdown}
+              onToggleFavorite={() => {}}
+              onDelete={onCardDelete}
+            />
+          </Animated.View>
+        </>
       </GestureDetector>
     );
   },
@@ -330,10 +403,14 @@ const SwipeableCard = React.memo(
   },
 );
 
-const Quiz3DCard = ({
-  initialAnsweredCount = 0,
-  startFromQuestion,
-}: Quiz3DCardProps = {}) => {
+const Quiz3DCard = (
+  {
+    initialAnsweredCount = 0,
+    startFromQuestion,
+    sourceLayout,
+  }: Quiz3DCardProps = {} as Quiz3DCardProps,
+) => {
+  const {state} = useSharedTransition();
   // 🚀 性能优化：使用 lazy 初始化减少初始渲染延迟
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [cards, setCards] = useState<QuestionMeta[]>([]);
@@ -341,7 +418,12 @@ const Quiz3DCard = ({
     useState<number>(initialAnsweredCount);
   const [activeCardIndex, setActiveCardIndex] = useState<number>(0);
   const [dismissedCards, setDismissedCards] = useState<QuestionMeta[]>([]);
-
+  const [showProcessCounter, setShowProcessCounter] = useState<boolean>(false);
+  useEffect(() => {
+    setTimeout(() => {
+      state.isTransitioning && setShowProcessCounter(true);
+    }, 1000);
+  }, [state.isTransitioning]);
   // 延迟加载数据以优化初始渲染性能
   React.useEffect(() => {
     const loadData = () => {
@@ -371,10 +453,15 @@ const Quiz3DCard = ({
     InteractionManager.runAfterInteractions(loadData);
   }, [initialAnsweredCount]);
 
+  // const [isTransitioning, setIsTransitioning] = useState(true);
   const visibleCards = useMemo(() => {
+    console.log('visibleCards-isTransitioning', state.isTransitioning);
+    if (state.isTransitioning) {
+      return cards.slice(0, 1);
+    }
     const maxVisible = 4;
     return cards.slice(0, maxVisible);
-  }, [cards]);
+  }, [cards, state.isTransitioning]);
 
   const canSwipeBack = useMemo(() => {
     // 只有当有已移除的卡片时才能右滑回退
@@ -469,11 +556,13 @@ const Quiz3DCard = ({
 
   return (
     <>
-      <ProgressCounter
-        current={remainingCards}
-        total={remainingCards + answeredCount} // ✅ 简单计算：剩余 + 已答 = 总数
-        answered={answeredCount}
-      />
+      {showProcessCounter && (
+        <ProgressCounter
+          current={remainingCards}
+          total={remainingCards + answeredCount} // ✅ 简单计算：剩余 + 已答 = 总数
+          answered={answeredCount}
+        />
+      )}
       <View style={styles.container}>
         {visibleCards.map((questionMeta, index) => (
           <SwipeableCard
@@ -487,6 +576,7 @@ const Quiz3DCard = ({
             isActive={index === activeCardIndex}
             onCardTouch={onCardTouch}
             canSwipeBack={index === 0 ? canSwipeBack : false}
+            sourceLayout={index === 0 ? sourceLayout : undefined}
           />
         ))}
       </View>

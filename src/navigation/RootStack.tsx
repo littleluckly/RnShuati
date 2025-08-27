@@ -52,11 +52,7 @@ const RootTabNavigator: React.FC = () => {
             ),
           }}
         />
-        <Tab.Screen
-          name="ThisRouteDoesNotShowBecauseOnlyFourAreInTabs"
-          initialParams={{fromTab: 'bottom'}}
-          component={DetailScreen}
-        />
+
       </Tab.Navigator>
     </Host>
   );

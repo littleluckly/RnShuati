@@ -42,6 +42,13 @@ export type SwipeableCardProps = {
   isActive: boolean;
   onCardTouch: (index: number) => void;
   canSwipeBack: boolean;
+  // 新增：源布局信息，用于共享元素过渡动画
+  sourceLayout?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 };
 
 export type ProgressCounterProps = {

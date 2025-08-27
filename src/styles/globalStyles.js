@@ -22,7 +22,7 @@ const GlobalStyles = StyleSheet.create({
     alignItems: 'center',
   },
   border: {
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: 'red',
     borderStyle: 'solid',
   },
