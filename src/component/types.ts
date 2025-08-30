@@ -60,8 +60,8 @@ export type ProgressCounterProps = {
 export type QuestionCardProps = {
   id: string;
   question: string;
-  shortAnswer?: string;
-  fullAnswer?: string;
+  simpleAnswer?: string;
+  analysisAnswer?: string;
   initialFavorite?: boolean;
   onDislike?: () => void;
   onToggleFavorite?: (isFavorite: boolean) => void;

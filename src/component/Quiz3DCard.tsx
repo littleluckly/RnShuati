@@ -382,8 +382,8 @@ const SwipeableCard = React.memo(
             <QuestionCard
               id={questionMeta.id}
               question={questionMeta.question_markdown}
-              shortAnswer={questionMeta.answer_simple_markdown}
-              fullAnswer={questionMeta.answer_analysis_markdown}
+              simpleAnswer={questionMeta.answer_simple_markdown}
+              analysisAnswer={questionMeta.answer_analysis_markdown}
               onToggleFavorite={() => {}}
               onDelete={onCardDelete}
             />

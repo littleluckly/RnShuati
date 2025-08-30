@@ -22,8 +22,8 @@ export default React.memo(
   ({
     id,
     question,
-    shortAnswer,
-    fullAnswer,
+    simpleAnswer,
+    analysisAnswer,
     initialFavorite = false,
     onDislike,
     onToggleFavorite,
@@ -40,14 +40,14 @@ export default React.memo(
       setFavorite(prev => !prev);
       onToggleFavorite?.(!favorite);
       // ✅ 使用封装的 Toast 工具
-      showSuccessToast(!favorite ? '已收藏' : '已取消收藏');
+      showSuccessToast({message: !favorite ? '已收藏' : '已取消收藏'});
     }, [favorite, onToggleFavorite]);
 
     const handleCopy = useCallback(() => {
-      Share.share({message: `${question}\n\n${fullAnswer}`});
+      Share.share({message: `${question}\n\n${analysisAnswer}`});
       // ✅ 使用封装的 Toast 工具
       showInfoToast('已复制到分享');
-    }, [question, fullAnswer]);
+    }, [question, analysisAnswer]);
 
     const handleDislike = useCallback(() => {
       onDislike?.();
@@ -100,7 +100,7 @@ export default React.memo(
             nestedScrollEnabled={true}
             keyboardShouldPersistTaps="handled">
             {/* 精简答案 */}
-            {shortAnswer && (
+            {simpleAnswer && (
               <View style={styles.contentPadding}>
                 <Text
                   variant="labelLarge"
@@ -108,12 +108,12 @@ export default React.memo(
                   onPress={() => setShowShort(!showShort)}>
                   {'精简答案'}
                 </Text>
-                <Markdown>{shortAnswer}</Markdown>
+                <Markdown>{simpleAnswer}</Markdown>
               </View>
             )}
 
             {/* 详细解析 */}
-            {fullAnswer && (
+            {analysisAnswer && (
               <View style={styles.contentPadding}>
                 <Text
                   variant="labelLarge"
@@ -121,7 +121,7 @@ export default React.memo(
                   onPress={() => setShowFull(!showFull)}>
                   {'详细解析'}
                 </Text>
-                <Markdown>{fullAnswer}</Markdown>
+                <Markdown>{analysisAnswer}</Markdown>
               </View>
             )}
           </ScrollView>
@@ -148,8 +148,8 @@ export default React.memo(
   (prevProps: QuestionCardProps, nextProps: QuestionCardProps) => {
     return (
       prevProps.question === nextProps.question &&
-      prevProps.shortAnswer === nextProps.shortAnswer &&
-      prevProps.fullAnswer === nextProps.fullAnswer &&
+      prevProps.simpleAnswer === nextProps.simpleAnswer &&
+      prevProps.analysisAnswer === nextProps.analysisAnswer &&
       prevProps.initialFavorite === nextProps.initialFavorite
     );
   },
