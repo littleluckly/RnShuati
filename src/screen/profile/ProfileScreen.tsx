@@ -3,10 +3,18 @@ import MaterialDesignIcons from '@react-native-vector-icons/material-design-icon
 import Ionicons from 'react-native-vector-icons/Ionicons';
 // import {Ionicons} from 'react-native-vector-icons';
 import React from 'react';
-import {View, Text, StyleSheet, Touchable} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity, Alert} from 'react-native';
 import {Button} from 'react-native-paper';
+import {useNavigation} from '@react-navigation/native';
 
 export default function ProfileScreen() {
+  const navigation = useNavigation();
+
+  const navigateToApiDemo = () => {
+    // @ts-ignore
+    navigation.navigate('ApiDemo');
+  };
+
   return (
     <View style={[{flex: 1}]}>
       <View
@@ -39,6 +47,16 @@ export default function ProfileScreen() {
           <Button>立即登录</Button>
         </View>
       </View>
+      <TouchableOpacity style={styles.setItem} onPress={navigateToApiDemo}>
+        <Ionicons
+          name="code-outline"
+          size={24}
+          color="#3498db"
+          style={{marginRight: 6}}
+        />
+        <Text style={{flex: 1}}>API 演示</Text>
+        <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
+      </TouchableOpacity>
       <View style={styles.setItem}>
         <Ionicons
           name="heart"

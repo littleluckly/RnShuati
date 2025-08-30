@@ -5,6 +5,7 @@ export const routeNameMap: Record<string, string> = {
   welcomeScreen: 'WelcomeScreen',
 
   profileTab: 'ProfileTab',
-  profileScreen: 'ProfileScreen'
+  profileScreen: 'ProfileScreen',
+  apiDemoScreen: 'ApiDemo'
 
 }

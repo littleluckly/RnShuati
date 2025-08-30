@@ -217,6 +217,41 @@ ssh -T git@github.com
 
 如果成功，会显示 "Hi 用户名！You've successfully authenticated..."
 
+# API Service
+
+## 本地真机测试
+
+### 使用 adb reverse (仅限 USB 连接调试)
+
+确保 USB 调试已开启：在安卓真机的开发者选项中开启 USB 调试。
+连接手机并授权：用 USB 线连接手机到电脑，手机上可能会弹出授权对话框，点击允许。
+执行 adb reverse 命令：
+打开终端或命令行工具。
+运行以下命令（假设你的 API 在电脑的 3000 端口）：
+
+```bash
+adb reverse tcp:3000 tcp:3000
+```
+
+这条命令会将真机上的 tcp:3000 端口反向代理到你开发电脑的 tcp:3000 端口。建立了隧道，你现在可以在代码中继续使用 localhost
+
+## Usage Example
+
+```typescript
+import {apiService} from './src/services/ApiService';
+
+// Get all subjects
+const subjects = await apiService.getSubjects();
+
+// Get a random question
+const randomQuestion = await apiService.getRandomQuestion();
+
+// Record a user action
+await apiService.recordUserAction(undefined, 'question123', 'favorited');
+```
+
+For more detailed examples, see `src/services/ApiServiceExample.ts`.
+
 # 了解更多
 
 要了解更多关于 React Native 的信息，请查看以下资源：
