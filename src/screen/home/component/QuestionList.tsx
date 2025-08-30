@@ -1,16 +1,38 @@
 import {useFocusEffect} from '@react-navigation/native';
-import React, {useCallback, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {FlatList} from 'react-native';
 import SwipeableItem from './SwipeableItem';
 
-import metadata from '@/data/importQuestion';
-import {QuestionMeta} from '@/models/QuestionMeta';
+import {questionApiService} from '@/services';
 
-export default () => {
-  const data = useMemo(
-    () => metadata.map(item => new QuestionMeta(item)),
-    [metadata],
-  );
+interface Props {
+  subjectId: string;
+}
+
+export default ({subjectId}: Props) => {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await questionApiService.getFilteredQuestionList({
+          subjectId: subjectId,
+          limit: 10,
+        });
+        console.log('response.data', response.data);
+        if (response.success && response.data) {
+          setData(response.data.questions);
+        }
+      } catch (error) {
+        console.error('获取题目列表失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [subjectId]);
 
   // 列表项引用管理
   const refs = useRef(new Map<string, any>()).current;
@@ -38,11 +60,15 @@ export default () => {
     setSelectedItemId(itemId);
   }, []);
 
+  if (loading) {
+    return null; // 或者返回一个加载指示器
+  }
+
   return (
     <>
       <FlatList
         data={data}
-        keyExtractor={i => i.id}
+        keyExtractor={item => item.id}
         renderItem={({item, index}) => (
           <SwipeableItem
             metadata={item}

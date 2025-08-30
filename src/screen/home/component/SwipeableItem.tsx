@@ -25,14 +25,14 @@ import Animated, {
 } from 'react-native-reanimated';
 // import {Icon} from 'react-native-paper';
 import {useSharedTransition} from '@/contexts/sharedTransitionContext';
-import {QuestionMeta} from '@/models/QuestionMeta';
 import {routeNameMap} from '@/navigation/constant';
 import {HomeStackNavigation} from '@/navigation/Types';
 import {AudioManager, AudioPlaybackInfo} from '@/services/AudioManager';
 import Icon from '@react-native-vector-icons/material-design-icons';
+import {Question} from '@/services/apiTypes';
 
 interface Props {
-  metadata: QuestionMeta;
+  metadata: Question;
   onWillOpen: (id: string) => void;
   setRef: (ref: any) => void;
   index?: number; // 添加索引参数
@@ -180,7 +180,7 @@ const SwipeableItem = React.memo(
 
     // 处理播放/暂停点击
     const handlePlayPause = () => {
-      const audioFiles = props.metadata.getAudioFiles();
+      const audioFiles = props.metadata.files;
 
       console.log('Audio files available:', audioFiles);
 

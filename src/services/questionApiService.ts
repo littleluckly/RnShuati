@@ -4,12 +4,12 @@
  */
 
 import { BaseApiService } from './baseApiService';
-import { 
-  Question, 
-  RandomQuestionListConfig, 
-  FilteredQuestionListConfig, 
-  FilteredQuestionListResponse, 
-  ApiResponse 
+import {
+  Question,
+  RandomQuestionListConfig,
+  FilteredQuestionListConfig,
+  FilteredQuestionListResponse,
+  ApiResponse
 } from './apiTypes';
 
 /**
