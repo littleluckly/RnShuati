@@ -376,7 +376,7 @@ const SwipeableCard = React.memo(
         <>
           {state.isTransitioning && (
             <SharedElement
-              style={[animatedSharedElementStye]}
+              style={animatedSharedElementStye}
               question={questionMeta.question_markdown}
               sourceLayout={sourceLayout!}></SharedElement>
           )}
