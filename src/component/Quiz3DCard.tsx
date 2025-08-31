@@ -29,13 +29,15 @@ import Animated, {
 } from 'react-native-reanimated';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import QuestionCard from './QuestionCard';
-import Toast from 'react-native-toast-message';
 import {ProgressCounterProps, SwipeableCardProps} from './types';
 import metadata from '@/data/importQuestion';
 import {QuestionMeta} from '@/models/QuestionMeta';
 import {showSwipeLimitToast} from '@/utils/toastUtils';
 import {useSharedTransition} from '@/contexts/sharedTransitionContext';
 import {SharedElement} from '@/contexts/ShareElement';
+// 导入导航栏高度hook
+import {useHeaderHeight} from '@react-navigation/elements';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const {width, height} = Dimensions.get('window');
 
@@ -110,9 +112,14 @@ const SwipeableCard = React.memo(
     const height = useSharedValue(
       state.isTransitioning ? sourceLayout?.height || 0 : targetHeight,
     );
-    const top = useSharedValue(
-      state.isTransitioning ? sourceLayout.y - 59 || 59 : 80,
-    );
+    // 在组件中获取导航栏高度
+    const headerHeight = useHeaderHeight();
+    const insets = useSafeAreaInsets();
+    // 计算实际需要补偿的高度
+    const topOffset = headerHeight + (insets.top || 0);
+    //sourceLayout.y计算的是相对屏幕坐标，共享元素的top要扣除导航栏和状态栏高度
+    const pageY = sourceLayout?.y || 0;
+    const top = useSharedValue(state.isTransitioning ? pageY - topOffset : 80);
 
     // 从sourceLayout位置平滑过渡到正常位置
     React.useEffect(() => {
