@@ -60,6 +60,7 @@ export class QuestionApiService extends BaseApiService {
       limit: 20,
       ...config,
     };
+    console.log(requestBody, 'requestBody')
 
     return this.fetchApi<FilteredQuestionListResponse>('/questions/list', {
       method: 'POST',

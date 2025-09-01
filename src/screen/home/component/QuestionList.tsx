@@ -7,30 +7,41 @@ import {questionApiService} from '@/services';
 
 interface Props {
   subjectId: string;
+  filters?: {difficulty?: string; tags?: string[]};
 }
 
-export default ({subjectId}: Props) => {
+export default ({subjectId, filters = {}}: Props) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const prevFilters = useRef(filters);
+
+  // 监听筛选条件变化
+  useEffect(() => {
+    if (JSON.stringify(prevFilters.current) !== JSON.stringify(filters)) {
+      prevFilters.current = filters;
+      fetchData();
+    }
+  }, [filters]);
+
+  const fetchData = async () => {
+    try {
+      const response = await questionApiService.getFilteredQuestionList({
+        subjectId: subjectId,
+        limit: 10,
+        ...filters,
+      });
+      // console.log('response.data', response.data);
+      if (response.success && response.data) {
+        setData(response.data.questions);
+      }
+    } catch (error) {
+      console.error('获取题目列表失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await questionApiService.getFilteredQuestionList({
-          subjectId: subjectId,
-          limit: 10,
-        });
-        console.log('response.data', response.data);
-        if (response.success && response.data) {
-          setData(response.data.questions);
-        }
-      } catch (error) {
-        console.error('获取题目列表失败:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, [subjectId]);
 

@@ -4,7 +4,7 @@
  */
 
 import { BaseApiService } from './baseApiService';
-import { Subject, SubjectTagStat, ApiResponse } from './apiTypes';
+import { Subject, SubjectTag, DifficultyOption, ApiResponse } from './apiTypes';
 
 /**
  * Subject API Service Class
@@ -16,7 +16,6 @@ export class SubjectApiService extends BaseApiService {
    * Get all enabled subjects
    */
   async getSubjects(): Promise<ApiResponse<Subject[]>> {
-    console.log('endpoint-getSubjects')
     return this.fetchApi<Subject[]>('/subjects');
   }
 
@@ -37,8 +36,8 @@ export class SubjectApiService extends BaseApiService {
   /**
    * Get all tags for a subject
    */
-  async getSubjectTags(id: string): Promise<ApiResponse<SubjectTagStat[]>> {
-    return this.fetchApi<SubjectTagStat[]>(`/subjects/${id}/tags`);
+  async getSubjectTags(id: string): Promise<ApiResponse<SubjectTag[]>> {
+    return this.fetchApi<SubjectTag[]>(`/subjects/${id}/all-tags`);
   }
 
   /**
@@ -51,7 +50,7 @@ export class SubjectApiService extends BaseApiService {
   ): Promise<ApiResponse<null>> {
     return this.fetchApi<null>(`/subjects/${subjectId}/user-tags`, {
       method: 'POST',
-      body: JSON.stringify({ name: tagName, type: tagType }),
+      body: JSON.stringify({ name: tagName, value: tagType }),
     });
   }
 
@@ -66,7 +65,7 @@ export class SubjectApiService extends BaseApiService {
   ): Promise<ApiResponse<null>> {
     return this.fetchApi<null>(`/subjects/${subjectId}/user-tags/${oldTagName}`, {
       method: 'PUT',
-      body: JSON.stringify({ newName: newTagName, type: tagType }),
+      body: JSON.stringify({ newName: newTagName, value: tagType }),
     });
   }
 
@@ -80,5 +79,12 @@ export class SubjectApiService extends BaseApiService {
     return this.fetchApi<null>(`/subjects/${subjectId}/user-tags/${tagName}`, {
       method: 'DELETE',
     });
+  }
+
+  /**
+   * Get difficulty options for a subject
+   */
+  async getDifficultyOptions(id: string): Promise<ApiResponse<DifficultyOption[]>> {
+    return this.fetchApi<DifficultyOption[]>(`/subjects/${id}/difficulty-options`);
   }
 }

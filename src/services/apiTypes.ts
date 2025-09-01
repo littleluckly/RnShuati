@@ -16,7 +16,7 @@ export interface ApiResponse<T> {
 // Subject related interfaces
 export interface SubjectTag {
   name: string;
-  type: string;
+  value: string;
 }
 
 export interface Subject {
@@ -40,9 +40,14 @@ export interface Subject {
   };
 }
 
-export interface SubjectTagStat {
+export interface SubjectTag {
   name: string;
-  count: number;
+  type: string;
+}
+
+export interface DifficultyOption {
+  name: string;
+  value: string;
 }
 
 // Question related interfaces
