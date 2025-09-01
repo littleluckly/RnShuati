@@ -57,7 +57,7 @@ export class QuestionApiService extends BaseApiService {
   ): Promise<ApiResponse<FilteredQuestionListResponse>> {
     const requestBody = {
       page: 1,
-      limit: 20,
+      limit: 10,
       ...config,
     };
     console.log(requestBody, 'requestBody')

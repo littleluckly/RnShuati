@@ -1,6 +1,6 @@
 import {useFocusEffect} from '@react-navigation/native';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {FlatList} from 'react-native';
+import {FlatList, ActivityIndicator, View, StyleSheet} from 'react-native';
 import SwipeableItem from './SwipeableItem';
 
 import {questionApiService} from '@/services';
@@ -13,36 +13,85 @@ interface Props {
 export default ({subjectId, filters = {}}: Props) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const prevFilters = useRef(filters);
 
   // 监听筛选条件变化
   useEffect(() => {
     if (JSON.stringify(prevFilters.current) !== JSON.stringify(filters)) {
       prevFilters.current = filters;
-      fetchData();
+      // 重置分页状态并重新获取数据
+      setPage(1);
+      setHasMore(true);
+      fetchData(false, 1);
     }
   }, [filters]);
 
-  const fetchData = async () => {
+  const fetchData = async (isRefreshing = false, nextPage = 1) => {
     try {
+      if (isRefreshing) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
       const response = await questionApiService.getFilteredQuestionList({
         subjectId: subjectId,
         limit: 10,
+        page: nextPage,
         ...filters,
       });
-      // console.log('response.data', response.data);
-      if (response.success && response.data) {
-        setData(response.data.questions);
+      // const ids = response.data?.questions.map(item => item.id);
+      // console.log(ids?.length === [...new Set(ids)].length, '相等吗');
+
+      if (response.success && response.data && response.data.questions) {
+        console.log('api获取完毕');
+        if (isRefreshing || nextPage === 1) {
+          setData(response.data.questions);
+        } else {
+          // 使用Set优化过滤已经存在的项，避免key重复
+          const existingIds = new Set(data.map(item => item._id));
+          const newQuestions = response.data.questions.filter(
+            newQuestion => !existingIds.has(newQuestion._id),
+          );
+          setData(prevData => [...prevData, ...newQuestions]);
+        }
+
+        // 检查是否还有更多数据
+        setHasMore(
+          (response.data &&
+            response.data.pagination &&
+            response.data.pagination.hasNext) ||
+            false,
+        );
+        setPage(nextPage);
       }
     } catch (error) {
       console.error('获取题目列表失败:', error);
     } finally {
-      setLoading(false);
+      if (isRefreshing) {
+        setRefreshing(false);
+      } else {
+        setLoading(false);
+      }
+    }
+  };
+
+  const onRefresh = () => {
+    fetchData(true, 1);
+  };
+
+  const onEndReached = () => {
+    // 防止在数据加载完成前重复触发
+    if (!loading && !refreshing && hasMore) {
+      fetchData(false, page + 1);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(false, 1);
   }, [subjectId]);
 
   // 列表项引用管理
@@ -71,26 +120,71 @@ export default ({subjectId, filters = {}}: Props) => {
     setSelectedItemId(itemId);
   }, []);
 
-  if (loading) {
-    return null; // 或者返回一个加载指示器
+  if (loading && data.length === 0) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
+
+  // 使用 React.memo 优化 renderItem 组件
+  const MemoizedSwipeableItem = React.memo(
+    ({item, index}: {item: any; index: number}) => (
+      <SwipeableItem
+        metadata={item}
+        onWillOpen={onWillOpen}
+        setRef={(r: any) => refs.set(item.id, r)}
+        index={index}
+        selectedItemId={selectedItemId}
+        onItemPress={onItemPress}
+      />
+    ),
+  );
+
+  // 渲染列表底部加载指示器
+  const renderFooter = () => {
+    if (!loading || data.length === 0) return null;
+    return (
+      <View style={styles.footerContainer}>
+        <ActivityIndicator size="small" />
+      </View>
+    );
+  };
 
   return (
     <>
       <FlatList
         data={data}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item._id}
         renderItem={({item, index}) => (
-          <SwipeableItem
-            metadata={item}
-            onWillOpen={onWillOpen}
-            setRef={(r: any) => refs.set(item.id, r)}
-            index={index}
-            selectedItemId={selectedItemId}
-            onItemPress={onItemPress}
-          />
+          <MemoizedSwipeableItem item={item} index={index} />
         )}
+        ListFooterComponent={renderFooter}
+        // 下拉刷新相关属性
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        // 上拉加载相关属性
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.1}
+        // 性能优化相关属性
+        removeClippedSubviews={true}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
       />
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  footerContainer: {
+    padding: 10,
+    alignItems: 'center',
+  },
+});
