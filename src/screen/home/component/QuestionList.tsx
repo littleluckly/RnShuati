@@ -134,7 +134,7 @@ export default ({subjectId, filters = {}}: Props) => {
       <SwipeableItem
         metadata={item}
         onWillOpen={onWillOpen}
-        setRef={(r: any) => refs.set(item.id, r)}
+        setRef={(r: any) => refs.set(item._id, r)}
         index={index}
         selectedItemId={selectedItemId}
         onItemPress={onItemPress}

@@ -42,7 +42,7 @@ interface Props {
 
 const SwipeableItem = React.memo(
   forwardRef((props: Props, _) => {
-    const {id, question_markdown} = props.metadata;
+    const {_id: id, question_markdown} = props.metadata;
     const {onWillOpen, setRef, index = 0, selectedItemId, onItemPress} = props;
     const navigation = useNavigation<HomeStackNavigation>();
     const swipeRef = React.useRef<any>();
@@ -203,72 +203,116 @@ const SwipeableItem = React.memo(
       AudioManager.stopCurrent();
       dispatch({type: 'START'});
 
-      // 缩短延迟时间，在动画开始后就立即跳转
-      // 这样可以避免用户看到状态重置的闪烁
-      setTimeout(() => {
-        // 测量当前列表项的布局信息
+      // 添加组件挂载状态检查
+      let isMounted = true;
+
+      // 检查itemRef是否可用的函数
+      const checkRefAndNavigate = () => {
+        // 如果组件已卸载，直接使用备用导航
+        if (!isMounted) {
+          console.warn('❌ 组件已卸载，使用备用导航方式');
+          navigation.navigate(routeNameMap.detailScreen, {
+            id,
+            currentIndex: index,
+          });
+          return;
+        }
+
+        // 如果itemRef存在，尝试使用它进行精确导航
         if (itemRef.current) {
-          itemRef.current.measure(
-            (
-              x: number,
-              y: number,
-              width: number,
-              height: number,
-              pageX: number,
-              pageY: number,
-            ) => {
-              // 验证测量值有效性
-              if (
-                isNaN(pageX) ||
-                isNaN(pageY) ||
-                isNaN(width) ||
-                isNaN(height)
-              ) {
-                console.warn('❌ 测量值包含 NaN，使用备用导航方式');
-                // 备用导航方式
-                navigation.navigate(routeNameMap.detailScreen, {
-                  id,
-                  currentIndex: index,
-                });
-                return;
-              }
-
-              console.log('📏 列表项布局测量:', {
-                pageX,
-                pageY,
-                width,
-                height,
-                itemId: id,
-                screenDimensions: {screenWidth: width, screenHeight: height},
-              });
-
-              // 🚀 性能优化：使用 requestAnimationFrame + InteractionManager 双重优化
-              requestAnimationFrame(() => {
-                InteractionManager.runAfterInteractions(() => {
-                  // 导航到详情页，传递当前项的索引和布局信息
+          try {
+            // 测量当前列表项的布局信息
+            // 注意：measure只接受一个回调函数参数
+            itemRef.current.measure(
+              (
+                x: number,
+                y: number,
+                width: number,
+                height: number,
+                pageX: number,
+                pageY: number,
+              ) => {
+                // 再次检查组件是否仍在挂载状态
+                if (!isMounted) {
+                  console.warn('❌ 组件已卸载，使用备用导航方式');
                   navigation.navigate(routeNameMap.detailScreen, {
                     id,
                     currentIndex: index,
-                    sourceLayout: {
-                      x: pageX,
-                      y: pageY,
-                      width,
-                      height,
-                    },
+                  });
+                  return;
+                }
+
+                // 验证测量值有效性
+                if (isNaN(pageX) || isNaN(pageY) || isNaN(width) || isNaN(height)) {
+                  console.warn('❌ 测量值包含 NaN，使用备用导航方式');
+                  navigation.navigate(routeNameMap.detailScreen, {
+                    id,
+                    currentIndex: index,
+                  });
+                  return;
+                }
+
+                // 性能优化：使用 requestAnimationFrame + InteractionManager 双重优化
+                requestAnimationFrame(() => {
+                  InteractionManager.runAfterInteractions(() => {
+                    if (isMounted) {
+                      // 导航到详情页，传递当前项的索引和布局信息
+                      navigation.navigate(routeNameMap.detailScreen, {
+                        id,
+                        currentIndex: index,
+                        sourceLayout: {
+                          x: pageX,
+                          y: pageY,
+                          width,
+                          height,
+                        },
+                      });
+                    }
                   });
                 });
+              }
+            );
+          } catch (error: any) {
+            // 添加了any类型注解，防止TypeScript编译错误
+            console.warn('❌ 调用measure时出错:', error?.message || String(error), '使用备用导航方式');
+            if (isMounted) {
+              navigation.navigate(routeNameMap.detailScreen, {
+                id,
+                currentIndex: index,
               });
-            },
-          );
+            }
+          }
         } else {
-          console.warn('❌ itemRef.current 为空，使用备用导航方式');
-          // 备用导航方式
+          // itemRef.current为空，使用备用导航方式
+          console.log('ℹ️ itemRef.current为空，但这是正常的，自动使用备用导航方式');
+          // 静默降级到备用导航，不显示警告
           navigation.navigate(routeNameMap.detailScreen, {
             id,
             currentIndex: index,
           });
         }
-      }, 100); // 缩短延迟到100ms，减少状态重置的可见性
+      };
+
+      // 尝试立即检查ref，如果不可用则使用超时重试
+      if (itemRef.current) {
+        checkRefAndNavigate();
+      } else {
+        // 设置一个短时间的延迟，让ref有机会被设置
+        const timeoutId = setTimeout(() => {
+          checkRefAndNavigate();
+        }, 100); // 减少延迟到100ms，提高响应速度
+
+        // 确保在组件卸载时清除定时器
+        return () => {
+          isMounted = false;
+          clearTimeout(timeoutId);
+        };
+      }
+
+      // 清理函数
+      return () => {
+        isMounted = false;
+      };
     }, [navigation, id, index, onItemPress]);
     return (
       <Animated.View style={[styles.container, animatedStyle]}>
@@ -330,7 +374,7 @@ const SwipeableItem = React.memo(
   (prevProps: Props, nextProps: Props) => {
     // 🚀 性能优化：防止不必要的重新渲染
     return (
-      prevProps.metadata.id === nextProps.metadata.id &&
+      prevProps.metadata._id === nextProps.metadata._id &&
       prevProps.index === nextProps.index &&
       prevProps.selectedItemId === nextProps.selectedItemId
     );
