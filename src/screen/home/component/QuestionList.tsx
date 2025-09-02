@@ -37,6 +37,8 @@ const OptimizedFlatList: React.FC<Props> = ({
 
   // 列表引用
   const flatListRef = useRef<FlatList<Question> | null>(null);
+  // 用于存储每个列表项的ref
+  const itemRefs = useRef<(View | null)[]>([]);
 
   // 监听subjectId和filters变化，更新Context中的状态
   useEffect(() => {
@@ -62,10 +64,32 @@ const OptimizedFlatList: React.FC<Props> = ({
     (id: string, index: number) => {
       // 立即停止音频以提供即时反馈
       AudioManager.stopCurrent();
-      navigation.navigate(routeNameMap.detailScreen, {
-        id,
-        currentIndex: index,
-      });
+
+      // 获取当前项的ref
+      const itemRef = itemRefs.current[index];
+
+      if (itemRef) {
+        // 测量当前项的尺寸和位置
+        itemRef.measureInWindow((x, y, width, height) => {
+          // 传递测量信息到详情页
+          navigation.navigate(routeNameMap.detailScreen, {
+            id,
+            currentIndex: index,
+            sourceLayout: {
+              x: x || 0,
+              y: y || 0,
+              width: width || 0,
+              height: height || 0,
+            },
+          });
+        });
+      } else {
+        // 如果没有获取到ref，仍然导航，但不传递坐标信息
+        navigation.navigate(routeNameMap.detailScreen, {
+          id,
+          currentIndex: index,
+        });
+      }
     },
     [navigation],
   );
@@ -105,6 +129,7 @@ const OptimizedFlatList: React.FC<Props> = ({
   const renderItem = useCallback(
     ({item, index}: {item: Question; index: number}) => (
       <TouchableOpacity
+        ref={el => (itemRefs.current[index] = el)}
         style={styles.row}
         activeOpacity={0.8}
         onPress={() => handleNavigateToDetail(item._id, index)}>
@@ -129,10 +154,6 @@ const OptimizedFlatList: React.FC<Props> = ({
           )}
         </TouchableOpacity>
         <View style={styles.textBox}>
-          <Text>
-            {playbackInfo.state}-
-            {JSON.stringify(playbackInfo.currentItemId === item.id)}
-          </Text>
           <Text style={styles.title} numberOfLines={3} ellipsizeMode="tail">
             {item.question_markdown}
           </Text>
