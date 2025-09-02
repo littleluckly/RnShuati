@@ -408,7 +408,7 @@ const Quiz3DCard = (
   }: Quiz3DCardProps = {} as Quiz3DCardProps,
 ) => {
   const {state} = useSharedTransition();
-  const { state: questionState } = useQuestionContext();
+  const { state: questionState, loadMore } = useQuestionContext();
   
   // 🚀 性能优化：使用 lazy 初始化减少初始渲染延迟
   const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -416,6 +416,7 @@ const Quiz3DCard = (
   const [answeredCount, setAnsweredCount] = useState<number>(initialAnsweredCount);
   const [activeCardIndex, setActiveCardIndex] = useState<number>(0);
   const [dismissedCards, setDismissedCards] = useState<Question[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false); // 跟踪是否正在加载更多数据
 
   // 监听QuestionContext中的questions变化，同步数据
   React.useEffect(() => {
@@ -424,18 +425,33 @@ const Quiz3DCard = (
 
       // 🚀 性能优化：使用 startTransition 延迟非关键更新
       startTransition(() => {
-        if (
-          initialAnsweredCount > 0 &&
-          initialAnsweredCount < questionData.length
-        ) {
-          const answeredCards = questionData.slice(0, initialAnsweredCount);
-          const remainingCards = questionData.slice(initialAnsweredCount);
+        // 只在初次加载数据时应用initialAnsweredCount
+        // 当isDataLoaded为false时，表示是初次加载
+        if (!isDataLoaded) {
+          if (
+            initialAnsweredCount > 0 &&
+            initialAnsweredCount < questionData.length
+          ) {
+            const answeredCards = questionData.slice(0, initialAnsweredCount);
+            const remainingCards = questionData.slice(initialAnsweredCount);
 
-          setCards(remainingCards);
-          setDismissedCards(answeredCards);
-          setAnsweredCount(initialAnsweredCount);
+            setCards(remainingCards);
+            setDismissedCards(answeredCards);
+            setAnsweredCount(initialAnsweredCount);
+          } else {
+            setCards(questionData);
+          }
         } else {
-          setCards(questionData);
+          // 后续更新时，保留用户当前的进度状态
+          // 计算新加入的问题（不在当前cards和dismissedCards中的问题）
+          const allCurrentQuestions = [...cards, ...dismissedCards];
+          const currentQuestionIds = new Set(allCurrentQuestions.map(q => q._id));
+          const newQuestions = questionData.filter(q => !currentQuestionIds.has(q._id));
+          
+          if (newQuestions.length > 0) {
+            // 将新问题添加到cards数组末尾
+            setCards(prevCards => [...prevCards, ...newQuestions]);
+          }
         }
 
         setIsDataLoaded(true);
@@ -443,8 +459,10 @@ const Quiz3DCard = (
     };
 
     // 使用 InteractionManager 在主线程闲置时加载数据
-    InteractionManager.runAfterInteractions(loadData);
-  }, [initialAnsweredCount, questionState.questions]);
+    InteractionManager.runAfterInteractions(() => {
+      loadData();
+    });
+  }, [initialAnsweredCount, questionState.questions, isDataLoaded, cards, dismissedCards]);
 
   // const [isTransitioning, setIsTransitioning] = useState(true);
   const visibleCards = useMemo(() => {
@@ -464,6 +482,34 @@ const Quiz3DCard = (
   const remainingCards = useMemo(() => {
     return cards.length;
   }, [cards]);
+
+  // 检查卡片数量并触发加载更多数据
+  const checkAndLoadMoreData = useCallback(async () => {
+    // 如果正在加载中，或者没有更多数据，或者剩余卡片数量大于阈值，则不加载
+    if (isLoadingMore || !questionState.pagination.hasNext || cards.length >= 10) {
+      return;
+    }
+
+    // 当剩余卡片数量少于5张时，触发加载更多
+    if (cards.length <= 5) {
+      console.log(`📥 剩余卡片数量不足，开始加载更多数据...`);
+      setIsLoadingMore(true);
+      try {
+        await loadMore();
+      } catch (error) {
+        console.error('加载更多数据失败:', error);
+      } finally {
+        setIsLoadingMore(false);
+      }
+    }
+  }, [isLoadingMore, questionState.pagination.hasNext, cards.length, loadMore]);
+
+  // 监听卡片数量变化，当数量不足时自动加载更多
+  useEffect(() => {
+    if (isDataLoaded) {
+      checkAndLoadMoreData();
+    }
+  }, [cards.length, isDataLoaded, checkAndLoadMoreData]);
 
   const onCardDismiss = useCallback(() => {
     setCards(prevCards => {
