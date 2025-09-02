@@ -94,16 +94,17 @@ export interface FilteredQuestionListConfig {
   limit?: number;
 }
 
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
 export interface FilteredQuestionListResponse {
   questions: Question[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
+  pagination: Pagination;
   filters: {
     subjectId?: string;
     difficulty?: string | string[];

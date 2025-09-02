@@ -10,6 +10,7 @@ import {routeNameMap} from './constant';
 import WelcomeScreen from '@/screen/home/WelcomeScreen';
 import {Button, TextInput} from 'react-native';
 import SearchableHeader from './SearchableHeader';
+import {QuestionProvider} from '@/contexts/QuestionContext';
 
 const Stack = createStackNavigator();
 
@@ -25,42 +26,45 @@ const customCardStyleInterpolator = ({current, layouts}: any) => {
     },
   };
 };
+
 export default function HomeStack() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: true,
-        header: () => <SearchableHeader />,
-      }}>
-      <Stack.Screen
-        name={routeNameMap.welcomeScreen}
-        component={WelcomeScreen}
-        options={{}}
-      />
-      <Stack.Screen name={routeNameMap.homeScreen} component={HomeScreen} />
-      <Stack.Screen
-        name={routeNameMap.detailScreen}
-        component={DetailScreen}
-        options={{
-          cardStyleInterpolator: customCardStyleInterpolator,
-          transitionSpec: {
-            open: {
-              animation: 'timing',
-              config: {
-                duration: 350,
+    <QuestionProvider>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: true,
+          header: () => <SearchableHeader />,
+        }}>
+        <Stack.Screen
+          name={routeNameMap.welcomeScreen}
+          component={WelcomeScreen}
+          options={{}}
+        />
+        <Stack.Screen name={routeNameMap.homeScreen} component={HomeScreen} />
+        <Stack.Screen
+          name={routeNameMap.detailScreen}
+          component={DetailScreen}
+          options={{
+            cardStyleInterpolator: customCardStyleInterpolator,
+            transitionSpec: {
+              open: {
+                animation: 'timing',
+                config: {
+                  duration: 350,
+                },
+              },
+              close: {
+                animation: 'timing',
+                config: {
+                  duration: 250,
+                },
               },
             },
-            close: {
-              animation: 'timing',
-              config: {
-                duration: 250,
-              },
-            },
-          },
-          // 禁用手势返回，避免干扰共享元素动画
-          gestureEnabled: false,
-        }}
-      />
-    </Stack.Navigator>
+            // 禁用手势返回，避免干扰共享元素动画
+            gestureEnabled: false,
+          }}
+        />
+      </Stack.Navigator>
+    </QuestionProvider>
   );
 }

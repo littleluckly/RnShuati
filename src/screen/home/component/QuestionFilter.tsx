@@ -10,16 +10,14 @@ import {
 import {Modalize} from 'react-native-modalize';
 import {Portal} from 'react-native-portalize';
 import {subjectApiService} from '@/services';
+import {useQuestionContext} from '@/contexts/QuestionContext';
 
 interface QuestionFilterProps {
   subjectId: string;
-  onFilterChange: (filters: {
-    difficulty?: string | string[];
-    tags?: string[];
-  }) => void;
 }
 
-const Filter = ({subjectId, onFilterChange}: QuestionFilterProps) => {
+const Filter = ({subjectId}: QuestionFilterProps) => {
+  const {updateFilters} = useQuestionContext();
   const modalRef = useRef<Modalize>(null);
   // 筛选项
   const filters = [
@@ -223,7 +221,7 @@ const Filter = ({subjectId, onFilterChange}: QuestionFilterProps) => {
                 style={styles.confirmButton}
                 onPress={() => {
                   // 触发筛选条件变化，同时传递所有筛选条件
-                  onFilterChange({
+                  updateFilters({
                     difficulty:
                       difficulty.includes('') || difficulty.length === 0
                         ? undefined
