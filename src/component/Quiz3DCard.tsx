@@ -30,26 +30,16 @@ import Animated, {
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import QuestionCard from './QuestionCard';
 import {ProgressCounterProps, SwipeableCardProps} from './types';
-import metadata from '@/data/importQuestion';
-import {QuestionMeta} from '@/models/QuestionMeta';
 import {showSwipeLimitToast} from '@/utils/toastUtils';
 import {useSharedTransition} from '@/contexts/sharedTransitionContext';
 import {SharedElement} from '@/contexts/ShareElement';
+import {useQuestionContext} from '@/contexts/QuestionContext';
+import {Question} from '@/services/apiTypes';
 // 导入导航栏高度hook
 import {useHeaderHeight} from '@react-navigation/elements';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const {width, height} = Dimensions.get('window');
-
-// 🚀 性能优化：延迟初始化 QuestionMeta 数据
-let _cachedQuestionData: QuestionMeta[] | null = null;
-const getQuestionData = (): QuestionMeta[] => {
-  if (!_cachedQuestionData) {
-    // 只在需要时才创建 QuestionMeta 对象
-    _cachedQuestionData = metadata.map(item => new QuestionMeta(item));
-  }
-  return _cachedQuestionData;
-};
 
 // Quiz3DCard 组件的属性接口
 interface Quiz3DCardProps {
@@ -84,7 +74,7 @@ const ProgressCounter = React.memo(
 // ✅ 核心组件：可滑动的卡片
 const SwipeableCard = React.memo(
   ({
-    questionMeta,
+    question: questionMeta,
     onDismiss,
     onCardDelete,
     onSwipeBack,
@@ -401,7 +391,7 @@ const SwipeableCard = React.memo(
   },
   (prevProps, nextProps) => {
     return (
-      prevProps.questionMeta.id === nextProps.questionMeta.id &&
+      prevProps.question._id === nextProps.question._id &&
       prevProps.index === nextProps.index &&
       prevProps.isActive === nextProps.isActive &&
       prevProps.totalCards === nextProps.totalCards &&
@@ -418,18 +408,19 @@ const Quiz3DCard = (
   }: Quiz3DCardProps = {} as Quiz3DCardProps,
 ) => {
   const {state} = useSharedTransition();
+  const { state: questionState } = useQuestionContext();
+  
   // 🚀 性能优化：使用 lazy 初始化减少初始渲染延迟
   const [isDataLoaded, setIsDataLoaded] = useState(false);
-  const [cards, setCards] = useState<QuestionMeta[]>([]);
-  const [answeredCount, setAnsweredCount] =
-    useState<number>(initialAnsweredCount);
+  const [cards, setCards] = useState<Question[]>([]);
+  const [answeredCount, setAnsweredCount] = useState<number>(initialAnsweredCount);
   const [activeCardIndex, setActiveCardIndex] = useState<number>(0);
-  const [dismissedCards, setDismissedCards] = useState<QuestionMeta[]>([]);
+  const [dismissedCards, setDismissedCards] = useState<Question[]>([]);
 
-  // 延迟加载数据以优化初始渲染性能
+  // 监听QuestionContext中的questions变化，同步数据
   React.useEffect(() => {
     const loadData = () => {
-      const questionData = getQuestionData();
+      const questionData = questionState.questions;
 
       // 🚀 性能优化：使用 startTransition 延迟非关键更新
       startTransition(() => {
@@ -453,7 +444,7 @@ const Quiz3DCard = (
 
     // 使用 InteractionManager 在主线程闲置时加载数据
     InteractionManager.runAfterInteractions(loadData);
-  }, [initialAnsweredCount]);
+  }, [initialAnsweredCount, questionState.questions]);
 
   // const [isTransitioning, setIsTransitioning] = useState(true);
   const visibleCards = useMemo(() => {
@@ -566,10 +557,10 @@ const Quiz3DCard = (
         />
       }
       <View style={styles.container}>
-        {visibleCards.map((questionMeta, index) => (
+        {visibleCards.map((question, index) => (
           <SwipeableCard
-            key={`${questionMeta.id}-${index}`}
-            questionMeta={questionMeta}
+            key={`${question._id}-${index}`}
+            question={question}
             onDismiss={index === 0 ? onCardDismiss : () => {}}
             onSwipeBack={index === 0 ? onSwipeBack : () => {}}
             onCardDelete={index === 0 ? onCardDelete : () => {}}
