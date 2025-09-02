@@ -425,12 +425,7 @@ const Quiz3DCard = (
     useState<number>(initialAnsweredCount);
   const [activeCardIndex, setActiveCardIndex] = useState<number>(0);
   const [dismissedCards, setDismissedCards] = useState<QuestionMeta[]>([]);
-  const [showProcessCounter, setShowProcessCounter] = useState<boolean>(false);
-  useEffect(() => {
-    setTimeout(() => {
-      state.isTransitioning && setShowProcessCounter(true);
-    }, 1000);
-  }, [state.isTransitioning]);
+
   // 延迟加载数据以优化初始渲染性能
   React.useEffect(() => {
     const loadData = () => {
@@ -563,13 +558,13 @@ const Quiz3DCard = (
 
   return (
     <>
-      {showProcessCounter && (
+      {
         <ProgressCounter
           current={remainingCards}
           total={remainingCards + answeredCount} // ✅ 简单计算：剩余 + 已答 = 总数
           answered={answeredCount}
         />
-      )}
+      }
       <View style={styles.container}>
         {visibleCards.map((questionMeta, index) => (
           <SwipeableCard
@@ -605,6 +600,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f5f7fa',
+    width: '100%',
   },
   loadingText: {
     marginTop: 16,

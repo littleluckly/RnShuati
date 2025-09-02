@@ -17,22 +17,14 @@ export default function DetailScreen() {
   // 安全地解构 route.params，处理可能为 undefined 的情况
   const params = route.params || {id: '', currentIndex: 0};
   const {id, currentIndex = 0, sourceLayout} = params;
-
+  console.log('sourceLayout', sourceLayout);
   return (
     <View style={styles.center}>
-      <Suspense
-        fallback={
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#1da1f2" />
-            <Text style={styles.loadingText}>加载中...</Text>
-          </View>
-        }>
-        <Quiz3DCard
-          initialAnsweredCount={currentIndex}
-          startFromQuestion={id}
-          sourceLayout={sourceLayout}
-        />
-      </Suspense>
+      <Quiz3DCard
+        initialAnsweredCount={currentIndex}
+        startFromQuestion={id}
+        sourceLayout={sourceLayout}
+      />
     </View>
   );
 }
