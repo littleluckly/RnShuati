@@ -50,37 +50,6 @@ const SearchableHeader = () => {
   const progress = useSharedValue(0);
   const [headerVisible, setHeaderVisible] = useState(false); // 🔑 控制头部是否显示
 
-  // ✅ 使用 useEffect 而不是 setTimeout 来触发动画
-  useEffect(() => {
-    console.log('🚀 SearchableHeader 初始化，准备开始动画...');
-    // 确保组件挂载后延迟开始动画
-    const timer = setTimeout(() => {
-      console.log('🎨 开始头部渐显动画');
-      setHeaderVisible(true); // 🔑 先显示头部
-      progress.value = withSpring(1, {
-        damping: 20,
-        stiffness: 200,
-      });
-    }, 1000); // 延迟 1 秒开始动画
-
-    return () => {
-      console.log('🗑️ 清理动画定时器');
-      clearTimeout(timer);
-    };
-  }, []);
-
-  const headerStyle = useAnimatedStyle(() => {
-    return {
-      opacity: progress.value, // 直接使用 progress.value
-      transform: [
-        {
-          // ✅ 修复动画计算：从 -20px 滑入到 0px
-          translateY: (1 - progress.value) * -20,
-        },
-      ],
-    };
-  });
-
   const insets = useSafeAreaInsets(); // 获取安全区域
   const route = useRoute();
   const navigationState = useNavigationState(state => state);
@@ -135,13 +104,7 @@ const SearchableHeader = () => {
   // 动态渲染 header
   if (isSearching) {
     return (
-      <View
-        style={[
-          styles.searchHeader,
-          headerStyle, // ✅ 也为搜索模式添加动画
-          isSearching && {padding: 0},
-          getDefaultHeaderStyle(),
-        ]}>
+      <View style={[styles.searchHeader, isSearching && {padding: 0}]}>
         <TextInput
           style={[styles.searchInput]}
           value={query}
@@ -160,13 +123,7 @@ const SearchableHeader = () => {
   }
 
   return (
-    <View
-      style={[
-        styles.defaultHeader,
-        headerStyle,
-        getDefaultHeaderStyle(),
-        {zIndex: 9999},
-      ]}>
+    <View style={[styles.defaultHeader, {zIndex: 9999}]}>
       {/* 左侧：返回按钮（仅在可以返回时显示） */}
       {canGoBack ? (
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -204,7 +161,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     height: 56,
     overflow: 'hidden',
-    // ...getDefaultHeaderStyle(), // ✅ 应用统一背景、阴影、高度
   },
   title: {
     fontSize: 17,
