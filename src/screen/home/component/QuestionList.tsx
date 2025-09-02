@@ -17,6 +17,7 @@ import {useNavigation} from '@react-navigation/native';
 import {HomeStackNavigation} from '@/navigation/Types';
 import {routeNameMap} from '@/navigation/constant';
 import {useQuestionContext} from '@/contexts/QuestionContext';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface Props {
   subjectId: string;
@@ -175,8 +176,16 @@ const OptimizedFlatList: React.FC<Props> = ({
   const renderFooter = useCallback(() => {
     if (!pagination.hasNext) {
       return (
-        <View style={styles.footerContainer}>
-          <Text style={styles.footerText}>No more data</Text>
+        <View style={styles.endContainer}>
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <View style={styles.endContent}>
+              <Ionicons name="checkmark-circle" size={18} color="#666" />
+              <Text style={styles.endText}>已经没有更多题目了</Text>
+            </View>
+            <View style={styles.divider} />
+          </View>
+          <Text style={styles.endSubText}>换个筛选条件试试吧</Text>
         </View>
       );
     }
@@ -395,6 +404,38 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
+  },
+
+  // 新增的底部结束样式
+  endContainer: {
+    paddingVertical: 24,
+    alignItems: 'center',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '80%',
+    marginBottom: 8,
+  },
+  divider: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: '#ddd',
+  },
+  endContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  endText: {
+    color: '#888',
+    fontSize: 14,
+    marginLeft: 6,
+    fontWeight: '500',
+  },
+  endSubText: {
+    color: '#aaa',
+    fontSize: 12,
   },
 });
 
