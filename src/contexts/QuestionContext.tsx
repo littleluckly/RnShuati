@@ -26,7 +26,8 @@ type QuestionContextAction =
   | { type: 'ADD_QUESTIONS'; payload: Question[] }
   | { type: 'SET_PAGINATION'; payload: Pagination }
   | { type: 'SET_HAS_MORE'; payload: boolean }
-  | { type: 'RESET' };
+  | { type: 'RESET' }
+  | { type: 'DELETE_QUESTION'; payload: string }; // 添加删除题目的action类型
 
 // 定义Context类型
 interface QuestionContextType {
@@ -36,6 +37,7 @@ interface QuestionContextType {
   refreshData: () => Promise<void>;
   loadMore: () => Promise<void>;
   updateFilters: (filters: { difficulty?: string | string[]; tags?: string[] }) => void;
+  deleteQuestion: (questionId: string) => void; // 添加删除题目方法
 }
 
 // 创建上下文并指定类型，初始值为undefined
@@ -87,6 +89,16 @@ const reducer = (
       return { ...state, hasMore: action.payload };
     case 'RESET':
       return { ...initialState, subjectId: state.subjectId };
+    case 'DELETE_QUESTION':
+      return {
+        ...state,
+        questions: state.questions.filter(question => question._id !== action.payload),
+        pagination: {
+          ...state.pagination,
+          total: Math.max(0, state.pagination.total - 1),
+          totalPages: Math.max(1, Math.ceil((Math.max(0, state.pagination.total - 1)) / state.pagination.limit))
+        }
+      };
     default:
       return state;
   }
@@ -162,6 +174,11 @@ export const QuestionProvider = ({ children, initialSubjectId = '' }: QuestionPr
     dispatch({ type: 'SET_FILTERS', payload: filters });
   }, []);
 
+  // 删除题目
+  const deleteQuestion = useCallback((questionId: string) => {
+    dispatch({ type: 'DELETE_QUESTION', payload: questionId });
+  }, []);
+
   // 当主题ID或筛选条件变化时，重新获取数据
   useEffect(() => {
     if (state.subjectId) {
@@ -185,6 +202,7 @@ export const QuestionProvider = ({ children, initialSubjectId = '' }: QuestionPr
         refreshData,
         loadMore,
         updateFilters,
+        deleteQuestion,
       }}
     >
       {children}

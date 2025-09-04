@@ -408,12 +408,13 @@ const Quiz3DCard = (
   }: Quiz3DCardProps = {} as Quiz3DCardProps,
 ) => {
   const {state} = useSharedTransition();
-  const { state: questionState, loadMore } = useQuestionContext();
-  
+  const {state: questionState, loadMore, deleteQuestion} = useQuestionContext();
+
   // 🚀 性能优化：使用 lazy 初始化减少初始渲染延迟
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [cards, setCards] = useState<Question[]>([]);
-  const [answeredCount, setAnsweredCount] = useState<number>(initialAnsweredCount);
+  const [answeredCount, setAnsweredCount] =
+    useState<number>(initialAnsweredCount);
   const [activeCardIndex, setActiveCardIndex] = useState<number>(0);
   const [dismissedCards, setDismissedCards] = useState<Question[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false); // 跟踪是否正在加载更多数据
@@ -445,9 +446,13 @@ const Quiz3DCard = (
           // 后续更新时，保留用户当前的进度状态
           // 计算新加入的问题（不在当前cards和dismissedCards中的问题）
           const allCurrentQuestions = [...cards, ...dismissedCards];
-          const currentQuestionIds = new Set(allCurrentQuestions.map(q => q._id));
-          const newQuestions = questionData.filter(q => !currentQuestionIds.has(q._id));
-          
+          const currentQuestionIds = new Set(
+            allCurrentQuestions.map(q => q._id),
+          );
+          const newQuestions = questionData.filter(
+            q => !currentQuestionIds.has(q._id),
+          );
+
           if (newQuestions.length > 0) {
             // 将新问题添加到cards数组末尾
             setCards(prevCards => [...prevCards, ...newQuestions]);
@@ -462,7 +467,13 @@ const Quiz3DCard = (
     InteractionManager.runAfterInteractions(() => {
       loadData();
     });
-  }, [initialAnsweredCount, questionState.questions, isDataLoaded, cards, dismissedCards]);
+  }, [
+    initialAnsweredCount,
+    questionState.questions,
+    isDataLoaded,
+    cards,
+    dismissedCards,
+  ]);
 
   // const [isTransitioning, setIsTransitioning] = useState(true);
   const visibleCards = useMemo(() => {
@@ -480,13 +491,19 @@ const Quiz3DCard = (
   }, [dismissedCards]);
 
   const remainingCards = useMemo(() => {
-    return cards.length;
-  }, [cards]);
+    // 剩余卡片数量应该是总数量减去已回答的卡片数量（删除的卡片已经在pagination.total中处理了）
+    return Math.max(0, questionState.pagination.total - answeredCount);
+  }, [questionState.pagination.total, answeredCount]);
 
   // 检查卡片数量并触发加载更多数据
   const checkAndLoadMoreData = useCallback(async () => {
     // 如果正在加载中，或者没有更多数据，或者剩余卡片数量大于阈值，则不加载
-    if (isLoadingMore || !questionState.pagination.hasNext || cards.length >= 10) {
+    if (
+      isLoadingMore ||
+      !questionState.pagination.hasNext ||
+      cards.length >= 10
+    ) {
+      console.log('⏭️ 不满足加载条件，跳过加载');
       return;
     }
 
@@ -501,6 +518,8 @@ const Quiz3DCard = (
       } finally {
         setIsLoadingMore(false);
       }
+    } else {
+      console.log(`⏭️ 卡片数量(${cards.length})大于阈值(5)，无需加载更多`);
     }
   }, [isLoadingMore, questionState.pagination.hasNext, cards.length, loadMore]);
 
@@ -552,15 +571,23 @@ const Quiz3DCard = (
   const onCardDelete = useCallback(() => {
     setCards(prevCards => {
       if (prevCards.length > 0) {
+        // 获取要删除的卡片ID
+        const cardToDelete = prevCards[0];
         // 只从卡片列表中移除第一张卡片，不添加到dismissedCards，也不更新answeredCount
         const newCards = prevCards.slice(1);
         console.log(`🗑️ 卡片被直接删除，剩余: ${newCards.length}`);
+
+        // 同时从questionState中删除该题目
+        if (deleteQuestion) {
+          deleteQuestion(cardToDelete._id);
+        }
+
         return newCards;
       }
       return prevCards;
     });
     setActiveCardIndex(0);
-  }, []);
+  }, [deleteQuestion]);
 
   const onCardTouch = useCallback(
     (touchedIndex: number) => {
@@ -586,7 +613,7 @@ const Quiz3DCard = (
         <View style={styles.completionContainer}>
           <Text style={styles.completionTitle}>🎉 恭喜完成！</Text>
           <Text style={styles.endText}>
-            你已经完成了所有 {dismissedCards.length} 道题目！
+            你已经完成了所有 {answeredCount} 道题目！
           </Text>
         </View>
       </View>
@@ -598,7 +625,7 @@ const Quiz3DCard = (
       {
         <ProgressCounter
           current={remainingCards}
-          total={remainingCards + answeredCount} // ✅ 简单计算：剩余 + 已答 = 总数
+          total={questionState.pagination.total} // 总数直接使用pagination.total，因为context已经处理了删除
           answered={answeredCount}
         />
       }
