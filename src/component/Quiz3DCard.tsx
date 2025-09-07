@@ -35,6 +35,7 @@ import {useSharedTransition} from '@/contexts/sharedTransitionContext';
 import {SharedElement} from '@/contexts/ShareElement';
 import {useQuestionContext} from '@/contexts/QuestionContext';
 import {Question} from '@/services/apiTypes';
+import {userActionApiService} from '@/services';
 // 导入导航栏高度hook
 import {useHeaderHeight} from '@react-navigation/elements';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -581,6 +582,15 @@ const Quiz3DCard = (
         if (deleteQuestion) {
           deleteQuestion(cardToDelete._id);
         }
+
+        // 调用API记录删除操作
+        userActionApiService.recordUserAction(
+          undefined, // userId can be undefined for anonymous users
+          cardToDelete._id,
+          'deleted'
+        ).catch(error => {
+          console.error('Failed to record delete action:', error);
+        });
 
         return newCards;
       }
