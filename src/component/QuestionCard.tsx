@@ -3,18 +3,11 @@
 import React, {useState, useCallback, useMemo} from 'react';
 import {StyleSheet, Share, Dimensions, View} from 'react-native';
 import {ScrollView} from 'react-native-gesture-handler';
-import {
-  Text,
-  IconButton,
-  Divider,
-  Snackbar,
-  useTheme,
-} from 'react-native-paper';
+import {Text, IconButton, Divider, useTheme} from 'react-native-paper';
 import {QuestionCardProps} from './types';
 import Markdown from 'react-native-markdown-display';
 import GlobalStyles from '@/styles/globalStyles';
 import {showSuccessToast, showInfoToast} from '@/utils/toastUtils';
-import ConfirmDialog from '@/components/ConfirmDialog';
 import he from 'he'; // 导入 he 库
 
 const {width, height} = Dimensions.get('window');
