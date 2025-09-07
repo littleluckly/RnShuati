@@ -109,12 +109,15 @@ const OptimizedFlatList: React.FC<Props> = ({
     (question: Question) => {
       const {files: audioFiles, id} = question;
       // console.log('Audio files available:', audioFiles);
-      // 开始播放序列：题目 → 精简答案 → 详细解析
+      // 开始播放序列：题目 → 简单答案 → 详细答案
+      // todo 详细解析内容过长，默认不播放，通过个人喜好设定
+      // 每个音频播放循环次数可以通过个人喜好设定
+      // 如何支持耳机控制上一曲，下一曲
       AudioManager.addListener(id, setPlaybackInfo);
       AudioManager.startPlayback(id, {
         audio_question: audioFiles.audio_question,
-        audio_simple: audioFiles.audio_simple,
-        audio_analysis: audioFiles.audio_analysis,
+        audio_simple: audioFiles.audio_answer_simple,
+        audio_analysis: audioFiles.audio_answer_analysis,
       });
       setPlaybackId(playbackId === id ? '' : id);
     },

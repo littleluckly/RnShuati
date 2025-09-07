@@ -52,10 +52,10 @@ export interface DifficultyOption {
 
 // Question related interfaces
 export interface QuestionFiles {
-  audio_simple?: string;
+  audio_answer_simple?: string;
+  audio_answer_detail?: string;
+  audio_answer_analysis?: string;
   audio_question?: string;
-  audio_analysis?: string;
-  meta: string;
 }
 
 export interface Question {
@@ -70,9 +70,11 @@ export interface Question {
   created_at: string | null;
   question_markdown: string;
   answer_simple_markdown: string;
+  answer_detail_markdown: string;
   answer_analysis_markdown: string;
   files: QuestionFiles;
   subjectId: string;
+  audioKey?: string;
 }
 
 export interface RandomQuestionListConfig {

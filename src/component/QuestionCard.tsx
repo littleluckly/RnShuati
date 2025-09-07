@@ -15,6 +15,7 @@ import Markdown from 'react-native-markdown-display';
 import GlobalStyles from '@/styles/globalStyles';
 import {showSuccessToast, showInfoToast} from '@/utils/toastUtils';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import he from 'he'; // 导入 he 库
 
 const {width, height} = Dimensions.get('window');
 
@@ -35,6 +36,9 @@ export default React.memo(
     const [showFull, setShowFull] = useState(false);
     const [favorite, setFavorite] = useState(initialFavorite);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    const decodedSimpleAnswer = he.decode(simpleAnswer);
+    const decodedAnalysisAnswer = he.decode(analysisAnswer);
 
     const handleFavorite = useCallback(() => {
       setFavorite(prev => !prev);
@@ -108,7 +112,7 @@ export default React.memo(
                   onPress={() => setShowShort(!showShort)}>
                   {'精简答案'}
                 </Text>
-                <Markdown>{simpleAnswer}</Markdown>
+                <Markdown>{decodedSimpleAnswer}</Markdown>
               </View>
             )}
 
@@ -121,7 +125,7 @@ export default React.memo(
                   onPress={() => setShowFull(!showFull)}>
                   {'详细解析'}
                 </Text>
-                <Markdown>{analysisAnswer}</Markdown>
+                <Markdown>{decodedAnalysisAnswer}</Markdown>
               </View>
             )}
           </ScrollView>
