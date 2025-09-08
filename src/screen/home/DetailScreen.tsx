@@ -1,9 +1,9 @@
 import Quiz3DCard from '@/component/3Dcard/Quiz3DCard';
 import {routeNameMap} from '@/navigation/constant';
-import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
-import React, {Suspense, useState} from 'react';
-import {View, Text, StyleSheet, ActivityIndicator} from 'react-native';
 import {HomeStackParamList} from '@/navigation/Types';
+import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
+import React from 'react';
+import {StyleSheet, View} from 'react-native';
 
 type DetailScreenRouteProp = RouteProp<
   HomeStackParamList,
