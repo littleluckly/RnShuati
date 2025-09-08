@@ -9,6 +9,7 @@ import Markdown from 'react-native-markdown-display';
 import GlobalStyles from '@/styles/globalStyles';
 import {showSuccessToast, showInfoToast} from '@/utils/toastUtils';
 import he from 'he'; // 导入 he 库
+import MarkdownWithHighlight from './MarkdownWithHighlight';
 
 const {width, height} = Dimensions.get('window');
 
@@ -105,7 +106,7 @@ export default React.memo(
                   onPress={() => setShowShort(!showShort)}>
                   {'精简答案'}
                 </Text>
-                <Markdown>{decodedSimpleAnswer}</Markdown>
+                <MarkdownWithHighlight content={decodedSimpleAnswer} />
               </View>
             )}
 
@@ -118,7 +119,7 @@ export default React.memo(
                   onPress={() => setShowFull(!showFull)}>
                   {'详细解析'}
                 </Text>
-                <Markdown>{decodedAnalysisAnswer}</Markdown>
+                <MarkdownWithHighlight content={decodedAnalysisAnswer} />
               </View>
             )}
           </ScrollView>
