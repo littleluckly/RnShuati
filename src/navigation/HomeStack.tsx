@@ -44,7 +44,7 @@ export default function HomeStack() {
         <Stack.Screen
           name={routeNameMap.detailScreen}
           component={DetailScreen}
-          options={{
+          options={({route}: any) => ({
             cardStyleInterpolator: customCardStyleInterpolator,
             transitionSpec: {
               open: {
@@ -62,7 +62,11 @@ export default function HomeStack() {
             },
             // 禁用手势返回，避免干扰共享元素动画
             gestureEnabled: false,
-          }}
+            // 隐藏底部标签栏
+            tabBarVisible: false,
+            // 隐藏头部
+            headerShown: false,
+          })}
         />
       </Stack.Navigator>
     </QuestionProvider>
