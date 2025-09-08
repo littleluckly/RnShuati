@@ -6,6 +6,7 @@ import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Alert} from 'react-native';
 import {Button} from 'react-native-paper';
 import {useNavigation} from '@react-navigation/native';
+import {resetOnboarding} from '@/utils/onboardingUtils'; // 导入重置新手引导的工具
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -13,6 +14,28 @@ export default function ProfileScreen() {
   const navigateToApiDemo = () => {
     // @ts-ignore
     navigation.navigate('ApiDemo');
+  };
+
+  // 处理重置新手引导
+  const handleResetOnboarding = () => {
+    Alert.alert(
+      '重置新手引导',
+      '确定要重置新手引导吗？下次进入详情页时将重新显示新手引导。',
+      [
+        {
+          text: '取消',
+          style: 'cancel',
+        },
+        {
+          text: '确定',
+          onPress: async () => {
+            await resetOnboarding();
+            Alert.alert('成功', '新手引导已重置');
+          },
+        },
+      ],
+      {cancelable: true},
+    );
   };
 
   return (
@@ -83,6 +106,17 @@ export default function ProfileScreen() {
         <Text style={{flex: 1}}>我的编辑</Text>
         <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
       </View>
+      {/* 新增重置新手引导选项 */}
+      <TouchableOpacity style={styles.setItem} onPress={handleResetOnboarding}>
+        <Ionicons
+          name="information-outline"
+          size={24}
+          color="#f39c12"
+          style={{marginRight: 6}}
+        />
+        <Text style={{flex: 1}}>重置新手引导</Text>
+        <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
+      </TouchableOpacity>
     </View>
   );
 }

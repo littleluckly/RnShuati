@@ -10,6 +10,7 @@ import {
   Text,
   FlatList,
   ScrollView,
+  Alert, // 导入 Alert 组件
 } from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {HomeStackParamList, HomeStackNavigation} from '@/navigation/Types';
@@ -19,6 +20,12 @@ import MarkdownWithHighlight from '@/component/markdown-hightlight/MarkdownWithH
 import {AudioManager, AudioPlaybackInfo} from '@/services/AudioManager';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import he from 'he'; // 导入 he 库来解析 HTML 实体字符
+import OnboardingOverlay from '@/components/OnboardingOverlay'; // 导入新手引导组件
+import {
+  shouldShowOnboarding,
+  markOnboardingCompleted,
+  setSkipOnboarding,
+} from '@/utils/onboardingUtils'; // 导入新手引导工具
 
 const {width, height} = Dimensions.get('window');
 
@@ -45,6 +52,9 @@ export default function DetailScreen() {
   const [navTranslateYTop] = useState(new Animated.Value(0)); // 顶部导航栏初始位置在屏幕上方
   const [navTranslateYBottom] = useState(new Animated.Value(0)); // 底部导航栏初始位置在屏幕下方
 
+  // 新手引导状态
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   // 添加滚动偏移量跟踪
   const scrollOffset = useRef(0);
   const scrollOffsetThreshold = 10; // 滚动偏移量阈值
@@ -64,6 +74,16 @@ export default function DetailScreen() {
   // 引用组件
   const contentScrollViewRef = useRef<ScrollView>(null);
   const directoryFlatListRef = useRef<FlatList>(null);
+
+  // 检查是否需要显示新手引导
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      const shouldShow = await shouldShowOnboarding();
+      setShowOnboarding(shouldShow);
+    };
+
+    checkOnboarding();
+  }, []);
 
   // 导航栏动画
   const animateNav = useCallback(
@@ -196,8 +216,37 @@ export default function DetailScreen() {
 
   // 处理设置
   const handleSettings = useCallback(() => {
-    // 这里可以打开设置页面
-    console.log('Open settings');
+    // 显示一个简单的设置选项对话框
+    Alert.alert(
+      '设置',
+      '请选择操作',
+      [
+        {
+          text: '取消',
+          style: 'cancel',
+        },
+        {
+          text: '关闭新手引导',
+          onPress: async () => {
+            await setSkipOnboarding(true);
+            setShowOnboarding(false);
+          },
+        },
+      ],
+      {cancelable: true},
+    );
+  }, []);
+
+  // 处理新手引导完成
+  const handleOnboardingComplete = useCallback(async () => {
+    await markOnboardingCompleted();
+    setShowOnboarding(false);
+  }, []);
+
+  // 处理新手引导跳过
+  const handleOnboardingSkip = useCallback(async () => {
+    await setSkipOnboarding(true);
+    setShowOnboarding(false);
   }, []);
 
   // 处理目录列表滚动到底部加载更多
@@ -464,6 +513,14 @@ export default function DetailScreen() {
           <Icon name="settings" size={24} color="#000" />
         </TouchableOpacity>
       </Animated.View>
+
+      {/* 新手引导覆盖层 */}
+      {showOnboarding && (
+        <OnboardingOverlay
+          onComplete={handleOnboardingComplete}
+          onSkip={handleOnboardingSkip}
+        />
+      )}
     </View>
   );
 }
