@@ -6,7 +6,7 @@ import QuestionList from './component/QuestionList';
 
 export default function HomeScreen() {
   // 缺少一个科目选择页面
-  const subjectId = '68bedb278d25f6cab98d3c11';
+  const subjectId = '68bef2596ec254ab66383230';
   const [filters, setFilters] = useState({});
 
   return (

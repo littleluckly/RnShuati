@@ -1,4 +1,4 @@
-import Quiz3DCard from '@/component/Quiz3DCard';
+import Quiz3DCard from '@/component/3Dcard/Quiz3DCard';
 import {routeNameMap} from '@/navigation/constant';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import React, {Suspense, useState} from 'react';

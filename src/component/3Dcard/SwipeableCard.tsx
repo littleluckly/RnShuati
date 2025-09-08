@@ -1,20 +1,9 @@
-'use client';
-
-import React, {
-  useState,
-  useRef,
-  useMemo,
-  useCallback,
-  Suspense,
-  startTransition,
-  useEffect,
-} from 'react';
+import React, {useRef, useCallback, useMemo} from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Dimensions,
-  InteractionManager,
   ActivityIndicator,
 } from 'react-native';
 import Animated, {
@@ -29,50 +18,15 @@ import Animated, {
 } from 'react-native-reanimated';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import QuestionCard from './QuestionCard';
-import {ProgressCounterProps, SwipeableCardProps} from './types';
+import {SwipeableCardProps} from '../types';
 import {showSwipeLimitToast} from '@/utils/toastUtils';
 import {useSharedTransition} from '@/contexts/sharedTransitionContext';
 import {SharedElement} from '@/contexts/ShareElement';
-import {useQuestionContext} from '@/contexts/QuestionContext';
-import {Question} from '@/services/apiTypes';
-import {userActionApiService} from '@/services';
-// 导入导航栏高度hook
 import {useHeaderHeight} from '@react-navigation/elements';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const {width, height} = Dimensions.get('window');
 
-// Quiz3DCard 组件的属性接口
-interface Quiz3DCardProps {
-  initialAnsweredCount?: number; // 初始已回答题目数
-  startFromQuestion?: string; // 从哪个题目开始（暂时保留，可用于未来定位到特定题目）
-  sourceLayout?: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-}
-
-const ProgressCounter = React.memo(
-  ({current, total, answered}: ProgressCounterProps) => {
-    const remaining = current;
-    const progress = (answered / total) * 100;
-
-    return (
-      <View style={styles.counterContainer}>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, {width: `${progress}%`}]} />
-        </View>
-        <Text style={styles.counterText}>
-          进度: {answered}/{total} · 剩余 {remaining} 张
-        </Text>
-      </View>
-    );
-  },
-);
-
-// ✅ 核心组件：可滑动的卡片
 const SwipeableCard = React.memo(
   ({
     question: questionMeta,
@@ -100,7 +54,7 @@ const SwipeableCard = React.memo(
     const sharedElementOpacity = useSharedValue(state.isTransitioning ? 1 : 0);
     const opacity = useSharedValue(1);
     const targetHeight = screenHeight - 220;
-    const height = useSharedValue(
+    const heightValue = useSharedValue(
       state.isTransitioning ? sourceLayout?.height || 0 : targetHeight,
     );
     // 在组件中获取导航栏高度
@@ -117,7 +71,7 @@ const SwipeableCard = React.memo(
       setTimeout(() => {
         if (sourceLayout && isActive && state.isTransitioning) {
           sharedElementOpacity.value = withTiming(0, {duration: 200});
-          height.value = withSpring(
+          heightValue.value = withSpring(
             targetHeight,
             {
               damping: 20,
@@ -312,7 +266,7 @@ const SwipeableCard = React.memo(
       ],
     );
 
-    const animatedSharedElementStye = useAnimatedStyle(() => {
+    const animatedSharedElementStyle = useAnimatedStyle(() => {
       return {
         opacity: sharedElementOpacity.value,
         transform: [
@@ -322,7 +276,7 @@ const SwipeableCard = React.memo(
           // {scale: scale.value},
         ],
         top: top.value,
-        height: height.value,
+        height: heightValue.value,
         bottom: 80,
       };
     });
@@ -337,7 +291,7 @@ const SwipeableCard = React.memo(
           // {scale: scale.value},
         ],
         top: top.value,
-        height: height.value,
+        height: heightValue.value,
         bottom: 80,
         // opacity: opacity.value,
       };
@@ -367,7 +321,7 @@ const SwipeableCard = React.memo(
         <>
           {state.isTransitioning && (
             <SharedElement
-              style={animatedSharedElementStye}
+              style={animatedSharedElementStyle}
               question={questionMeta.question_markdown}
               sourceLayout={sourceLayout!}></SharedElement>
           )}
@@ -401,324 +355,7 @@ const SwipeableCard = React.memo(
   },
 );
 
-const Quiz3DCard = (
-  {
-    initialAnsweredCount = 0,
-    startFromQuestion,
-    sourceLayout,
-  }: Quiz3DCardProps = {} as Quiz3DCardProps,
-) => {
-  const {state} = useSharedTransition();
-  const {state: questionState, loadMore, deleteQuestion} = useQuestionContext();
-
-  // 🚀 性能优化：使用 lazy 初始化减少初始渲染延迟
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
-  const [cards, setCards] = useState<Question[]>([]);
-  const [answeredCount, setAnsweredCount] =
-    useState<number>(initialAnsweredCount);
-  const [activeCardIndex, setActiveCardIndex] = useState<number>(0);
-  const [dismissedCards, setDismissedCards] = useState<Question[]>([]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false); // 跟踪是否正在加载更多数据
-
-  // 监听QuestionContext中的questions变化，同步数据
-  React.useEffect(() => {
-    const loadData = () => {
-      const questionData = questionState.questions;
-
-      // 🚀 性能优化：使用 startTransition 延迟非关键更新
-      startTransition(() => {
-        // 只在初次加载数据时应用initialAnsweredCount
-        // 当isDataLoaded为false时，表示是初次加载
-        if (!isDataLoaded) {
-          if (
-            initialAnsweredCount > 0 &&
-            initialAnsweredCount < questionData.length
-          ) {
-            const answeredCards = questionData.slice(0, initialAnsweredCount);
-            const remainingCards = questionData.slice(initialAnsweredCount);
-
-            setCards(remainingCards);
-            setDismissedCards(answeredCards);
-            setAnsweredCount(initialAnsweredCount);
-          } else {
-            setCards(questionData);
-          }
-        } else {
-          // 后续更新时，保留用户当前的进度状态
-          // 计算新加入的问题（不在当前cards和dismissedCards中的问题）
-          const allCurrentQuestions = [...cards, ...dismissedCards];
-          const currentQuestionIds = new Set(
-            allCurrentQuestions.map(q => q._id),
-          );
-          const newQuestions = questionData.filter(
-            q => !currentQuestionIds.has(q._id),
-          );
-
-          if (newQuestions.length > 0) {
-            // 将新问题添加到cards数组末尾
-            setCards(prevCards => [...prevCards, ...newQuestions]);
-          }
-        }
-
-        setIsDataLoaded(true);
-      });
-    };
-
-    // 使用 InteractionManager 在主线程闲置时加载数据
-    InteractionManager.runAfterInteractions(() => {
-      loadData();
-    });
-  }, [
-    initialAnsweredCount,
-    questionState.questions,
-    isDataLoaded,
-    cards,
-    dismissedCards,
-  ]);
-
-  // const [isTransitioning, setIsTransitioning] = useState(true);
-  const visibleCards = useMemo(() => {
-    console.log('visibleCards-isTransitioning', state.isTransitioning);
-    if (state.isTransitioning) {
-      return cards.slice(0, 1);
-    }
-    const maxVisible = 4;
-    return cards.slice(0, maxVisible);
-  }, [cards, state.isTransitioning]);
-
-  const canSwipeBack = useMemo(() => {
-    // 只有当有已移除的卡片时才能右滑回退
-    return dismissedCards.length > 0;
-  }, [dismissedCards]);
-
-  const remainingCards = useMemo(() => {
-    // 剩余卡片数量应该是总数量减去已回答的卡片数量（删除的卡片已经在pagination.total中处理了）
-    return Math.max(0, questionState.pagination.total - answeredCount);
-  }, [questionState.pagination.total, answeredCount]);
-
-  // 检查卡片数量并触发加载更多数据
-  const checkAndLoadMoreData = useCallback(async () => {
-    // 如果正在加载中，或者没有更多数据，或者剩余卡片数量大于阈值，则不加载
-    if (
-      isLoadingMore ||
-      !questionState.pagination.hasNext ||
-      cards.length >= 10
-    ) {
-      console.log('⏭️ 不满足加载条件，跳过加载');
-      return;
-    }
-
-    // 当剩余卡片数量少于5张时，触发加载更多
-    if (cards.length <= 5) {
-      console.log(`📥 剩余卡片数量不足，开始加载更多数据...`);
-      setIsLoadingMore(true);
-      try {
-        await loadMore();
-      } catch (error) {
-        console.error('加载更多数据失败:', error);
-      } finally {
-        setIsLoadingMore(false);
-      }
-    } else {
-      console.log(`⏭️ 卡片数量(${cards.length})大于阈值(5)，无需加载更多`);
-    }
-  }, [isLoadingMore, questionState.pagination.hasNext, cards.length, loadMore]);
-
-  // 监听卡片数量变化，当数量不足时自动加载更多
-  useEffect(() => {
-    if (isDataLoaded) {
-      checkAndLoadMoreData();
-    }
-  }, [cards.length, isDataLoaded, checkAndLoadMoreData]);
-
-  const onCardDismiss = useCallback(() => {
-    setCards(prevCards => {
-      if (prevCards.length > 0) {
-        const dismissedCard = prevCards[0];
-        const newCards = prevCards.slice(1);
-
-        setDismissedCards(prev => [...prev, dismissedCard]);
-        console.log(`📊 卡片移除后剩余: ${newCards.length}`);
-        return newCards;
-      }
-      return prevCards;
-    });
-    setAnsweredCount(prev => {
-      const newCount = prev + 1;
-      console.log(`📈 已回答题目数: ${newCount}`);
-      return newCount;
-    });
-    setActiveCardIndex(0);
-  }, []);
-
-  const onSwipeBack = useCallback(() => {
-    setDismissedCards(prevCards => {
-      if (prevCards.length > 0) {
-        const lastDismissedCard = prevCards[prevCards.length - 1];
-        const newDismissedCards = prevCards.slice(0, -1);
-
-        setCards(prevCards => [lastDismissedCard, ...prevCards]);
-        console.log(`↩️ 回退到上一张卡片，剩余卡片: ${prevCards.length + 1}`);
-
-        return newDismissedCards;
-      }
-      return prevCards;
-    });
-
-    // 减少已回答计数
-    setAnsweredCount(prev => Math.max(0, prev - 1));
-  }, []);
-
-  const onCardDelete = useCallback(() => {
-    setCards(prevCards => {
-      if (prevCards.length > 0) {
-        // 获取要删除的卡片ID
-        const cardToDelete = prevCards[0];
-        // 只从卡片列表中移除第一张卡片，不添加到dismissedCards，也不更新answeredCount
-        const newCards = prevCards.slice(1);
-        console.log(`🗑️ 卡片被直接删除，剩余: ${newCards.length}`);
-
-        // 同时从questionState中删除该题目
-        if (deleteQuestion) {
-          deleteQuestion(cardToDelete._id);
-        }
-
-        // 调用API记录删除操作
-        userActionApiService.recordUserAction(
-          undefined, // userId can be undefined for anonymous users
-          cardToDelete._id,
-          'deleted'
-        ).catch(error => {
-          console.error('Failed to record delete action:', error);
-        });
-
-        return newCards;
-      }
-      return prevCards;
-    });
-    setActiveCardIndex(0);
-  }, [deleteQuestion]);
-
-  const onCardTouch = useCallback(
-    (touchedIndex: number) => {
-      if (touchedIndex === activeCardIndex || touchedIndex !== 0) return;
-      setActiveCardIndex(0);
-    },
-    [activeCardIndex],
-  );
-
-  // 🚀 性能优化：显示加载状态
-  if (!isDataLoaded) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1da1f2" />
-        <Text style={styles.loadingText}>加载中...</Text>
-      </View>
-    );
-  }
-
-  if (cards.length === 0) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.completionContainer}>
-          <Text style={styles.completionTitle}>🎉 恭喜完成！</Text>
-          <Text style={styles.endText}>
-            你已经完成了所有 {answeredCount} 道题目！
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <>
-      {
-        <ProgressCounter
-          current={remainingCards}
-          total={questionState.pagination.total} // 总数直接使用pagination.total，因为context已经处理了删除
-          answered={answeredCount}
-        />
-      }
-      <View style={styles.container}>
-        {visibleCards.map((question, index) => (
-          <SwipeableCard
-            key={`${question._id}-${index}`}
-            question={question}
-            onDismiss={index === 0 ? onCardDismiss : () => {}}
-            onSwipeBack={index === 0 ? onSwipeBack : () => {}}
-            onCardDelete={index === 0 ? onCardDelete : () => {}}
-            index={index}
-            totalCards={visibleCards.length}
-            isActive={index === activeCardIndex}
-            onCardTouch={onCardTouch}
-            canSwipeBack={index === 0 ? canSwipeBack : false}
-            sourceLayout={index === 0 ? sourceLayout : undefined}
-          />
-        ))}
-      </View>
-    </>
-  );
-};
-
-// 样式保持不变
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f7fa',
-  },
-  // 🚀 性能优化：加载状态样式
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f7fa',
-    width: '100%',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#657786',
-    fontWeight: '500',
-  },
-  counterContainer: {
-    position: 'absolute',
-    top: 10,
-    left: 20,
-    right: 20,
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  progressBar: {
-    width: '100%',
-    height: 6,
-    backgroundColor: '#e1e8ed',
-    borderRadius: 3,
-    marginBottom: 10,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#1da1f2',
-    borderRadius: 3,
-  },
-  counterText: {
-    fontSize: 15,
-    color: '#657786',
-    fontWeight: '600',
-  },
   card: {
     marginLeft: 10,
     marginRight: 10,
@@ -737,22 +374,6 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  completionContainer: {
-    alignItems: 'center',
-    padding: 40,
-  },
-  completionTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1da1f2',
-    marginBottom: 16,
-  },
-  endText: {
-    fontSize: 18,
-    color: '#657786',
-    textAlign: 'center',
-    lineHeight: 24,
-  },
 });
 
-export default Quiz3DCard;
+export default SwipeableCard;

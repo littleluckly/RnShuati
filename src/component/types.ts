@@ -31,12 +31,6 @@ export type SwipeableCardProps = {
   };
 };
 
-export type ProgressCounterProps = {
-  current: number;
-  total: number;
-  answered: number;
-};
-
 export type QuestionCardProps = {
   id: string;
   question: string;
