@@ -471,12 +471,13 @@ export default function DetailScreen() {
           styles.navTop,
           {opacity: navOpacity, transform: [{translateY: navTranslateYTop}]},
         ]}>
-        <TouchableOpacity style={styles.navButton} onPress={handleBack}>
+        <TouchableOpacity style={styles.navBackButton} onPress={handleBack}>
           <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.navTitle} numberOfLines={1}>
           {currentIndex + 1}/{state.pagination.total}
         </Text>
+        <View style={styles.navSpacer} />
       </Animated.View>
 
       {/* 内容区域 - 全屏展示 */}
@@ -642,8 +643,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     zIndex: 100,
-    borderBottomWidth: 1, // 添加底部边框
-    borderBottomColor: '#e0e0e0', // 浅色边框
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  navBackButton: {
+    padding: 8,
+  },
+  navSpacer: {
+    width: 40, // 与返回按钮宽度相等，确保标题真正居中
+  },
+  navTitle: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '500',
+    flex: 1,
+    textAlign: 'center',
   },
   navBottom: {
     position: 'absolute',
@@ -674,14 +688,6 @@ const styles = StyleSheet.create({
   navButtonText: {
     fontSize: 12,
     marginTop: 4,
-  },
-  navTitle: {
-    color: '#000', // 改为黑色以匹配白色背景
-    fontSize: 16,
-    fontWeight: '500',
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: 16,
   },
   notFoundText: {
     fontSize: 18,
