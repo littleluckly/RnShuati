@@ -34,6 +34,8 @@ type DetailScreenRouteProp = RouteProp<
   typeof routeNameMap.detailScreen
 >;
 
+export {default} from '@/screen/detail';
+
 export default function DetailScreen() {
   const navigation = useNavigation<HomeStackNavigation>();
   const route = useRoute<DetailScreenRouteProp>();

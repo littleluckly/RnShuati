@@ -5,7 +5,7 @@ import {
   CardStyleInterpolators,
 } from '@react-navigation/stack';
 import HomeScreen from '@/screen/home/HomeScreen';
-import DetailScreen from '@/screen/home/DetailScreen';
+import DetailScreen from '@/screen/detail';
 import {routeNameMap} from './constant';
 import WelcomeScreen from '@/screen/home/WelcomeScreen';
 import {Button, TextInput} from 'react-native';
