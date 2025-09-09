@@ -1,8 +1,0 @@
-- 源码全部用 TypeScript 重写。
-- 新增 Composition API（setup），逻辑复用更灵活；Options API 仍可用。
-- 响应式系统升级为 Proxy，解决数组与动态属性的监听问题。
-- 编译阶段标记并提升所有静态节点，diff 时只对比动态节点，性能提升。
-- 移除不常用 API（filter、inline-template）；Tree-shaking 更彻底，包更小。
-- 生命周期：setup 合并 beforeCreate & created；新增 onBeforeUnmount、onUnmounted 等。
-- template 支持多个根标签。
-- Vuex 改为 createStore，Router 需使用 useRouter / useRoute。
