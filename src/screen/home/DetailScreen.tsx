@@ -141,6 +141,8 @@ export default function DetailScreen() {
       if (prevQuestion) {
         // 停止当前音频播放
         AudioManager.stopCurrent();
+        // 重置内容区域滚动位置
+        contentScrollViewRef.current?.scrollTo({y: 0, animated: true});
         navigation.navigate(routeNameMap.detailScreen, {
           id: prevQuestion._id,
           currentIndex: prevIndex,
@@ -157,6 +159,8 @@ export default function DetailScreen() {
       if (nextQuestion) {
         // 停止当前音频播放
         AudioManager.stopCurrent();
+        // 重置内容区域滚动位置
+        contentScrollViewRef.current?.scrollTo({y: 0, animated: true});
         navigation.navigate(routeNameMap.detailScreen, {
           id: nextQuestion._id,
           currentIndex: nextIndex,
@@ -344,6 +348,26 @@ export default function DetailScreen() {
     }
   }, [currentQuestion]);
 
+  // 检查剩余题目数量，当少于5题时触发加载更多
+  useEffect(() => {
+    // 只有当还有更多题目可以加载时才检查
+    if (state.pagination.hasNext && !state.loading) {
+      // 计算剩余题目数量：当前已加载的题目数量 - 当前索引
+      const remainingQuestions = state.questions.length - (currentIndex + 1);
+
+      // 如果剩余题目数量少于5题，触发加载更多
+      if (remainingQuestions < 5) {
+        loadMore();
+      }
+    }
+  }, [
+    currentIndex,
+    state.questions.length,
+    state.pagination.hasNext,
+    state.loading,
+    loadMore,
+  ]);
+
   if (!currentQuestion) {
     return (
       <View style={styles.container}>
@@ -451,7 +475,7 @@ export default function DetailScreen() {
           <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.navTitle} numberOfLines={1}>
-          {currentIndex + 1}/{state.questions.length}
+          {currentIndex + 1}/{state.pagination.total}
         </Text>
       </Animated.View>
 
@@ -488,11 +512,27 @@ export default function DetailScreen() {
           styles.navBottom,
           {opacity: navOpacity, transform: [{translateY: navTranslateYBottom}]},
         ]}>
-        <TouchableOpacity style={styles.navButton} onPress={handlePrev}>
-          <Icon name="arrow-back" size={24} color="#000" />
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={handlePrev}
+          disabled={currentIndex === 0}>
+          <Icon
+            name="arrow-back"
+            size={24}
+            color={currentIndex === 0 ? '#ccc' : '#000'}
+          />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={handleNext}>
-          <Icon name="arrow-forward" size={24} color="#000" />
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={handleNext}
+          disabled={currentIndex === state.questions.length - 1}>
+          <Icon
+            name="arrow-forward"
+            size={24}
+            color={
+              currentIndex === state.questions.length - 1 ? '#ccc' : '#000'
+            }
+          />
         </TouchableOpacity>
         <TouchableOpacity style={styles.navButton} onPress={handleDirectory}>
           <Icon name="list" size={24} color="#000" />
