@@ -516,29 +516,58 @@ export default function DetailScreen() {
           style={styles.navButton}
           onPress={handlePrev}
           disabled={currentIndex === 0}>
-          <Icon
-            name="arrow-back"
-            size={24}
-            color={currentIndex === 0 ? '#ccc' : '#000'}
-          />
+          <View style={styles.navButtonContainer}>
+            <Icon
+              name="arrow-back"
+              size={24}
+              color={currentIndex === 0 ? '#ccc' : '#000'}
+            />
+            <Text
+              style={[
+                styles.navButtonText,
+                {color: currentIndex === 0 ? '#ccc' : '#000'},
+              ]}>
+              上一题
+            </Text>
+          </View>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.navButton}
           onPress={handleNext}
           disabled={currentIndex === state.questions.length - 1}>
-          <Icon
-            name="arrow-forward"
-            size={24}
-            color={
-              currentIndex === state.questions.length - 1 ? '#ccc' : '#000'
-            }
-          />
+          <View style={styles.navButtonContainer}>
+            <Icon
+              name="arrow-forward"
+              size={24}
+              color={
+                currentIndex === state.questions.length - 1 ? '#ccc' : '#000'
+              }
+            />
+            <Text
+              style={[
+                styles.navButtonText,
+                {
+                  color:
+                    currentIndex === state.questions.length - 1
+                      ? '#ccc'
+                      : '#000',
+                },
+              ]}>
+              下一题
+            </Text>
+          </View>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navButton} onPress={handleDirectory}>
-          <Icon name="list" size={24} color="#000" />
+          <View style={styles.navButtonContainer}>
+            <Icon name="list" size={24} color="#000" />
+            <Text style={[styles.navButtonText, {color: '#000'}]}>目录</Text>
+          </View>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navButton} onPress={handleSettings}>
-          <Icon name="settings" size={24} color="#000" />
+          <View style={styles.navButtonContainer}>
+            <Icon name="settings" size={24} color="#000" />
+            <Text style={[styles.navButtonText, {color: '#000'}]}>设置</Text>
+          </View>
         </TouchableOpacity>
       </Animated.View>
 
@@ -622,18 +651,29 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 60,
-    backgroundColor: '#fff', // 与内容区背景一致
+    backgroundColor: '#fff',
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingHorizontal: 16,
     zIndex: 100,
-    borderTopWidth: 1, // 添加顶部边框
-    borderTopColor: '#e0e0e0', // 浅色边框
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
   },
   navButton: {
-    padding: 8,
-    borderRadius: 20,
+    flex: 1,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  navButtonContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navButtonText: {
+    fontSize: 12,
+    marginTop: 4,
   },
   navTitle: {
     color: '#000', // 改为黑色以匹配白色背景
