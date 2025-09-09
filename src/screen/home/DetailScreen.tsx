@@ -537,20 +537,24 @@ export default function DetailScreen() {
         <TouchableOpacity style={styles.navButton} onPress={handleDirectory}>
           <Icon name="list" size={24} color="#000" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={handlePlayPause}>
-          <Icon
-            name={
-              playbackInfo.currentItemId === currentQuestion._id &&
-              playbackInfo.state === 'playing'
-                ? 'pause'
-                : 'play-arrow'
-            }
-            size={24}
-            color="#000"
-          />
-        </TouchableOpacity>
         <TouchableOpacity style={styles.navButton} onPress={handleSettings}>
           <Icon name="settings" size={24} color="#000" />
+        </TouchableOpacity>
+      </Animated.View>
+
+      {/* 播放按钮 - 紧挨着底部导航的右上侧 */}
+      <Animated.View
+        style={[
+          styles.playButtonContainer,
+          {opacity: navOpacity, transform: [{translateY: navTranslateYBottom}]},
+        ]}>
+        <TouchableOpacity style={styles.playButton} onPress={handlePlayPause}>
+          <Text style={styles.playButtonText}>
+            {playbackInfo.currentItemId === currentQuestion._id &&
+            playbackInfo.state === 'playing'
+              ? '停'
+              : '听'}
+          </Text>
         </TouchableOpacity>
       </Animated.View>
 
@@ -644,6 +648,34 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginTop: 50,
+  },
+  // 播放按钮样式
+  playButtonContainer: {
+    position: 'absolute',
+    bottom: 70, // 紧挨着底部导航的右上侧
+    right: 20,
+    zIndex: 101,
+  },
+  playButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#1da1f2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  playButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   // 目录抽屉样式
   directoryContainer: {
