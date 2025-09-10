@@ -6,7 +6,6 @@ import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
 
 import ProfileScreen from '@/screen/profile/ProfileScreen';
-import DetailScreen from '@/screen/home/DetailScreen';
 import HomeStack from './HomeStack';
 import LottieView from 'lottie-react-native';
 import {routeNameMap} from './constant';

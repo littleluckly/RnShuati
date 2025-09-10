@@ -12,8 +12,10 @@ import {styles} from './styles/styles';
 import {DetailScreenRouteProp} from './types';
 import {HomeStackNavigation} from '@/navigation/Types';
 import {AudioManager} from '@/services/AudioManager';
+import {useQuestionContext} from '@/contexts/QuestionContext';
 
 export default function DetailScreen() {
+  const {state: questionState, loadMore} = useQuestionContext();
   const route = useRoute<DetailScreenRouteProp>();
   const navigation = useNavigation<HomeStackNavigation>();
   const {
@@ -94,6 +96,25 @@ export default function DetailScreen() {
       AudioManager.stopCurrent();
     };
   }, [navigation]);
+
+  // 检查剩余题目数量，当少于5题时触发加载更多
+  useEffect(() => {
+    if (questionState.pagination.hasNext && !questionState.loading) {
+      // 计算剩余题目数量：当前已加载的题目数量 - 当前索引
+      const remainingQuestions =
+        questionState.questions.length - (currentIndex + 1);
+      // 如果剩余题目数量少于5题，触发加载更多
+      if (remainingQuestions < 5) {
+        loadMore();
+      }
+    }
+  }, [
+    currentIndex,
+    questionState.questions.length,
+    questionState.pagination.hasNext,
+    questionState.loading,
+    loadMore,
+  ]);
 
   if (!currentQuestion) {
     return (
