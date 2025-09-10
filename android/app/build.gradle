@@ -78,9 +78,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.testapp"
+    namespace "com.repeatthech.shuatipai"
     defaultConfig {
-        applicationId "com.testapp"
+        applicationId "com.repeatthech.shuatipai"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

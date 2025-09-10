@@ -1,4 +1,4 @@
-package com.testapp
+package com.repeatthech.shuatipai
 
 import android.app.Application
 import com.facebook.react.PackageList
