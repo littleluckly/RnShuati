@@ -193,8 +193,8 @@ export const useDetailScreen = (route: any) => {
       AudioManager.addListener('detailScreen', setPlaybackInfo);
       AudioManager.startPlayback(questionId, {
         audio_question: audioFiles.audio_question,
-        audio_simple: audioFiles.audio_answer_simple,
-        audio_analysis: audioFiles.audio_answer_analysis,
+        audio_answer_simple: audioFiles.audio_answer_simple,
+        audio_answer_detail: audioFiles.audio_answer_detail,
       });
     }
   }, [currentQuestion, playbackInfo]);

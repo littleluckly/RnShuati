@@ -116,8 +116,8 @@ const OptimizedFlatList: React.FC<Props> = ({
       AudioManager.addListener(id, setPlaybackInfo);
       AudioManager.startPlayback(id, {
         audio_question: audioFiles.audio_question,
-        audio_simple: audioFiles.audio_answer_simple,
-        audio_analysis: audioFiles.audio_answer_analysis,
+        audio_answer_simple: audioFiles.audio_answer_simple,
+        audio_answer_detail: audioFiles.audio_answer_detail,
       });
       setPlaybackId(playbackId === id ? '' : id);
     },

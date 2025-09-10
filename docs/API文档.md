@@ -466,9 +466,9 @@ GET http://localhost:3000/questions/random?subjectId=64f1a2b3c4d5e6f789012345&di
     "answer_simple_markdown": "beforeCreate → created → beforeMount → mounted → beforeUpdate → updated → beforeDestroy → destroyed",
     "answer_analysis_markdown": "- beforeCreate：实例刚初始化，data、methods 均不可用。\n- created：实例创建完成，可访问/修改数据，但 DOM 未生成...",
     "files": {
-      "audio_simple": "q0001_285acd89_audio_simple.mp3",
+      "audio_answer_simple": "q0001_285acd89_audio_simple.mp3",
       "audio_question": "q0001_285acd89_audio_question.mp3",
-      "audio_analysis": "q0001_285acd89_audio_analysis.mp3",
+      "audio_answer_detail": "q0001_285acd89_audio_analysis.mp3",
       "meta": "q0001_285acd89_meta.json"
     },
     "subjectId": "64f1a2b3c4d5e6f789012345"
@@ -576,9 +576,9 @@ Content-Type: application/json
         "answer_simple_markdown": "beforeCreate → created → beforeMount → mounted → beforeUpdate → updated → beforeDestroy → destroyed",
         "answer_analysis_markdown": "- beforeCreate：实例刚初始化，data、methods 均不可用。\n- created：实例创建完成...",
         "files": {
-          "audio_simple": "q0001_285acd89_audio_simple.mp3",
+          "audio_answer_simple": "q0001_285acd89_audio_simple.mp3",
           "audio_question": "q0001_285acd89_audio_question.mp3",
-          "audio_analysis": "q0001_285acd89_audio_analysis.mp3",
+          "audio_answer_detail": "q0001_285acd89_audio_analysis.mp3",
           "meta": "q0001_285acd89_meta.json"
         },
         "subjectId": "64f1a2b3c4d5e6f789012345"
@@ -701,9 +701,9 @@ Content-Type: application/json
         "answer_simple_markdown": "beforeCreate → created → beforeMount → mounted...",
         "answer_analysis_markdown": "- beforeCreate：实例刚初始化...",
         "files": {
-          "audio_simple": "q0001_285acd89_audio_simple.mp3",
+          "audio_answer_simple": "q0001_285acd89_audio_simple.mp3",
           "audio_question": "q0001_285acd89_audio_question.mp3",
-          "audio_analysis": "q0001_285acd89_audio_analysis.mp3",
+          "audio_answer_detail": "q0001_285acd89_audio_analysis.mp3",
           "meta": "q0001_285acd89_meta.json"
         },
         "subjectId": "64f1a2b3c4d5e6f789012345"
@@ -909,9 +909,9 @@ GET http://localhost:3000/user-actions/stats?userId=user123
   "answer_simple_markdown": "简答内容",
   "answer_analysis_markdown": "详细解析",
   "files": {
-    "audio_simple": "简答音频文件",
+    "audio_answer_simple": "简答音频文件",
     "audio_question": "题目音频文件",
-    "audio_analysis": "解析音频文件",
+    "audio_answer_detail": "解析音频文件",
     "meta": "元数据文件"
   },
   "subjectId": "ObjectId",

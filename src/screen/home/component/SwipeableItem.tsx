@@ -187,8 +187,8 @@ const SwipeableItem = React.memo(
       // 开始播放序列：题目 → 精简答案 → 详细解析
       AudioManager.startPlayback(id, {
         audio_question: audioFiles.audio_question,
-        audio_simple: audioFiles.audio_simple,
-        audio_analysis: audioFiles.audio_analysis,
+        audio_answer_simple: audioFiles.audio_answer_simple,
+        audio_answer_detail: audioFiles.audio_answer_detail,
       });
     };
 
@@ -243,7 +243,12 @@ const SwipeableItem = React.memo(
                 }
 
                 // 验证测量值有效性
-                if (isNaN(pageX) || isNaN(pageY) || isNaN(width) || isNaN(height)) {
+                if (
+                  isNaN(pageX) ||
+                  isNaN(pageY) ||
+                  isNaN(width) ||
+                  isNaN(height)
+                ) {
                   console.warn('❌ 测量值包含 NaN，使用备用导航方式');
                   navigation.navigate(routeNameMap.detailScreen, {
                     id,
@@ -270,11 +275,15 @@ const SwipeableItem = React.memo(
                     }
                   });
                 });
-              }
+              },
             );
           } catch (error: any) {
             // 添加了any类型注解，防止TypeScript编译错误
-            console.warn('❌ 调用measure时出错:', error?.message || String(error), '使用备用导航方式');
+            console.warn(
+              '❌ 调用measure时出错:',
+              error?.message || String(error),
+              '使用备用导航方式',
+            );
             if (isMounted) {
               navigation.navigate(routeNameMap.detailScreen, {
                 id,
@@ -284,7 +293,9 @@ const SwipeableItem = React.memo(
           }
         } else {
           // itemRef.current为空，使用备用导航方式
-          console.log('ℹ️ itemRef.current为空，但这是正常的，自动使用备用导航方式');
+          console.log(
+            'ℹ️ itemRef.current为空，但这是正常的，自动使用备用导航方式',
+          );
           // 静默降级到备用导航，不显示警告
           navigation.navigate(routeNameMap.detailScreen, {
             id,

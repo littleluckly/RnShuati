@@ -54,7 +54,6 @@ export interface DifficultyOption {
 export interface QuestionFiles {
   audio_answer_simple?: string;
   audio_answer_detail?: string;
-  audio_answer_analysis?: string;
   audio_question?: string;
 }
 

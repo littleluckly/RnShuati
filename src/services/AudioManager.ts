@@ -82,8 +82,8 @@ class AudioManagerService {
   // 开始播放音频队列
   public startPlayback(itemId: string, audioFiles: {
     audio_question?: string;
-    audio_simple?: string;
-    audio_analysis?: string;
+    audio_answer_simple?: string;
+    audio_answer_detail?: string;
   }): void {
     // 如果当前正在播放其他项目，先停止
     if (this.currentItemId && this.currentItemId !== itemId) {
@@ -103,9 +103,11 @@ class AudioManagerService {
 
     // 构建音频队列
     this.audioQueue = [];
+    console.log(audioFiles.audio_answer_detail, 'audioFiles.audio_answer_detail')
+    console.log(audioFiles.audio_answer_simple, 'audioFiles.audio_answer_simple')
     if (audioFiles.audio_question) this.audioQueue.push(audioFiles.audio_question);
-    if (audioFiles.audio_simple) this.audioQueue.push(audioFiles.audio_simple);
-    if (audioFiles.audio_analysis) this.audioQueue.push(audioFiles.audio_analysis);
+    if (audioFiles.audio_answer_simple) this.audioQueue.push(audioFiles.audio_answer_simple);
+    if (audioFiles.audio_answer_detail) this.audioQueue.push(audioFiles.audio_answer_detail);
 
     if (this.audioQueue.length === 0) {
       console.warn('No audio files available for playback');

@@ -59,17 +59,17 @@ export class QuestionMeta {
    * Check if question has audio files
    */
   public hasAudioFiles(): boolean {
-    return !!(this.files.audio_simple || this.files.audio_question || this.files.audio_analysis);
+    return !!(this.files.audio_answer_simple || this.files.audio_question || this.files.audio_answer_detail);
   }
 
   /**
    * Get all available audio files
    */
-  public getAudioFiles(): Partial<Pick<QuestionFiles, 'audio_simple' | 'audio_question' | 'audio_analysis'>> {
+  public getAudioFiles(): Partial<Pick<QuestionFiles, 'audio_answer_simple' | 'audio_question' | 'audio_answer_detail'>> {
     return {
-      audio_simple: this.files.audio_simple,
+      audio_answer_simple: this.files.audio_answer_simple,
       audio_question: this.files.audio_question,
-      audio_analysis: this.files.audio_analysis
+      audio_answer_detail: this.files.audio_answer_detail
     };
   }
 
@@ -134,9 +134,9 @@ export class QuestionMeta {
  * Question Files interface
  */
 export interface QuestionFiles {
-  audio_simple?: string;
+  audio_answer_simple?: string;
   audio_question?: string;
-  audio_analysis?: string;
+  audio_answer_detail?: string;
   meta: string;
 }
 
