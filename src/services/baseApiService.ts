@@ -39,7 +39,7 @@ export class BaseApiService {
       const result: ApiResponse<T> = await response.json();
       return result;
     } catch (error) {
-      console.error(`API(${endpoint}) request failed:${error}`);
+      console.error(`API(${this.baseUrl}${endpoint}) request failed:${error}`);
       return {
         success: false,
         data: null,
