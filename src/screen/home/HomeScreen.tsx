@@ -21,9 +21,31 @@ export default function HomeScreen() {
   const navigation = useNavigation<RootNavigation>();
   const {state: questionState} = useQuestionContext();
   const {pagination} = questionState;
+  const [isFocused, setIsFocused] = useState(true); // 添加焦点状态
+
+  // 监听页面焦点状态
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      setIsFocused(true);
+    });
+    
+    const blurUnsubscribe = navigation.addListener('blur', () => {
+      setIsFocused(false);
+    });
+
+    return () => {
+      unsubscribe();
+      blurUnsubscribe();
+    };
+  }, [navigation]);
 
   // 当科目信息或题目总数变化时，更新导航参数，包含题目总数
   useEffect(() => {
+    // 只有在页面处于焦点状态时才更新导航参数
+    if (!isFocused) {
+      return;
+    }
+    
     if (subjectInfo && subjectInfo.subjectName) {
       // 只有当数据加载完成且有题目时，才更新标题显示题目总数
       // 其他情况（加载中或没有题目时），保持标题不变
@@ -43,7 +65,7 @@ export default function HomeScreen() {
       }
       // 加载中或没有题目时，不更新标题，保持不变
     }
-  }, [subjectInfo, navigation, pagination.total, questionState.loading]);
+  }, [subjectInfo, navigation, pagination.total, questionState.loading, isFocused]);
 
   // 获取当前登录状态和科目信息
   const fetchSubjectInfo = async () => {
