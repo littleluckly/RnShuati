@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import {useState} from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,10 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { routeNameMap } from '@/navigation/constant';
-import { authApiService } from '@/services';
+import {useNavigation} from '@react-navigation/native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {routeNameMap} from '@/navigation/constant';
+import {authApiService} from '@/services';
 
 /**
  * 用户注册页面组件
@@ -20,7 +20,7 @@ import { authApiService } from '@/services';
 const RegisterScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  
+
   // 表单状态
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -33,32 +33,35 @@ const RegisterScreen = () => {
    * 表单验证函数
    * @returns 验证是否通过，以及可能的错误信息
    */
-  const validateForm = (): { isValid: boolean; errorMessage?: string } => {
+  const validateForm = (): {isValid: boolean; errorMessage?: string} => {
     // 检查用户名是否为空
     if (!username.trim()) {
-      return { isValid: false, errorMessage: '请输入用户名' };
+      return {isValid: false, errorMessage: '请输入用户名'};
     }
 
     // 检查密码是否为空且长度是否足够
     if (!password.trim()) {
-      return { isValid: false, errorMessage: '请输入密码' };
+      return {isValid: false, errorMessage: '请输入密码'};
     }
 
     if (password.length < 6) {
-      return { isValid: false, errorMessage: '密码长度至少为6位' };
+      return {isValid: false, errorMessage: '密码长度至少为6位'};
     }
 
     // 检查两次输入的密码是否一致
     if (password !== confirmPassword) {
-      return { isValid: false, errorMessage: '两次输入的密码不一致' };
+      return {isValid: false, errorMessage: '两次输入的密码不一致'};
     }
 
     // 检查邮箱格式是否正确（如果输入了邮箱）
-    if (email.trim() && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
-      return { isValid: false, errorMessage: '请输入有效的邮箱地址' };
+    if (
+      email.trim() &&
+      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)
+    ) {
+      return {isValid: false, errorMessage: '请输入有效的邮箱地址'};
     }
 
-    return { isValid: true };
+    return {isValid: true};
   };
 
   /**
@@ -69,7 +72,10 @@ const RegisterScreen = () => {
     // 验证表单
     const validationResult = validateForm();
     if (!validationResult.isValid) {
-      Alert.alert('注册失败', validationResult.errorMessage || '请检查输入信息');
+      Alert.alert(
+        '注册失败',
+        validationResult.errorMessage || '请检查输入信息',
+      );
       return;
     }
 
@@ -79,16 +85,16 @@ const RegisterScreen = () => {
       const response = await authApiService.register(
         username,
         password,
-        email.trim() || undefined
+        email.trim() || undefined,
       );
 
       if (response.success) {
         // 注册成功
         Alert.alert(
           '注册成功',
-          email ? 
-            '注册成功！请登录您的账号。\n注意：如果您忘记密码，可以通过邮箱找回。' : 
-            '注册成功！请登录您的账号。\n注意：由于您没有提供邮箱，如果忘记密码将无法找回。',
+          email
+            ? '注册成功！请登录您的账号。\n注意：如果您忘记密码，可以通过邮箱找回。'
+            : '注册成功！请登录您的账号。\n注意：由于您没有提供邮箱，如果忘记密码将无法找回。',
           [
             {
               text: '立即登录',
@@ -96,7 +102,7 @@ const RegisterScreen = () => {
                 navigation.navigate(routeNameMap.loginScreen as never);
               },
             },
-          ]
+          ],
         );
       } else {
         // 注册失败
@@ -106,7 +112,7 @@ const RegisterScreen = () => {
       console.error('Register error:', error);
       Alert.alert(
         '注册失败',
-        error instanceof Error ? error.message : '网络错误，请稍后再试'
+        error instanceof Error ? error.message : '网络错误，请稍后再试',
       );
     } finally {
       setIsLoading(false);
@@ -121,7 +127,7 @@ const RegisterScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
+    <View style={[styles.container, {paddingTop: insets.top + 20}]}>
       <View style={styles.header}>
         <Text style={styles.title}>用户注册</Text>
         <Text style={styles.subtitle}>创建一个新的账号</Text>
@@ -160,12 +166,12 @@ const RegisterScreen = () => {
             keyboardType="email-address"
             editable={!isLoading}
           />
-          
-          {emailTooltipVisible && (
+
+          {
             <Text style={styles.tooltipText}>
               提供邮箱可在忘记密码时进行找回，不提供则无法找回密码
             </Text>
-          )}
+          }
         </View>
 
         {/* 密码输入框 */}
@@ -201,8 +207,7 @@ const RegisterScreen = () => {
           style={styles.registerButton}
           onPress={handleRegister}
           disabled={isLoading}
-          activeOpacity={0.8}
-        >
+          activeOpacity={0.8}>
           {isLoading ? (
             <ActivityIndicator color="white" size="small" />
           ) : (
@@ -213,7 +218,10 @@ const RegisterScreen = () => {
         {/* 已有账号，去登录 */}
         <View style={styles.loginLinkContainer}>
           <Text style={styles.loginLinkText}>已有账号？</Text>
-          <TouchableOpacity onPress={() => navigation.navigate(routeNameMap.loginScreen as never)}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate(routeNameMap.loginScreen as never)
+            }>
             <Text style={styles.loginLink}> 立即登录</Text>
           </TouchableOpacity>
         </View>
@@ -222,8 +230,7 @@ const RegisterScreen = () => {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
-          disabled={isLoading}
-        >
+          disabled={isLoading}>
           <Text style={styles.backButtonText}>返回</Text>
         </TouchableOpacity>
       </View>

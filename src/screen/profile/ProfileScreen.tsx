@@ -104,7 +104,9 @@ export default function ProfileScreen() {
                 onPress={() =>
                   (navigation as any).navigate(routeNameMap.loginScreen)
                 }>
-                <Text style={{color: '#3498db', fontSize: 14}}>立即登录</Text>
+                <Text style={{color: '#3498db', fontSize: 14}}>
+                  立即登录/注册
+                </Text>
               </TouchableOpacity>
             </View>
           )}

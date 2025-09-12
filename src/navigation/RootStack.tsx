@@ -23,29 +23,6 @@ import ForgotPasswordScreen from '@/screen/auth/ForgotPasswordScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-// 认证相关导航栈
-const AuthStack = () => {
-  return (
-    <Stack.Navigator screenOptions={{headerShown: false}}>
-      <Stack.Screen
-        name={routeNameMap.loginScreen}
-        component={LoginScreen}
-        options={{title: '登录'}}
-      />
-      <Stack.Screen
-        name={routeNameMap.registerScreen}
-        component={RegisterScreen}
-        options={{title: '注册'}}
-      />
-      <Stack.Screen
-        name={routeNameMap.forgotPasswordScreen}
-        component={ForgotPasswordScreen}
-        options={{title: '忘记密码'}}
-      />
-    </Stack.Navigator>
-  );
-};
-
 // 个人中心导航栈
 const ProfileStack = () => {
   return (
@@ -65,6 +42,17 @@ const ProfileStack = () => {
         name={routeNameMap.loginScreen}
         component={LoginScreen}
         options={{title: '登录', presentation: 'modal'}}
+      />
+
+      <Stack.Screen
+        name={routeNameMap.registerScreen}
+        component={RegisterScreen}
+        options={{title: '注册', presentation: 'modal'}}
+      />
+      <Stack.Screen
+        name={routeNameMap.forgotPasswordScreen}
+        component={ForgotPasswordScreen}
+        options={{title: '忘记密码', presentation: 'modal'}}
       />
     </Stack.Navigator>
   );
