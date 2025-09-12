@@ -90,6 +90,143 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
     }
     openFilter();
   };
+
+  // 渲染难度选项（保持单列）
+  const renderDifficultyOptions = () => (
+    <View style={styles.optionsContainer}>
+      {difficultyItems.map((item) => {
+        const isSelected = difficulty.includes(item.value);
+        return (
+          <TouchableOpacity
+            key={item.value}
+            style={[styles.option, isSelected && styles.optionSelected]}
+            onPress={() => {
+              // 多选逻辑
+              setDifficulty(prev => {
+                if (item.value === '') {
+                  // 选择"全部"时清空其他选择
+                  return [''];
+                } else {
+                  const newDifficulty = prev.includes(item.value)
+                    ? prev.filter(v => v !== item.value && v !== '')
+                    : [...prev.filter(v => v !== ''), item.value];
+
+                  // 如果没有选择任何项，则默认选择"全部"
+                  return newDifficulty.length > 0
+                    ? newDifficulty
+                    : [''];
+                }
+              });
+            }}
+          >
+            <Text style={isSelected && styles.optionTextSelected}>
+              {item.name}
+            </Text>
+            {isSelected && (
+              <Icon
+                name="check"
+                size={18}
+                color="#007aff"
+                style={styles.checkIcon}
+              />
+            )}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+
+  // 渲染标签选项（改为徽标样式，支持滚动）
+  const renderTagOptions = () => (
+    <ScrollView
+      showsVerticalScrollIndicator={true}
+      style={styles.tagsScrollContainer}
+      contentContainerStyle={styles.tagsContainer}
+    >
+      <View style={styles.tagsHeaderContainer}>
+        {/* 全选标签保持单列显示 */}
+        {tagItems.find(item => item.value === '') && (
+          <TouchableOpacity
+            style={[styles.option, tag.includes('') && styles.optionSelected]}
+            onPress={() => {
+              setTag(tag.includes('') ? [] : ['']);
+            }}
+          >
+            <Text style={tag.includes('') && styles.optionTextSelected}>
+              {tagItems.find(item => item.value === '')?.name}
+            </Text>
+            {tag.includes('') && (
+              <Icon
+                name="check"
+                size={18}
+                color="#007aff"
+                style={styles.checkIcon}
+              />
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
+      
+      {/* 标签列表改为徽标样式，一行多个 */}
+      <View style={styles.tagChipsContainer}>
+        {tagItems
+          .filter(item => item.value !== '')
+          .map((item) => {
+            const isSelected = tag.includes(item.value);
+            return (
+              <TouchableOpacity
+                key={item.value}
+                style={[
+                  styles.tagChip,
+                  isSelected && styles.tagChipSelected
+                ]}
+                onPress={() => {
+                  setTag(prev => {
+                    if (prev.includes(item.value)) {
+                      // 移除已选择的标签
+                      const newTags = prev.filter(v => v !== item.value);
+                      // 如果没有选择任何项，则默认不选择任何标签（不自动选全部）
+                      return newTags;
+                    } else {
+                      // 添加新选择的标签，同时移除"全部"选项
+                      return [...prev.filter(v => v !== ''), item.value];
+                    }
+                  });
+                }}
+              >
+                <Text 
+                  style={[
+                    styles.tagChipText,
+                    isSelected && styles.tagChipTextSelected
+                  ]}
+                >
+                  {item.name}
+                </Text>
+                {isSelected && (
+                  <Icon
+                    name="check"
+                    size={12}
+                    color="#fff"
+                    style={styles.tagChipCheckIcon}
+                  />
+                )}
+              </TouchableOpacity>
+            );
+          })}
+      </View>
+    </ScrollView>
+  );
+
+  // 渲染弹窗内容
+  const renderModalContent = () => {
+    if (active === 'difficulty') {
+      return renderDifficultyOptions();
+    } else if (active === 'tags') {
+      return renderTagOptions();
+    }
+    return null;
+  };
+
   return (
     <View
       style={[
@@ -119,9 +256,7 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
           ) {
             displayText = `${name}(${difficulty.length})`;
           } else if (value === 'tags' && tag.length > 0 && !tag.includes('')) {
-            displayText = `${name}(${
-              tag.includes('') ? tag.length : tag.length
-            })`;
+            displayText = `${name}(${tag.includes('') ? tag.length : tag.length})`;
           }
 
           return (
@@ -146,75 +281,13 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
           );
         })}
       </ScrollView>
+      
       {/* 弹窗 */}
       <Portal>
         <Modalize
           ref={modalRef}
           adjustToContentHeight
           modalStyle={styles.modal}
-          flatListProps={{
-            data: filterOptions,
-            keyExtractor: (item, index) => `${item.value}-${index}`,
-            renderItem: ({item}) => {
-              // 判断当前项是否被选中
-              const isSelected =
-                (active === 'difficulty' && difficulty.includes(item.value)) ||
-                (active === 'tags' && tag.includes(item.value));
-
-              return (
-                <TouchableOpacity
-                  style={[styles.option, isSelected && styles.optionSelected]}
-                  onPress={() => {
-                    if (active === 'difficulty') {
-                      // 多选逻辑
-                      setDifficulty(prev => {
-                        if (item.value === '') {
-                          // 选择"全部"时清空其他选择
-                          return [''];
-                        } else {
-                          const newDifficulty = prev.includes(item.value)
-                            ? prev.filter(v => v !== item.value && v !== '')
-                            : [...prev.filter(v => v !== ''), item.value];
-
-                          // 如果没有选择任何项，则默认选择"全部"
-                          return newDifficulty.length > 0
-                            ? newDifficulty
-                            : [''];
-                        }
-                      });
-                    } else {
-                      // 标签多选逻辑
-                      setTag(prev => {
-                        if (item.value === '') {
-                          // 选择"全部"时清空其他选择
-                          return [''];
-                        } else {
-                          const newTags = prev.includes(item.value)
-                            ? prev.filter(v => v !== item.value && v !== '')
-                            : [...prev.filter(v => v !== ''), item.value];
-
-                          // 如果没有选择任何项，则默认选择"全部"
-                          return newTags.length > 0 ? newTags : [''];
-                        }
-                      });
-                    }
-                  }}>
-                  <Text style={isSelected && styles.optionTextSelected}>
-                    {item.name}
-                  </Text>
-                  {isSelected && (
-                    <Icon
-                      name="check"
-                      size={18}
-                      color="#007aff"
-                      style={styles.checkIcon}
-                    />
-                  )}
-                </TouchableOpacity>
-              );
-            },
-            ItemSeparatorComponent: () => <View style={styles.divider} />,
-          }}
           FooterComponent={
             <View style={styles.footer}>
               <TouchableOpacity
@@ -234,7 +307,9 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
               </TouchableOpacity>
             </View>
           }
-        />
+        >
+          {renderModalContent()}
+        </Modalize>
       </Portal>
     </View>
   );
@@ -332,5 +407,50 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '500',
+  },
+  // 新增样式
+  optionsContainer: {
+    padding: 8,
+  },
+  tagsScrollContainer: {
+    maxHeight: 400, // 设置最大高度以启用滚动
+    
+  },
+  tagsContainer: {
+    padding: 8,
+  },
+  tagsHeaderContainer: {
+    marginBottom: 16,
+  },
+  tagChipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 8,
+  },
+  tagChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    margin: 4,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#fff',
+  },
+  tagChipSelected: {
+    backgroundColor: '#007aff',
+    borderColor: '#007aff',
+  },
+  tagChipText: {
+    fontSize: 13,
+    color: '#333',
+  },
+  tagChipTextSelected: {
+    color: '#fff',
+  },
+  tagChipCheckIcon: {
+    marginLeft: 4,
   },
 });
