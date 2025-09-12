@@ -36,10 +36,6 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     // 简单的输入验证
     if (!identifier.trim() || !password.trim()) {
-      Alert.alert(
-        '登录失败',
-        '请输入' + (loginMethod === 'username' ? '用户名' : '邮箱') + '和密码',
-      );
       return;
     }
 
@@ -59,16 +55,8 @@ const LoginScreen = () => {
             {
               text: '确定',
               onPress: () => {
-                // 导航到首页并重置整个tab导航器的状态
-                // 这样可以确保ProfileTab显示正确的屏幕而不是保持在登录页
-                navigation.reset({
-                  index: 0,
-                  routes: [
-                    {
-                      name: routeNameMap.homeTab,
-                    },
-                  ],
-                });
+                // 导航到首页或其他需要登录的页面, 直接导航到homeScreen会失败，因为他们处于不同stack
+                navigation.navigate(routeNameMap.homeTab as never);
               },
             },
           ],
@@ -77,12 +65,6 @@ const LoginScreen = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      Alert.alert(
-        '登录失败',
-        typeof error === 'object' && error !== null && 'message' in error
-          ? String(error.message)
-          : '网络错误，请稍后再试',
-      );
     }
   };
 
@@ -102,10 +84,6 @@ const LoginScreen = () => {
       Alert.alert('退出成功', '您已成功退出登录');
     } catch (error) {
       console.error('Logout error:', error);
-      Alert.alert(
-        '退出失败',
-        error instanceof Error ? error.message : '网络错误，请稍后再试',
-      );
     }
   };
 

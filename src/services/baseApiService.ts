@@ -3,6 +3,7 @@
  * Provides generic fetch method with error handling
  */
 
+import { Alert } from 'react-native';
 import { API_BASE_URL, ApiResponse } from './apiTypes';
 
 /**
@@ -32,11 +33,18 @@ export class BaseApiService {
         ...options,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // if (!response.ok) {
+      //   // console.log('response', response)
+      //   throw new Error(`HTTP error! status: ${response.status}`);
+      // }
 
       const result: ApiResponse<T> = await response.json();
+      console.log('result', result)
+      if (!result.success) {
+        Alert.alert(
+          result.message,
+        );
+      }
       return result;
     } catch (error) {
       console.error(`API(${this.baseUrl}${endpoint}) request failed:${error}`);

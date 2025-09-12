@@ -1,20 +1,10 @@
-/*
+/**
  * Authentication API Service for the Quiz Application
  * Provides methods to handle user authentication, registration and password management
  */
 
 import { BaseApiService } from './baseApiService';
-import {
-  ApiResponse,
-  LoginRequest,
-  LoginResponse,
-  LogoutRequest,
-  RegisterRequest,
-  RegisterResponse,
-  UserInfoResponse,
-  ForgotPasswordRequest,
-  ResetPasswordRequest,
-} from './apiTypes';
+import { ApiResponse, LoginRequest, LoginResponse, LogoutRequest, RegisterRequest, RegisterResponse, UserInfoResponse, ForgotPasswordRequest, ResetPasswordRequest } from './apiTypes';
 
 /**
  * Authentication API Service Class
@@ -121,23 +111,23 @@ export class AuthApiService extends BaseApiService {
 
   /**
    * Reset password
-   * Sets a new password for the user using reset token
-   * @param userId User's unique identifier
-   * @param resetToken Password reset token
+   * Sets a new password for the user using verification code
+   * @param email User's registered email address
+   * @param verificationCode Verification code from email
    * @param newPassword New password
    * @returns Promise with operation result
    */
   async resetPassword(
-    userId: string,
-    resetToken: string,
+    email: string,
+    verificationCode: string,
     newPassword: string
   ): Promise<ApiResponse<null>> {
     const requestBody: ResetPasswordRequest = {
-      userId,
-      resetToken,
+      email,
+      verificationCode,
       newPassword,
     };
-
+    console.log('requestBody', requestBody)
     return this.fetchApi<null>('/users/reset-password', {
       method: 'POST',
       body: JSON.stringify(requestBody),
@@ -158,3 +148,5 @@ export class AuthApiService extends BaseApiService {
     });
   }
 }
+
+export default new AuthApiService();
