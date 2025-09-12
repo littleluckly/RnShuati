@@ -23,7 +23,7 @@ const ForgotPasswordScreen = () => {
   const insets = useSafeAreaInsets();
 
   // 表单状态
-  const [email, setEmail] = useState('admin@example.com');
+  const [email, setEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');

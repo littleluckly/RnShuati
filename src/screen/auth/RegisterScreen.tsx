@@ -72,10 +72,6 @@ const RegisterScreen = () => {
     // 验证表单
     const validationResult = validateForm();
     if (!validationResult.isValid) {
-      Alert.alert(
-        '注册失败',
-        validationResult.errorMessage || '请检查输入信息',
-      );
       return;
     }
 
@@ -110,10 +106,6 @@ const RegisterScreen = () => {
       }
     } catch (error) {
       console.error('Register error:', error);
-      Alert.alert(
-        '注册失败',
-        error instanceof Error ? error.message : '网络错误，请稍后再试',
-      );
     } finally {
       setIsLoading(false);
     }

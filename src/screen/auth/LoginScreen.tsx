@@ -20,8 +20,8 @@ import {useAuthContext} from '@/contexts/AuthContext';
 const LoginScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const [identifier, setIdentifier] = useState('admin'); // 用户名或邮箱
-  const [password, setPassword] = useState('admin123');
+  const [identifier, setIdentifier] = useState(''); // 用户名或邮箱
+  const [password, setPassword] = useState('');
   const [loginMethod, setLoginMethod] = useState<'username' | 'email'>(
     'username',
   ); // 登录方式
