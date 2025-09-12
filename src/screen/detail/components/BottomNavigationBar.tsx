@@ -1,11 +1,12 @@
 import React from 'react';
-import {View, TouchableOpacity, Text, Animated} from 'react-native';
+import {View, TouchableOpacity, Text} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Animated, {useAnimatedStyle, SharedValue} from 'react-native-reanimated';
 import {styles} from '../styles/styles';
 
 interface BottomNavigationBarProps {
-  navOpacity: Animated.Value;
-  navTranslateYBottom: Animated.Value;
+  navOpacity: SharedValue<number>;
+  navTranslateYBottom: SharedValue<number>;
   handlePrev: () => void;
   handleNext: () => void;
   handleDirectory: () => void;
@@ -26,12 +27,20 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({
 }) => {
   const isFirstQuestion = currentIndex === 0;
   const isLastQuestion = currentIndex === totalQuestions - 1;
+  
+  // 创建动画样式
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: navOpacity.value,
+      transform: [{translateY: navTranslateYBottom.value}],
+    };
+  });
 
   return (
     <Animated.View
       style={[
         styles.navBottom,
-        {opacity: navOpacity, transform: [{translateY: navTranslateYBottom}]},
+        animatedStyle,
       ]}>
       <TouchableOpacity
         style={styles.navButton}

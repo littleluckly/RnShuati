@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, StatusBar, BackHandler, Text} from 'react-native';
 import {useRoute, useNavigation} from '@react-navigation/native';
 import OnboardingOverlay from '@/components/OnboardingOverlay';
@@ -18,6 +18,7 @@ export default function DetailScreen() {
   const {state: questionState, loadMore} = useQuestionContext();
   const route = useRoute<DetailScreenRouteProp>();
   const navigation = useNavigation<HomeStackNavigation>();
+  const [isAutoLoading, setIsAutoLoading] = useState(false); // 添加自动加载状态
   const {
     // State
     showNav,
@@ -27,6 +28,7 @@ export default function DetailScreen() {
     showOnboarding,
     showDirectory,
     directoryTranslateX,
+    overlayOpacity,
     playbackInfo,
     contentScrollViewRef,
     directoryFlatListRef,
@@ -53,25 +55,25 @@ export default function DetailScreen() {
     handleScroll,
   } = useDetailScreen(route);
 
-  // 处理硬件返回键
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      () => {
-        if (showDirectory) {
-          animateDirectory(false);
-          return true;
-        }
-        if (showNav) {
-          animateNav(false);
-          return true;
-        }
-        return false;
-      },
-    );
-
-    return () => backHandler.remove();
-  }, [showNav, showDirectory, animateNav, animateDirectory]);
+  // // 处理硬件返回键
+  // useEffect(() => {
+  //   const backHandler = BackHandler.addEventListener(
+  //     'hardwareBackPress',
+  //     () => {
+  //       if (showDirectory) {
+  //         animateDirectory(false);
+  //         return true;
+  //       }
+  //       if (showNav) {
+  //         animateNav(false);
+  //         return true;
+  //       }
+  //       return false;
+  //     },
+  //   );
+  //   console.log('处理硬件返回键');
+  //   return () => backHandler.remove();
+  // }, [showNav, showDirectory, animateNav, animateDirectory]);
 
   // 状态栏和导航设置
   useEffect(() => {
@@ -99,13 +101,26 @@ export default function DetailScreen() {
 
   // 检查剩余题目数量，当少于5题时触发加载更多
   useEffect(() => {
-    if (questionState.pagination.hasNext && !questionState.loading) {
+    // 防止在目录抽屉打开时触发自动加载，避免与目录抽屉的加载更多冲突
+    if (showDirectory) {
+      return;
+    }
+
+    // 确保不在加载过程中且还有更多数据可加载，并且当前没有在进行自动加载
+    if (
+      questionState.pagination.hasNext &&
+      !questionState.loading &&
+      !isAutoLoading
+    ) {
       // 计算剩余题目数量：当前已加载的题目数量 - 当前索引
       const remainingQuestions =
         questionState.questions.length - (currentIndex + 1);
       // 如果剩余题目数量少于5题，触发加载更多
       if (remainingQuestions < 5) {
-        loadMore();
+        setIsAutoLoading(true);
+        loadMore().finally(() => {
+          setIsAutoLoading(false);
+        });
       }
     }
   }, [
@@ -114,6 +129,8 @@ export default function DetailScreen() {
     questionState.pagination.hasNext,
     questionState.loading,
     loadMore,
+    showDirectory,
+    isAutoLoading,
   ]);
 
   if (!currentQuestion) {
@@ -143,6 +160,7 @@ export default function DetailScreen() {
       <DirectoryDrawer
         showDirectory={showDirectory}
         directoryTranslateX={directoryTranslateX}
+        overlayOpacity={overlayOpacity}
         animateDirectory={animateDirectory}
         questions={state.questions}
         currentQuestionId={currentQuestion._id}

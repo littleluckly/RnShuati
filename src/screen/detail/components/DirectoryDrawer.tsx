@@ -1,7 +1,9 @@
-import React, {useCallback, memo} from 'react';
-import {View, TouchableOpacity, Text, Animated, FlatList} from 'react-native';
+import React, {useCallback, memo, useEffect, useState} from 'react';
+import {View, TouchableOpacity, Text, FlatList} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Animated, {useSharedValue, useAnimatedStyle, withTiming, useAnimatedReaction, type SharedValue, runOnJS} from 'react-native-reanimated';
 import {styles} from '../styles/styles';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 // 创建一个优化的目录项组件
 const DirectoryItem = memo(
@@ -56,7 +58,8 @@ const DirectoryItem = memo(
 
 interface DirectoryDrawerProps {
   showDirectory: boolean;
-  directoryTranslateX: Animated.Value;
+  directoryTranslateX: SharedValue<number>;
+  overlayOpacity: SharedValue<number>;
   animateDirectory: (show: boolean) => void;
   questions: any[];
   currentQuestionId: string;
@@ -69,6 +72,7 @@ interface DirectoryDrawerProps {
 export const DirectoryDrawer: React.FC<DirectoryDrawerProps> = ({
   showDirectory,
   directoryTranslateX,
+  overlayOpacity,
   animateDirectory,
   questions,
   currentQuestionId,
@@ -77,6 +81,31 @@ export const DirectoryDrawer: React.FC<DirectoryDrawerProps> = ({
   handleDirectoryEndReached,
   renderDirectoryFooter,
 }) => {
+  const insets = useSafeAreaInsets();
+  const contentOpacity = useSharedValue(showDirectory ? 1 : 0);
+  const isRendered = useSharedValue(showDirectory ? 1 : 0);
+  const [isVisible, setIsVisible] = useState(showDirectory);
+
+  // 同步内容区域的透明度动画
+  useEffect(() => {
+    contentOpacity.value = withTiming(showDirectory ? 1 : 0, {duration: 200});
+    isRendered.value = withTiming(showDirectory ? 1 : 0, {duration: 200});
+  }, [showDirectory, contentOpacity, isRendered]);
+
+  // 使用useAnimatedReaction监听isRendered的变化，更新React状态
+  useAnimatedReaction(
+    () => isRendered.value,
+    (currentValue) => {
+      if (showDirectory) {
+        // 当显示目录时，始终设置为可见
+        runOnJS(setIsVisible)(true);
+      } else if (currentValue === 0) {
+        // 当目录完全隐藏后，设置为不可见
+        runOnJS(setIsVisible)(false);
+      }
+    },
+    [showDirectory]
+  );
   // 渲染目录项
   const renderDirectoryItem = useCallback(
     ({item, index}: {item: any; index: number}) => (
@@ -93,7 +122,27 @@ export const DirectoryDrawer: React.FC<DirectoryDrawerProps> = ({
   // 优化列表项的key提取
   const keyExtractor = useCallback((item: any) => item._id, []);
 
-  if (!showDirectory) {
+  // 创建动画样式
+  const containerStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{translateX: directoryTranslateX.value}],
+    };
+  });
+
+  const contentStyle = useAnimatedStyle(() => {
+    return {
+      opacity: contentOpacity.value,
+    };
+  });
+
+  const overlayStyle = useAnimatedStyle(() => {
+    return {
+      opacity: overlayOpacity.value,
+    };
+  });
+
+  // 如果组件不可见，不渲染任何内容
+  if (!isVisible) {
     return null;
   }
 
@@ -102,7 +151,11 @@ export const DirectoryDrawer: React.FC<DirectoryDrawerProps> = ({
       <Animated.View
         style={[
           styles.directoryContainer,
-          {transform: [{translateX: directoryTranslateX}]},
+          containerStyle,
+          {
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom
+          }
         ]}>
         <View style={styles.directoryHeader}>
           <Text style={styles.directoryTitle}>题目目录</Text>
@@ -112,39 +165,43 @@ export const DirectoryDrawer: React.FC<DirectoryDrawerProps> = ({
             <Icon name="close" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
-        <FlatList
-          ref={directoryFlatListRef}
-          data={questions}
-          renderItem={renderDirectoryItem}
-          keyExtractor={keyExtractor}
-          style={styles.directoryList}
-          showsVerticalScrollIndicator={true}
-          onEndReached={handleDirectoryEndReached}
-          onEndReachedThreshold={0.1}
-          ListFooterComponent={() => {
-            const footer = renderDirectoryFooter();
-            if (footer && footer.loading) {
-              return (
-                <View style={styles.directoryLoadingFooter}>
-                  <Text style={styles.directoryLoadingText}>加载中...</Text>
-                </View>
-              );
-            }
-            return null;
-          }}
-          // 添加性能优化属性
-          removeClippedSubviews={true}
-          initialNumToRender={10}
-          maxToRenderPerBatch={10}
-          windowSize={5}
-          updateCellsBatchingPeriod={50}
+        <Animated.View style={[contentStyle, {flex: 1}]}>
+          <FlatList
+            ref={directoryFlatListRef}
+            data={questions}
+            renderItem={renderDirectoryItem}
+            keyExtractor={keyExtractor}
+            style={styles.directoryList}
+            showsVerticalScrollIndicator={true}
+            onEndReached={handleDirectoryEndReached}
+            onEndReachedThreshold={0.1}
+            ListFooterComponent={() => {
+              const footer = renderDirectoryFooter();
+              if (footer && footer.loading) {
+                return (
+                  <View style={styles.directoryLoadingFooter}>
+                    <Text style={styles.directoryLoadingText}>加载中...</Text>
+                  </View>
+                );
+              }
+              return null;
+            }}
+            // 添加性能优化属性
+            removeClippedSubviews={true}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            updateCellsBatchingPeriod={50}
+          />
+        </Animated.View>
+      </Animated.View>
+      <Animated.View style={[styles.overlay, overlayStyle]}>
+        <TouchableOpacity
+          style={{flex: 1}}
+          activeOpacity={1}
+          onPress={() => animateDirectory(false)}
         />
       </Animated.View>
-      <TouchableOpacity
-        style={styles.overlay}
-        activeOpacity={1}
-        onPress={() => animateDirectory(false)}
-      />
     </>
   );
 };

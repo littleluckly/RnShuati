@@ -127,7 +127,6 @@ export class AuthApiService extends BaseApiService {
       verificationCode,
       newPassword,
     };
-    console.log('requestBody', requestBody)
     return this.fetchApi<null>('/users/reset-password', {
       method: 'POST',
       body: JSON.stringify(requestBody),

@@ -33,13 +33,7 @@ export class BaseApiService {
         ...options,
       });
 
-      // if (!response.ok) {
-      //   // console.log('response', response)
-      //   throw new Error(`HTTP error! status: ${response.status}`);
-      // }
-
       const result: ApiResponse<T> = await response.json();
-      console.log('result', result)
       if (!result.success) {
         Alert.alert(
           result.message,

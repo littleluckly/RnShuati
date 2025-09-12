@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Animated, Dimensions } from 'react-native';
+import { Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { HomeStackNavigation } from '@/navigation/Types';
 import { routeNameMap } from '@/navigation/constant';
 import { useQuestionContext } from '@/contexts/QuestionContext';
 import { AudioManager, AudioPlaybackInfo } from '@/services/AudioManager';
+import { useSharedValue, withTiming } from 'react-native-reanimated';
 import {
   shouldShowOnboarding,
   markOnboardingCompleted,
@@ -26,9 +27,9 @@ export const useDetailScreen = (route: any) => {
 
   // 控制导航栏显示状态
   const [showNav, setShowNav] = useState(true);
-  const [navOpacity] = useState(new Animated.Value(1));
-  const [navTranslateYTop] = useState(new Animated.Value(0)); // 顶部导航栏初始位置在屏幕上方
-  const [navTranslateYBottom] = useState(new Animated.Value(0)); // 底部导航栏初始位置在屏幕下方
+  const navOpacity = useSharedValue(1);
+  const navTranslateYTop = useSharedValue(0); // 顶部导航栏初始位置在屏幕上方
+  const navTranslateYBottom = useSharedValue(0); // 底部导航栏初始位置在屏幕下方
 
   // 新手引导状态
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -39,7 +40,8 @@ export const useDetailScreen = (route: any) => {
 
   // 控制目录抽屉显示状态
   const [showDirectory, setShowDirectory] = useState(false);
-  const [directoryTranslateX] = useState(new Animated.Value(-width * 0.8));
+  const directoryTranslateX = useSharedValue(-width * 0.8);
+  const overlayOpacity = useSharedValue(0); // 遮罩层透明度
 
   // 音频播放状态
   const [playbackInfo, setPlaybackInfo] = useState<AudioPlaybackInfo>({
@@ -66,23 +68,9 @@ export const useDetailScreen = (route: any) => {
   // 导航栏动画
   const animateNav = useCallback(
     (show: boolean) => {
-      Animated.parallel([
-        Animated.timing(navOpacity, {
-          toValue: show ? 1 : 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(navTranslateYTop, {
-          toValue: show ? 0 : -60,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(navTranslateYBottom, {
-          toValue: show ? 0 : 60,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      navOpacity.value = withTiming(show ? 1 : 0, { duration: 300 });
+      navTranslateYTop.value = withTiming(show ? 0 : -60, { duration: 300 });
+      navTranslateYBottom.value = withTiming(show ? 0 : 60, { duration: 300 });
       setShowNav(show);
     },
     [navOpacity, navTranslateYTop, navTranslateYBottom],
@@ -91,14 +79,11 @@ export const useDetailScreen = (route: any) => {
   // 目录抽屉动画
   const animateDirectory = useCallback(
     (show: boolean) => {
-      Animated.timing(directoryTranslateX, {
-        toValue: show ? 0 : -width * 0.8,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
+      directoryTranslateX.value = withTiming(show ? 0 : -width * 0.8, { duration: 300 });
+      overlayOpacity.value = withTiming(show ? 1 : 0, { duration: 200 });
       setShowDirectory(show);
     },
-    [directoryTranslateX],
+    [directoryTranslateX, overlayOpacity],
   );
 
   // 切换导航栏显示
@@ -219,11 +204,19 @@ export const useDetailScreen = (route: any) => {
   }, []);
 
   // 处理目录列表滚动到底部加载更多
+  const isDirectoryLoading = useRef(false);
   const handleDirectoryEndReached = useCallback(() => {
-    if (state.pagination.hasNext) {
-      loadMore();
+    // 确保不在加载过程中且还有更多数据可加载
+    if (state.pagination.hasNext && !state.loading) {
+      // 使用标志位防止重复触发
+      if (!isDirectoryLoading.current) {
+        isDirectoryLoading.current = true;
+        loadMore().finally(() => {
+          isDirectoryLoading.current = false;
+        });
+      }
     }
-  }, [state.pagination.hasNext, loadMore]);
+  }, [state.pagination.hasNext, state.loading, loadMore]);
 
   // 渲染目录底部加载指示器
   const renderDirectoryFooter = useCallback(() => {
@@ -262,6 +255,7 @@ export const useDetailScreen = (route: any) => {
     showOnboarding,
     showDirectory,
     directoryTranslateX,
+    overlayOpacity,
     playbackInfo,
     setPlaybackInfo,
     contentScrollViewRef,

@@ -1,11 +1,12 @@
 import React from 'react';
-import {View, TouchableOpacity, Text, Animated} from 'react-native';
+import {View, TouchableOpacity, Text} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Animated, {useAnimatedStyle, SharedValue} from 'react-native-reanimated';
 import {styles} from '../styles/styles';
 
 interface TopNavigationBarProps {
-  navOpacity: Animated.Value;
-  navTranslateYTop: Animated.Value;
+  navOpacity: SharedValue<number>;
+  navTranslateYTop: SharedValue<number>;
   handleBack: () => void;
   currentIndex: number;
   total: number;
@@ -18,11 +19,19 @@ export const TopNavigationBar: React.FC<TopNavigationBarProps> = ({
   currentIndex,
   total,
 }) => {
+  // 创建动画样式
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: navOpacity.value,
+      transform: [{translateY: navTranslateYTop.value}],
+    };
+  });
+
   return (
     <Animated.View
       style={[
         styles.navTop,
-        {opacity: navOpacity, transform: [{translateY: navTranslateYTop}]},
+        animatedStyle,
       ]}>
       <TouchableOpacity style={styles.navBackButton} onPress={handleBack}>
         <Icon name="arrow-back" size={24} color="#000" />
