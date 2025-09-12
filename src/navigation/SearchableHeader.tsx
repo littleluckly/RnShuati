@@ -23,6 +23,8 @@ import {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import {RouteProp} from '@react-navigation/native';
+import {HomeStackParamList} from './Types';
 
 const SearchableHeader = () => {
   const navigation = useNavigation<RootNavigation>();
@@ -52,19 +54,19 @@ const SearchableHeader = () => {
 
   const insets = useSafeAreaInsets(); // 获取安全区域
   const route = useRoute();
+  // 类型断言，确保route.params可以访问subjectName属性
+  const params = route.params as {subjectName?: string} | undefined;
   const navigationState = useNavigationState(state => state);
   const [isSearching, setIsSearching] = useState(false);
   const [query, setQuery] = useState('');
 
-  // 获取当前路由的标题 - 根据route.name显示中文标题
+  // 获取当前路由的标题 - 根据route.name显示中文标题，对于HomeScreen可以显示动态科目名称和题目总数
   const getChineseTitle = () => {
     switch (route.name) {
       case 'DetailScreen':
         return '题目详情';
       case 'HomeScreen':
-        return '首页';
-      case 'WelcomeScreen':
-        return '欢迎';
+        return params?.subjectName;
       case 'ProfileScreen':
         return '个人资料';
       default:
@@ -125,14 +127,12 @@ const SearchableHeader = () => {
   return (
     <View style={[styles.defaultHeader, {zIndex: 9999}]}>
       {/* 左侧：返回按钮（仅在可以返回时显示） */}
-      {canGoBack ? (
+      {canGoBack && (
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back-outline" size={20} color="#333"></Ionicons>
         </TouchableOpacity>
-      ) : (
-        <View style={{width: 60}} /> // 占位，保持对齐
       )}
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, {flex: 1}]}>{title}</Text>
       <TouchableOpacity onPress={() => setIsSearching(true)}>
         <Ionicons name="search" size={20} color="gray" />
       </TouchableOpacity>
@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
     minHeight: 56, // 确保最小高度
     height: 56,
     overflow: 'hidden',
+    backgroundColor: '',
   },
   searchHeader: {
     flexDirection: 'row',
@@ -161,11 +162,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     height: 56,
     overflow: 'hidden',
+    backgroundColor: 'white',
   },
   title: {
     fontSize: 17,
     fontWeight: '600',
     color: 'black',
+    textAlign: 'center',
   },
   searchIcon: {
     fontSize: 24,

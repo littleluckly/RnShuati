@@ -21,7 +21,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface Props {
   subjectId: string;
-  filters?: {difficulty?: string; tags?: string[]};
+  filters?: {difficulty?: string | string[]; tags?: string[]};
 }
 
 // 屏幕尺寸
@@ -31,7 +31,8 @@ const OptimizedFlatList: React.FC<Props> = ({
   subjectId,
   filters = {},
 }: Props) => {
-  const {state, refreshData, loadMore, dispatch} = useQuestionContext();
+  const {state, refreshData, loadMore, dispatch, updateFilters} =
+    useQuestionContext();
   const {questions, pagination, loading, refreshing, hasMore} = state;
   // const {onWillOpen, setRef, index = 0, selectedItemId, onItemPress} = props;
   const navigation = useNavigation<HomeStackNavigation>();
@@ -45,11 +46,14 @@ const OptimizedFlatList: React.FC<Props> = ({
   useEffect(() => {
     if (subjectId) {
       dispatch({type: 'SET_SUBJECT_ID', payload: subjectId});
-      if (filters) {
-        dispatch({type: 'SET_FILTERS', payload: filters});
-      }
     }
-  }, [subjectId, filters, dispatch]);
+  }, [subjectId, dispatch]);
+
+  useEffect(() => {
+    if (filters) {
+      updateFilters(filters);
+    }
+  }, [filters, updateFilters]);
 
   // 下拉刷新
   const handleRefresh = useCallback(async () => {

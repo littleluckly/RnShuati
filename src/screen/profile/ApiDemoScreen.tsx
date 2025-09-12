@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 // import {apiService} from '../../services/ApiService';
 import {
   subjectApiService,
@@ -75,6 +76,46 @@ const ApiDemoScreen = () => {
     }
   };
 
+  // 清理userId的功能 - 用于本地调试
+  const clearUserIdForDebug = async () => {
+    try {
+      // 显示确认对话框
+      Alert.alert(
+        '清理用户数据',
+        '确定要清理本地用户ID和科目选择信息吗？这仅用于调试目的。',
+        [
+          {
+            text: '取消',
+            style: 'cancel',
+          },
+          {
+            text: '确定清理',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                // 清除用户ID和相关数据
+                await AsyncStorage.removeItem('anonymous_user_id');
+                await AsyncStorage.removeItem('selected_subject');
+                await AsyncStorage.removeItem('is_logged_in');
+                
+                Alert.alert('成功', '用户数据已清理');
+                
+                // 刷新用户统计数据
+                fetchUserStats();
+              } catch (error) {
+                console.error('清理用户数据失败:', error);
+                Alert.alert('错误', '清理用户数据失败');
+              }
+            },
+          },
+        ],
+        { cancelable: true }
+      );
+    } catch (error) {
+      console.error('显示确认对话框失败:', error);
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>API Service Demo</Text>
@@ -128,6 +169,17 @@ const ApiDemoScreen = () => {
           </View>
         )}
       </View>
+
+      {/* 调试工具部分 */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>调试工具</Text>
+        <TouchableOpacity 
+          style={[styles.button, styles.dangerButton]} 
+          onPress={clearUserIdForDebug}
+        >
+          <Text style={styles.buttonText}>清理用户ID（调试用）</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
@@ -170,6 +222,9 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
+  },
+  dangerButton: {
+    backgroundColor: '#FF3B30', // 红色，表示危险操作
   },
   subjectCard: {
     padding: 12,

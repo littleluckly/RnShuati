@@ -5,6 +5,7 @@ import React, {
   ReactNode,
   useCallback,
   useEffect,
+  useRef,
 } from 'react';
 import {questionApiService} from '@/services';
 import {
@@ -90,6 +91,10 @@ const reducer = (
 ): QuestionContextState => {
   switch (action.type) {
     case 'SET_SUBJECT_ID':
+      // Only reset if subjectId actually changes
+      if (state.subjectId === action.payload) {
+        return state;
+      }
       return {
         ...state,
         subjectId: action.payload,
@@ -98,6 +103,10 @@ const reducer = (
         deletedCount: 0,
       };
     case 'SET_FILTERS':
+      // Only update if filters actually change
+      if (JSON.stringify(state.filters) === JSON.stringify(action.payload)) {
+        return state;
+      }
       return {
         ...state,
         filters: action.payload,
@@ -181,45 +190,59 @@ export const QuestionProvider = ({
   };
 
   const [state, dispatch] = useReducer(reducer, adjustedInitialState);
+  const prevSubjectIdRef = useRef(initialSubjectId);
+  const prevFiltersRef = useRef(state.filters);
+  const fetchDataRef = useRef<Promise<void> | null>(null);
 
   // 获取题目数据
   const fetchData = useCallback(
     async (pageNumber = 1, isRefreshing = false) => {
-      try {
-        dispatch({type: 'SET_REFRESHING', payload: isRefreshing});
-        dispatch({type: 'SET_LOADING', payload: true});
-
-        const config: FilteredQuestionListConfig = {
-          subjectId: state.subjectId,
-          limit: 10,
-          page: pageNumber,
-          ...state.filters,
-        };
-
-        const response = await questionApiService.getFilteredQuestionList(
-          config,
-        );
-
-        if (response.success && response.data?.questions) {
-          const questions = response.data.questions || [];
-          const pagination =
-            response.data.pagination || initialState.pagination;
-
-          dispatch({type: 'SET_PAGINATION', payload: pagination});
-          dispatch({type: 'SET_HAS_MORE', payload: pagination.hasNext});
-
-          if (isRefreshing || pageNumber === 1) {
-            dispatch({type: 'SET_QUESTIONS', payload: questions});
-          } else {
-            dispatch({type: 'ADD_QUESTIONS', payload: questions});
-          }
-        }
-      } catch (error) {
-        console.error('获取题目列表失败:', error);
-      } finally {
-        dispatch({type: 'SET_LOADING', payload: false});
-        dispatch({type: 'SET_REFRESHING', payload: false});
+      // Prevent multiple simultaneous requests
+      if (fetchDataRef.current) {
+        return fetchDataRef.current;
       }
+
+      const fetchPromise = (async () => {
+        try {
+          dispatch({type: 'SET_REFRESHING', payload: isRefreshing});
+          dispatch({type: 'SET_LOADING', payload: true});
+
+          const config: FilteredQuestionListConfig = {
+            subjectId: state.subjectId,
+            limit: 10,
+            page: pageNumber,
+            ...state.filters,
+          };
+
+          const response = await questionApiService.getFilteredQuestionList(
+            config,
+          );
+
+          if (response.success && response.data?.questions) {
+            const questions = response.data.questions || [];
+            const pagination =
+              response.data.pagination || initialState.pagination;
+
+            dispatch({type: 'SET_PAGINATION', payload: pagination});
+            dispatch({type: 'SET_HAS_MORE', payload: pagination.hasNext});
+
+            if (isRefreshing || pageNumber === 1) {
+              dispatch({type: 'SET_QUESTIONS', payload: questions});
+            } else {
+              dispatch({type: 'ADD_QUESTIONS', payload: questions});
+            }
+          }
+        } catch (error) {
+          console.error('获取题目列表失败:', error);
+        } finally {
+          dispatch({type: 'SET_LOADING', payload: false});
+          dispatch({type: 'SET_REFRESHING', payload: false});
+          fetchDataRef.current = null;
+        }
+      })();
+
+      fetchDataRef.current = fetchPromise;
+      return fetchPromise;
     },
     [state.subjectId, state.filters],
   );
@@ -250,17 +273,34 @@ export const QuestionProvider = ({
 
   // 当主题ID或筛选条件变化时，重新获取数据
   useEffect(() => {
-    if (state.subjectId) {
+    // Only fetch data if subjectId has actually changed
+    if (state.subjectId && state.subjectId !== prevSubjectIdRef.current) {
+      prevSubjectIdRef.current = state.subjectId;
+      fetchData(1);
+      return;
+    }
+
+    // Only fetch data if filters have actually changed
+    if (
+      JSON.stringify(state.filters) !== JSON.stringify(prevFiltersRef.current)
+    ) {
+      prevFiltersRef.current = state.filters;
+      fetchData(1);
+      return;
+    }
+
+    // Initial fetch if we have a subjectId and no questions
+    if (state.subjectId && state.questions.length === 0) {
       fetchData(1);
     }
-  }, [state.subjectId, state.filters, fetchData]);
+  }, [state.subjectId, state.filters, state.questions.length, fetchData]);
 
   // 当主题ID从外部改变时更新状态
   useEffect(() => {
     if (initialSubjectId && initialSubjectId !== state.subjectId) {
       dispatch({type: 'SET_SUBJECT_ID', payload: initialSubjectId});
     }
-  }, [initialSubjectId]);
+  }, [initialSubjectId, state.subjectId]);
 
   return (
     <QuestionContext.Provider

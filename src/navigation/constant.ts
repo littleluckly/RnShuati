@@ -2,10 +2,9 @@ export const routeNameMap: Record<string, string> = {
   homeTab: 'HomeTab',
   homeScreen: 'HomeScreen',
   detailScreen: 'DetailScreen',
-  welcomeScreen: 'WelcomeScreen',
+  subjectSelectionScreen: 'SubjectSelectionScreen',
 
   profileTab: 'ProfileTab',
   profileScreen: 'ProfileScreen',
   apiDemoScreen: 'ApiDemo'
-
 }

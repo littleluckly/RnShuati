@@ -4,6 +4,10 @@ import {
 } from '@react-navigation/bottom-tabs';
 import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
+import {
+  getFocusedRouteNameFromRoute,
+  NavigationContainer,
+} from '@react-navigation/native';
 
 import ProfileScreen from '@/screen/profile/ProfileScreen';
 import HomeStack from './HomeStack';
@@ -11,6 +15,7 @@ import LottieView from 'lottie-react-native';
 import {routeNameMap} from './constant';
 import {Host} from 'react-native-portalize';
 import ApiDemoScreen from '@/screen/profile/ApiDemoScreen';
+import {QuestionProvider} from '@/contexts/QuestionContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -32,46 +37,63 @@ const ProfileStack = () => {
   );
 };
 
-const RootTabNavigator: React.FC = () => {
+const RootTabNavigator: React.FC<{initialRouteName?: string}> = ({
+  initialRouteName = routeNameMap.homeTab,
+}) => {
   return (
     <Host>
-      <Tab.Navigator
-        initialRouteName={routeNameMap.homeTab}
-        screenOptions={{headerShown: false}}>
-        <Tab.Screen
-          name={routeNameMap.homeTab}
-          component={HomeStack}
-          options={{
-            tabBarIcon: ({focused}) => (
-              <LottieView
-                source={require('../assets/lottie/lottie-home.json')}
-                autoPlay
-                loop={true}
-                style={{width: 40, height: 40}}
-              />
-            ),
-          }}
-        />
-        <Tab.Screen
-          name={routeNameMap.profileTab}
-          component={ProfileStack}
-          options={{
-            headerShown: false,
-            tabBarIcon: ({focused}) => (
-              <LottieView
-                source={
-                  focused
-                    ? require('../assets/lottie/lottie-profile.json')
-                    : require('../assets/lottie/lottie-profile.json')
-                }
-                autoPlay
-                loop={true}
-                style={{width: 40, height: 40}}
-              />
-            ),
-          }}
-        />
-      </Tab.Navigator>
+      <QuestionProvider>
+        <NavigationContainer>
+          <Tab.Navigator
+            initialRouteName={routeNameMap.homeTab}
+            screenOptions={{headerShown: false}}>
+            <Tab.Screen
+              name={routeNameMap.homeTab}
+              component={HomeStack}
+              options={({route}) => {
+                const routeName =
+                  getFocusedRouteNameFromRoute(route) ??
+                  routeNameMap.subjectSelectionScreen;
+                return {
+                  tabBarStyle: {
+                    display:
+                      routeName === routeNameMap.subjectSelectionScreen
+                        ? 'none'
+                        : 'block',
+                  },
+                  tabBarIcon: ({focused}) => (
+                    <LottieView
+                      source={require('../assets/lottie/lottie-home.json')}
+                      autoPlay
+                      loop={true}
+                      style={{width: 40, height: 40}}
+                    />
+                  ),
+                };
+              }}
+            />
+            <Tab.Screen
+              name={routeNameMap.profileTab}
+              component={ProfileStack}
+              options={{
+                headerShown: false,
+                tabBarIcon: ({focused}) => (
+                  <LottieView
+                    source={
+                      focused
+                        ? require('../assets/lottie/lottie-profile.json')
+                        : require('../assets/lottie/lottie-profile.json')
+                    }
+                    autoPlay
+                    loop={true}
+                    style={{width: 40, height: 40}}
+                  />
+                ),
+              }}
+            />
+          </Tab.Navigator>
+        </NavigationContainer>
+      </QuestionProvider>
     </Host>
   );
 };

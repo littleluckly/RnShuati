@@ -20,9 +20,7 @@ export default function App() {
       <GestureHandlerRootView>
         <SharedTransitionProvider>
           <PaperProvider>
-            <NavigationContainer>
-              <RootStack />
-            </NavigationContainer>
+            <RootStack />
           </PaperProvider>
         </SharedTransitionProvider>
         <ToastComponent />

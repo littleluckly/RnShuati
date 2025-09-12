@@ -17,6 +17,12 @@ export interface ApiResponse<T> {
 export interface SubjectTag {
   name: string;
   value: string;
+  type?: string;
+}
+
+export interface DifficultyOption {
+  name: string;
+  value: string;
 }
 
 export interface Subject {
@@ -26,7 +32,7 @@ export interface Subject {
   description: string;
   tags: SubjectTag[];
   userTags: SubjectTag[];
-  difficultyLevels: string[];
+  difficultyLevels: DifficultyOption[];
   isEnabled: boolean;
   createdAt: string;
   updatedAt: string;
@@ -38,16 +44,6 @@ export interface Subject {
       hard: number;
     };
   };
-}
-
-export interface SubjectTag {
-  name: string;
-  type: string;
-}
-
-export interface DifficultyOption {
-  name: string;
-  value: string;
 }
 
 // Question related interfaces
@@ -118,6 +114,12 @@ export interface UserAction {
   userId?: string;
   questionId: string;
   action: 'favorited' | 'deleted' | 'practiced';
+}
+
+export interface UserSubjectSelection {
+  userId: string;
+  subjectId: string;
+  subjectName: string;
 }
 
 export interface UserStats {
