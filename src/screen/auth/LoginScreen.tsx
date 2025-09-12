@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,10 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { routeNameMap } from '@/navigation/constant';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAuthContext } from '@/contexts/AuthContext';
+import {useNavigation} from '@react-navigation/native';
+import {routeNameMap} from '@/navigation/constant';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useAuthContext} from '@/contexts/AuthContext';
 
 /**
  * 用户登录页面组件
@@ -20,12 +20,14 @@ import { useAuthContext } from '@/contexts/AuthContext';
 const LoginScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const [identifier, setIdentifier] = useState(''); // 用户名或邮箱
-  const [password, setPassword] = useState('');
-  const [loginMethod, setLoginMethod] = useState<'username' | 'email'>('username'); // 登录方式
-  
+  const [identifier, setIdentifier] = useState('admin'); // 用户名或邮箱
+  const [password, setPassword] = useState('admin123');
+  const [loginMethod, setLoginMethod] = useState<'username' | 'email'>(
+    'username',
+  ); // 登录方式
+
   // 使用认证上下文
-  const { login, logout, isLoading } = useAuthContext();
+  const {login, logout, isLoading} = useAuthContext();
 
   /**
    * 处理用户登录
@@ -34,14 +36,21 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     // 简单的输入验证
     if (!identifier.trim() || !password.trim()) {
-      Alert.alert('登录失败', '请输入' + (loginMethod === 'username' ? '用户名' : '邮箱') + '和密码');
+      Alert.alert(
+        '登录失败',
+        '请输入' + (loginMethod === 'username' ? '用户名' : '邮箱') + '和密码',
+      );
       return;
     }
 
     try {
       // 调用登录API（通过上下文）
-      const success = await login(identifier, password, loginMethod === 'email');
-      
+      const success = await login(
+        identifier,
+        password,
+        loginMethod === 'email',
+      );
+
       if (success) {
         Alert.alert(
           '登录成功',
@@ -50,17 +59,30 @@ const LoginScreen = () => {
             {
               text: '确定',
               onPress: () => {
-                // 导航到首页或其他需要登录的页面
-                navigation.navigate(routeNameMap.homeScreen as never);
+                // 导航到首页并重置整个tab导航器的状态
+                // 这样可以确保ProfileTab显示正确的屏幕而不是保持在登录页
+                navigation.reset({
+                  index: 0,
+                  routes: [
+                    {
+                      name: routeNameMap.homeTab,
+                    },
+                  ],
+                });
               },
             },
           ],
-          { cancelable: false }
+          {cancelable: false},
         );
       }
     } catch (error) {
       console.error('Login error:', error);
-      Alert.alert('登录失败', typeof error === 'object' && error !== null && 'message' in error ? String(error.message) : '网络错误，请稍后再试');
+      Alert.alert(
+        '登录失败',
+        typeof error === 'object' && error !== null && 'message' in error
+          ? String(error.message)
+          : '网络错误，请稍后再试',
+      );
     }
   };
 
@@ -72,15 +94,18 @@ const LoginScreen = () => {
     try {
       // 使用上下文进行退出登录
       await logout();
-      
+
       // 重置输入字段
       setIdentifier('');
       setPassword('');
-      
+
       Alert.alert('退出成功', '您已成功退出登录');
     } catch (error) {
       console.error('Logout error:', error);
-      Alert.alert('退出失败', error instanceof Error ? error.message : '网络错误，请稍后再试');
+      Alert.alert(
+        '退出失败',
+        error instanceof Error ? error.message : '网络错误，请稍后再试',
+      );
     }
   };
 
@@ -88,22 +113,38 @@ const LoginScreen = () => {
   const renderLoginMethodToggle = () => (
     <View style={styles.loginMethodToggle}>
       <TouchableOpacity
-        style={[styles.toggleButton, loginMethod === 'username' && styles.toggleButtonActive]}
-        onPress={() => setLoginMethod('username')}
-      >
-        <Text style={[styles.toggleButtonText, loginMethod === 'username' && styles.toggleButtonTextActive]}>用户名</Text>
+        style={[
+          styles.toggleButton,
+          loginMethod === 'username' && styles.toggleButtonActive,
+        ]}
+        onPress={() => setLoginMethod('username')}>
+        <Text
+          style={[
+            styles.toggleButtonText,
+            loginMethod === 'username' && styles.toggleButtonTextActive,
+          ]}>
+          用户名
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.toggleButton, loginMethod === 'email' && styles.toggleButtonActive]}
-        onPress={() => setLoginMethod('email')}
-      >
-        <Text style={[styles.toggleButtonText, loginMethod === 'email' && styles.toggleButtonTextActive]}>邮箱</Text>
+        style={[
+          styles.toggleButton,
+          loginMethod === 'email' && styles.toggleButtonActive,
+        ]}
+        onPress={() => setLoginMethod('email')}>
+        <Text
+          style={[
+            styles.toggleButtonText,
+            loginMethod === 'email' && styles.toggleButtonTextActive,
+          ]}>
+          邮箱
+        </Text>
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
+    <View style={[styles.container, {paddingTop: insets.top + 20}]}>
       <View style={styles.header}>
         <Text style={styles.title}>用户登录</Text>
         <Text style={styles.subtitle}>请输入您的登录信息</Text>
@@ -111,12 +152,16 @@ const LoginScreen = () => {
 
       <View style={styles.formContainer}>
         {renderLoginMethodToggle()}
-        
+
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>{loginMethod === 'username' ? '用户名' : '邮箱'}</Text>
+          <Text style={styles.inputLabel}>
+            {loginMethod === 'username' ? '用户名' : '邮箱'}
+          </Text>
           <TextInput
             style={styles.input}
-            placeholder={`请输入${loginMethod === 'username' ? '用户名' : '邮箱'}`}
+            placeholder={`请输入${
+              loginMethod === 'username' ? '用户名' : '邮箱'
+            }`}
             placeholderTextColor="#999"
             value={identifier}
             onChangeText={setIdentifier}
@@ -143,8 +188,7 @@ const LoginScreen = () => {
           style={styles.loginButton}
           onPress={handleLogin}
           disabled={isLoading}
-          activeOpacity={0.8}
-        >
+          activeOpacity={0.8}>
           {isLoading ? (
             <ActivityIndicator color="white" size="small" />
           ) : (
@@ -155,8 +199,7 @@ const LoginScreen = () => {
         <TouchableOpacity
           style={styles.logoutButton}
           onPress={handleLogout}
-          activeOpacity={0.8}
-        >
+          activeOpacity={0.8}>
           <Text style={styles.logoutButtonText}>退出登录 (演示)</Text>
         </TouchableOpacity>
 
@@ -165,25 +208,22 @@ const LoginScreen = () => {
           <TouchableOpacity
             onPress={() => {
               (navigation as any).navigate(routeNameMap.registerScreen);
-            }}
-          >
+            }}>
             <Text style={styles.actionLinkText}>新用户注册</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             onPress={() => {
               (navigation as any).navigate(routeNameMap.forgotPasswordScreen);
-            }}
-          >
+            }}>
             <Text style={styles.actionLinkText}>忘记密码？</Text>
           </TouchableOpacity>
         </View>
-        
+
         <TouchableOpacity
           style={styles.skipButton}
           onPress={() => navigation.navigate(routeNameMap.homeScreen as never)}
-          activeOpacity={0.8}
-        >
+          activeOpacity={0.8}>
           <Text style={styles.skipButtonText}>跳过登录，继续使用</Text>
         </TouchableOpacity>
       </View>
@@ -232,7 +272,7 @@ const styles = StyleSheet.create({
   toggleButtonActive: {
     backgroundColor: 'white',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
     elevation: 2,
