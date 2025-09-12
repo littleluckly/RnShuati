@@ -109,6 +109,61 @@ export interface FilteredQuestionListResponse {
   };
 }
 
+// Authentication interfaces
+export interface LoginRequest {
+  username?: string;
+  email?: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  userId: string;
+  username: string;
+  role: string;
+  token: string;
+  lastLogin: string;
+  email?: string;
+}
+
+export interface LogoutRequest {
+  userId: string;
+  token: string;
+}
+
+// User registration interfaces
+export interface RegisterRequest {
+  username: string;
+  password: string;
+  email?: string;
+}
+
+export interface RegisterResponse {
+  userId: string;
+  username: string;
+  email: string | null;
+}
+
+// User info interfaces
+export interface UserInfoResponse {
+  userId: string;
+  username: string;
+  role: string;
+  lastLogin: string;
+  isLoggedIn: boolean;
+  email?: string;
+}
+
+// Password management interfaces
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  userId: string;
+  resetToken: string;
+  newPassword: string;
+}
+
 // User action interfaces
 export interface UserAction {
   userId?: string;

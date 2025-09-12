@@ -101,6 +101,9 @@ GET http://localhost:3000/subjects/all
       "tags": [
         { "name": "JavaScript", "type": "language" },
         { "name": "CSS", "type": "style" },
+        { "name": "React", "type": "framework" },
+        { "name": "Vue", "type": "framework" },
+        { "name": "工程化", "type": "tooling" }
       ],
       "userTags": [
         { "name": "面试重点", "type": "priority" },
@@ -110,13 +113,11 @@ GET http://localhost:3000/subjects/all
       "isEnabled": true,
       "createdAt": "2023-09-01T00:00:00.000Z",
       "updatedAt": "2023-09-01T00:00:00.000Z",
-      "questionStats": {
-        "total": 25,
-        "byDifficulty": {
-          "easy": 10,
-          "medium": 10,
-          "hard": 5
-        }
+      "questionCount": 120,
+      "difficultyCount": {
+        "easy": 40,
+        "medium": 50,
+        "hard": 30
       }
     }
   ],
@@ -124,16 +125,21 @@ GET http://localhost:3000/subjects/all
 }
 ```
 
+**字段说明**:
+
+- `questionCount`: 该科目的题目总数
+- `difficultyCount`: 各难度等级的题目数量
+
 ### 1.3 根据 ID 获取科目详情
 
 **接口地址**: `GET /subjects/:id`
 
-**接口描述**: 根据科目 ID 获取科目详细信息
+**接口描述**: 根据科目 ID 获取科目详情
 
 **请求参数**:
 | 参数名 | 类型 | 位置 | 必填 | 说明 |
 |--------|------|------|------|------|
-| id | string | path | 是 | 科目的 ObjectId |
+| id | string | path | 是 | 科目 ID |
 
 **请求示例**:
 
@@ -153,9 +159,15 @@ GET http://localhost:3000/subjects/64f1a2b3c4d5e6f789012345
     "description": "涵盖 JS、CSS、Vue、React 等",
     "tags": [
       { "name": "JavaScript", "type": "language" },
-      { "name": "CSS", "type": "style" }
+      { "name": "CSS", "type": "style" },
+      { "name": "React", "type": "framework" },
+      { "name": "Vue", "type": "framework" },
+      { "name": "工程化", "type": "tooling" }
     ],
-    "userTags": [{ "name": "面试重点", "type": "priority" }],
+    "userTags": [
+      { "name": "面试重点", "type": "priority" },
+      { "name": "高频题", "type": "frequency" }
+    ],
     "difficultyLevels": ["简单", "中等", "困难"],
     "isEnabled": true,
     "createdAt": "2023-09-01T00:00:00.000Z",
@@ -168,23 +180,19 @@ GET http://localhost:3000/subjects/64f1a2b3c4d5e6f789012345
 **错误响应**:
 
 ```
-{
-  "success": false,
-  "data": null,
-  "message": "科目不存在"
-}
+{"success": false, "data": null, "message": "科目不存在"}
 ```
 
-### 1.4 根据科目 ID 获取所有标签计数
+### 1.4 根据科目 ID 获取所有标签
 
-**接口地址**: `GET /subjects/:id/tags-count`
+**接口地址**: `GET /subjects/:id/tags`
 
-**接口描述**: 根据科目 ID 获取该科目下所有题目的标签及其数量统计
+**接口描述**: 根据科目 ID 获取该科目下的所有标签列表
 
 **请求参数**:
 | 参数名 | 类型 | 位置 | 必填 | 说明 |
 |--------|------|------|------|------|
-| id | string | path | 是 | 科目的 ObjectId |
+| id | string | path | 是 | 科目 ID |
 
 **请求示例**:
 
@@ -198,52 +206,31 @@ GET http://localhost:3000/subjects/64f1a2b3c4d5e6f789012345/tags
 {
   "success": true,
   "data": [
-    {
-      "name": "vue",
-      "count": 15
-    },
-    {
-      "name": "javascript",
-      "count": 12
-    },
-    {
-      "name": "lifecycle",
-      "count": 8
-    },
-    {
-      "name": "reactivity",
-      "count": 6
-    }
+    { "name": "JavaScript", "type": "language" },
+    { "name": "CSS", "type": "style" },
+    { "name": "React", "type": "framework" },
+    { "name": "Vue", "type": "framework" },
+    { "name": "工程化", "type": "tooling" }
   ],
   "message": "操作成功"
 }
 ```
 
-**错误响应**:
+### 1.5 根据科目 ID 获取标签计数
 
-```
-{
-  "success": false,
-  "data": null,
-  "message": "科目不存在"
-}
-```
+**接口地址**: `GET /subjects/:id/tags-count`
 
-### 1.5 根据科目 ID 获取所有标签
-
-**接口地址**: `GET /subjects/:id/all-tags`
-
-**接口描述**: 根据科目 ID 获取该科目下所有题目的标签，不包含数量统计
+**接口描述**: 根据科目 ID 获取该科目下的标签统计信息
 
 **请求参数**:
 | 参数名 | 类型 | 位置 | 必填 | 说明 |
 |--------|------|------|------|------|
-| id | string | path | 是 | 科目的 ObjectId |
+| id | string | path | 是 | 科目 ID |
 
 **请求示例**:
 
 ```
-GET http://localhost:3000/subjects/64f1a2b3c4d5e6f789012345/all-tags
+GET http://localhost:3000/subjects/64f1a2b3c4d5e6f789012345/tags-count
 ```
 
 **响应示例**:
@@ -252,165 +239,19 @@ GET http://localhost:3000/subjects/64f1a2b3c4d5e6f789012345/all-tags
 {
   "success": true,
   "data": [
-    {
-      "name": "JavaScript",
-      "value": "javascript"
-    },
-    {
-      "name": "CSS",
-      "value": "css"
-    },
-    {
-      "name": "React",
-      "value": "react"
-    },
-    {
-      "name": "Vue",
-      "value": "vue"
-    }
+    { "name": "JavaScript", "count": 45 },
+    { "name": "CSS", "count": 30 },
+    { "name": "React", "count": 25 },
+    { "name": "Vue", "count": 20 },
+    { "name": "工程化", "count": 15 }
   ],
   "message": "操作成功"
 }
 ```
 
-**错误响应**:
+**字段说明**:
 
-```
-{
-  "success": false,
-  "data": null,
-  "message": "科目不存在"
-}
-```
-
-### 1.6 添加用户自定义标签
-
-**接口地址**: `POST /subjects/:id/user-tags`
-
-**接口描述**: 为指定科目添加用户自定义标签，内置标签不可修改
-
-**请求参数**:
-| 参数名 | 类型 | 位置 | 必填 | 说明 |
-|--------|------|------|------|------|
-| id | string | path | 是 | 科目的 ObjectId |
-| name | string | body | 是 | 标签名称 |
-| type | string | body | 否 | 标签类型，默认为 "custom" |
-
-**请求示例**:
-
-```
-POST http://localhost:3000/subjects/64f1a2b3c4d5e6f789012345/user-tags
-Content-Type: application/json
-
-{
-  "name": "面试重点",
-  "type": "priority"
-}
-```
-
-**响应示例**:
-
-```
-{
-  "success": true,
-  "data": null,
-  "message": "标签添加成功"
-}
-```
-
-**错误响应**:
-
-```
-{
-  "success": false,
-  "data": null,
-  "message": "标签名称不能为空"
-}
-```
-
-### 1.6 修改用户自定义标签
-
-**接口地址**: `PUT /subjects/:id/user-tags/:tagName`
-
-**接口描述**: 修改指定科目的用户自定义标签，内置标签不可修改
-
-**请求参数**:
-| 参数名 | 类型 | 位置 | 必填 | 说明 |
-|--------|------|------|------|------|
-| id | string | path | 是 | 科目的 ObjectId |
-| tagName | string | path | 是 | 原标签名称 |
-| newName | string | body | 是 | 新标签名称 |
-| type | string | body | 否 | 新标签类型 |
-
-**请求示例**:
-
-```
-PUT http://localhost:3000/subjects/64f1a2b3c4d5e6f789012345/user-tags/面试重点
-Content-Type: application/json
-
-{
-  "newName": "必考题",
-  "type": "priority"
-}
-```
-
-**响应示例**:
-
-```
-{
-  "success": true,
-  "data": null,
-  "message": "标签修改成功"
-}
-```
-
-**错误响应**:
-
-```
-{
-  "success": false,
-  "data": null,
-  "message": "只能修改用户自定义标签"
-}
-```
-
-### 1.7 删除用户自定义标签
-
-**接口地址**: `DELETE /subjects/:id/user-tags/:tagName`
-
-**接口描述**: 删除指定科目的用户自定义标签，内置标签不可删除，同时会从该科目下的所有题目中移除该标签
-
-**请求参数**:
-| 参数名 | 类型 | 位置 | 必填 | 说明 |
-|--------|------|------|------|------|
-| id | string | path | 是 | 科目的 ObjectId |
-| tagName | string | path | 是 | 要删除的标签名称 |
-
-**请求示例**:
-
-```
-DELETE http://localhost:3000/subjects/64f1a2b3c4d5e6f789012345/user-tags/面试重点
-```
-
-**响应示例**:
-
-```
-{
-  "success": true,
-  "data": null,
-  "message": "标签删除成功"
-}
-```
-
-**错误响应**:
-
-```
-{
-  "success": false,
-  "data": null,
-  "message": "只能删除用户自定义标签"
-}
-```
+- `count`: 该标签下的题目数量
 
 ---
 
@@ -420,28 +261,30 @@ DELETE http://localhost:3000/subjects/64f1a2b3c4d5e6f789012345/user-tags/面试�
 
 **接口地址**: `GET /questions/random`
 
-**接口描述**: 根据指定条件随机获取一道题目
+**接口描述**: 随机获取一道题目
 
 **请求参数**:
 | 参数名 | 类型 | 位置 | 必填 | 说明 |
 |--------|------|------|------|------|
-| subjectId | string | query | 否 | 科目 ID，筛选指定科目的题目 |
-| difficulty | string | query | 否 | 难度等级：简单、中等、困难 |
+| subjectId | string | query | 否 | 科目 ID |
+| difficulty | string | query | 否 | 难度等级：easy、medium、hard |
+| excludeIds | string | query | 否 | 排除的题目 ID，多个用逗号分隔 |
+| tags | string | query | 否 | 标签过滤，多个用逗号分隔 |
 
 **请求示例**:
 
 ```
-# 获取任意题目
+# 获取任意一道题目
 GET http://localhost:3000/questions/random
 
 # 获取指定科目的题目
 GET http://localhost:3000/questions/random?subjectId=64f1a2b3c4d5e6f789012345
 
 # 获取指定难度的题目
-GET http://localhost:3000/questions/random?difficulty=中等
+GET http://localhost:3000/questions/random?difficulty=medium
 
-# 获取指定科目和难度的题目
-GET http://localhost:3000/questions/random?subjectId=64f1a2b3c4d5e6f789012345&difficulty=简单
+# 获取指定标签的题目
+GET http://localhost:3000/questions/random?tags=javascript,react
 ```
 
 **响应示例**:
@@ -455,20 +298,20 @@ GET http://localhost:3000/questions/random?subjectId=64f1a2b3c4d5e6f789012345&di
     "type": "choice",
     "difficulty": "easy",
     "tags": ["vue", "lifecycle"],
-    "question_length": 23,
-    "simple_answer_length": 189,
-    "detailed_analysis_length": 347,
-    "created_at": null,
     "question_markdown": "Vue 2.x 生命周期有哪些？分别做了什么？",
-    "answer_simple_markdown": "beforeCreate → created → beforeMount → mounted → beforeUpdate → updated → beforeDestroy → destroyed",
-    "answer_analysis_markdown": "- beforeCreate：实例刚初始化，data、methods 均不可用。\n- created：实例创建完成，可访问/修改数据，但 DOM 未生成...",
+    "answer_simple_markdown": "beforeCreate → created → beforeMount → mounted...",
+    "answer_analysis_markdown": "详细解析内容...",
     "files": {
-      "audio_simple": "q0001_285acd89_audio_simple.mp3",
-      "audio_question": "q0001_285acd89_audio_question.mp3",
-      "audio_analysis": "q0001_285acd89_audio_analysis.mp3",
-      "meta": "q0001_285acd89_meta.json"
+      "audio_simple": "path/to/audio_simple.mp3",
+      "audio_question": "path/to/audio_question.mp3",
+      "audio_analysis": "path/to/audio_analysis.mp3",
+      "meta": "path/to/meta.json"
     },
-    "subjectId": "64f1a2b3c4d5e6f789012345"
+    "subjectId": "64f1a2b3c4d5e6f789012345",
+    "question_length": 25,
+    "simple_answer_length": 120,
+    "detailed_analysis_length": 500,
+    "created_at": "2023-09-01T10:00:00.000Z"
   },
   "message": "操作成功"
 }
@@ -477,58 +320,43 @@ GET http://localhost:3000/questions/random?subjectId=64f1a2b3c4d5e6f789012345&di
 **错误响应**:
 
 ```
-{
-  "success": false,
-  "data": null,
-  "message": "暂无符合条件的题目"
-}
+{"success": false, "data": null, "message": "暂无符合条件的题目"}
 ```
 
 ### 2.2 随机获取题目列表
 
 **接口地址**: `POST /questions/random-list`
 
-**接口描述**: 根据指定配置随机获取某个科目下的题目列表，支持难度分布和标签过滤
+**接口描述**: 随机获取指定数量的题目列表
 
 **请求参数**:
 | 参数名 | 类型 | 位置 | 必填 | 说明 |
 |--------|------|------|------|------|
-| subjectId | string | body | 是 | 科目 ID |
-| total | number | body | 否 | 题目总数，默认 10 |
-| difficultyConfig | object | body | 否 | 难度分布配置 |
-| tagConfig | object | body | 否 | 标签配置 |
-
-**难度分布配置说明**:
-
-```
-{
-  "easy": 0.4, // 40% 简单题
-  "medium": 0.4, // 40% 中等题
-  "hard": 0.2 // 20% 困难题
-}
-```
-
-**标签配置说明**:
-
-```
-{
-  "vue": 5, // vue 标签的题目 5 道
-  "javascript": 3 // javascript 标签的题目 3 道
-}
-```
+| subjectId | string | body | 否 | 科目 ID |
+| total | number | body | 否 | 题目数量，默认 10，最大 50 |
+| difficultyConfig | object | body | 否 | 难度分布配置，例如：{"easy": 0.4, "medium": 0.4, "hard": 0.2} |
+| excludeIds | array | body | 否 | 排除的题目 ID 数组 |
+| tags | array | body | 否 | 标签过滤数组 |
 
 **请求示例**:
 
 ```
-# 获取默认配置的 10 道题
+# 随机获取 10 道题目
+POST http://localhost:3000/questions/random-list
+Content-Type: application/json
+
+{}
+
+# 随机获取指定科目的 20 道题目
 POST http://localhost:3000/questions/random-list
 Content-Type: application/json
 
 {
-  "subjectId": "64f1a2b3c4d5e6f789012345"
+  "subjectId": "64f1a2b3c4d5e6f789012345",
+  "total": 20
 }
 
-# 获取 20 道题，自定义难度分布
+# 自定义难度分布
 POST http://localhost:3000/questions/random-list
 Content-Type: application/json
 
@@ -536,23 +364,19 @@ Content-Type: application/json
   "subjectId": "64f1a2b3c4d5e6f789012345",
   "total": 20,
   "difficultyConfig": {
-    "easy": 0.5,
-    "medium": 0.3,
+    "easy": 0.3,
+    "medium": 0.5,
     "hard": 0.2
   }
 }
 
-# 获取指定标签的题目
+# 按标签过滤
 POST http://localhost:3000/questions/random-list
 Content-Type: application/json
 
 {
   "subjectId": "64f1a2b3c4d5e6f789012345",
-  "total": 15,
-  "tagConfig": {
-    "vue": 8,
-    "javascript": 7
-  }
+  "tags": ["vue", "javascript"]
 }
 ```
 
@@ -570,27 +394,32 @@ Content-Type: application/json
         "difficulty": "easy",
         "tags": ["vue", "lifecycle"],
         "question_markdown": "Vue 2.x 生命周期有哪些？分别做了什么？",
-        "answer_simple_markdown": "beforeCreate → created → beforeMount → mounted → beforeUpdate → updated → beforeDestroy → destroyed",
-        "answer_analysis_markdown": "- beforeCreate：实例刚初始化，data、methods 均不可用。\n- created：实例创建完成...",
+        "answer_simple_markdown": "beforeCreate → created → beforeMount → mounted...",
+        "answer_analysis_markdown": "详细解析内容...",
         "files": {
-          "audio_simple": "q0001_285acd89_audio_simple.mp3",
-          "audio_question": "q0001_285acd89_audio_question.mp3",
-          "audio_analysis": "q0001_285acd89_audio_analysis.mp3",
-          "meta": "q0001_285acd89_meta.json"
+          "audio_simple": "path/to/audio_simple.mp3",
+          "audio_question": "path/to/audio_question.mp3",
+          "audio_analysis": "path/to/audio_analysis.mp3",
+          "meta": "path/to/meta.json"
         },
-        "subjectId": "64f1a2b3c4d5e6f789012345"
+        "subjectId": "64f1a2b3c4d5e6f789012345",
+        "question_length": 25,
+        "simple_answer_length": 120,
+        "detailed_analysis_length": 500,
+        "created_at": "2023-09-01T10:00:00.000Z"
       }
-      // ... 更多题目
+      // 更多题目...
     ],
-    "total": 10,
-    "config": {
-      "requestedTotal": 10,
-      "difficultyConfig": {
-        "easy": 0.4,
-        "medium": 0.4,
-        "hard": 0.2
-      },
-      "tagConfig": null
+    "stats": {
+      "total": 10,
+      "easy": 4,
+      "medium": 4,
+      "hard": 2,
+      "tags": {
+        "vue": 6,
+        "javascript": 5,
+        "react": 3
+      }
     }
   },
   "message": "操作成功"
@@ -600,89 +429,45 @@ Content-Type: application/json
 **错误响应**:
 
 ```
-{
-  "success": false,
-  "data": null,
-  "message": "缺少科目 ID 参数"
-}
+{"success": false, "data": null, "message": "暂无符合条件的题目"}
 ```
 
 ### 2.3 获取过滤的题目列表
 
 **接口地址**: `POST /questions/list`
 
-**接口描述**: 根据科目、难度和多个标签过滤获取题目列表，支持分页
+**接口描述**: 根据条件过滤题目并返回分页列表
 
 **请求参数**:
 | 参数名 | 类型 | 位置 | 必填 | 说明 |
 |--------|------|------|------|------|
 | subjectId | string | body | 否 | 科目 ID |
-| difficulty | string/array | body | 否 | 难度等级，单个值或数组（支持多个）：easy、medium、hard |
-| tags | array | body | 否 | 标签数组，支持多个标签 |
+| difficulty | array | body | 否 | 难度等级数组，例如：["easy", "medium"] |
+| tags | array | body | 否 | 标签数组，例如：["vue", "javascript"] |
 | page | number | body | 否 | 页码，默认 1 |
-| limit | number | body | 否 | 每页数量，默认 20 |
-| userId | string | body | 否 | 用户 ID，默认为 "guest"，用于过滤用户已删除的题目 |
+| limit | number | body | 否 | 每页数量，默认 20，最大 50 |
 
 **请求示例**:
 
 ```
-# 获取指定科目的所有题目（不包含用户已删除的）
+# 获取所有题目（分页）
 POST http://localhost:3000/questions/list
 Content-Type: application/json
 
 {
-  "subjectId": "64f1a2b3c4d5e6f789012345",
-  "userId": "user123",
   "page": 1,
   "limit": 10
 }
 
-# 按单个难度过滤
-POST http://localhost:3000/questions/list
-Content-Type: application/json
-
-{
-  "subjectId": "64f1a2b3c4d5e6f789012345",
-  "difficulty": "medium",
-  "userId": "user123",
-  "page": 1,
-  "limit": 20
-}
-
-# 按多个难度过滤
+# 根据条件过滤题目
 POST http://localhost:3000/questions/list
 Content-Type: application/json
 
 {
   "subjectId": "64f1a2b3c4d5e6f789012345",
   "difficulty": ["easy", "medium"],
-  "userId": "user123",
+  "tags": ["vue", "javascript"],
   "page": 1,
-  "limit": 20
-}
-
-# 按多个标签过滤
-POST http://localhost:3000/questions/list
-Content-Type: application/json
-
-{
-  "subjectId": "64f1a2b3c4d5e6f789012345",
-  "tags": ["vue", "javascript", "lifecycle"],
-  "userId": "user123",
-  "page": 1,
-  "limit": 15
-}
-
-# 组合过滤（多个难度 + 多个标签）
-POST http://localhost:3000/questions/list
-Content-Type: application/json
-
-{
-  "subjectId": "64f1a2b3c4d5e6f789012345",
-  "difficulty": ["easy", "medium"],
-  "tags": ["vue", "component"],
-  "userId": "user123",
-  "page": 2,
   "limit": 10
 }
 ```
@@ -702,43 +487,92 @@ Content-Type: application/json
         "tags": ["vue", "lifecycle"],
         "question_markdown": "Vue 2.x 生命周期有哪些？分别做了什么？",
         "answer_simple_markdown": "beforeCreate → created → beforeMount → mounted...",
-        "answer_analysis_markdown": "- beforeCreate：实例刚初始化...",
+        "answer_analysis_markdown": "详细解析内容...",
         "files": {
-          "audio_simple": "q0001_285acd89_audio_simple.mp3",
-          "audio_question": "q0001_285acd89_audio_question.mp3",
-          "audio_analysis": "q0001_285acd89_audio_analysis.mp3",
-          "meta": "q0001_285acd89_meta.json"
+          "audio_simple": "path/to/audio_simple.mp3",
+          "audio_question": "path/to/audio_question.mp3",
+          "audio_analysis": "path/to/audio_analysis.mp3",
+          "meta": "path/to/meta.json"
         },
-        "subjectId": "64f1a2b3c4d5e6f789012345"
+        "subjectId": "64f1a2b3c4d5e6f789012345",
+        "question_length": 25,
+        "simple_answer_length": 120,
+        "detailed_analysis_length": 500,
+        "created_at": "2023-09-01T10:00:00.000Z"
       }
-      // ... 更多题目
+      // 更多题目...
     ],
     "pagination": {
       "page": 1,
-      "limit": 20,
-      "total": 45,
-      "totalPages": 3,
+      "limit": 10,
+      "total": 120,
+      "totalPages": 12,
       "hasNext": true,
       "hasPrev": false
-    },
-    "filters": {
-      "subjectId": "64f1a2b3c4d5e6f789012345",
-      "difficulty": "easy",
-      "tags": ["vue", "lifecycle"]
     }
   },
   "message": "操作成功"
 }
 ```
 
-**分页字段说明**:
+**错误响应**:
 
-- `page`: 当前页码
-- `limit`: 每页数量
-- `total`: 总题目数
-- `totalPages`: 总页数
-- `hasNext`: 是否有下一页
-- `hasPrev`: 是否有上一页
+```
+{"success": false, "data": null, "message": "暂无符合条件的题目"}
+```
+
+### 2.4 根据 ID 获取题目详情
+
+**接口地址**: `GET /questions/:id`
+
+**接口描述**: 根据题目 ID 获取题目详情
+
+**请求参数**:
+| 参数名 | 类型 | 位置 | 必填 | 说明 |
+|--------|------|------|------|------|
+| id | string | path | 是 | 题目 ID |
+
+**请求示例**:
+
+```
+GET http://localhost:3000/questions/64f1a2b3c4d5e6f789012346
+```
+
+**响应示例**:
+
+```
+{
+  "success": true,
+  "data": {
+    "_id": "64f1a2b3c4d5e6f789012346",
+    "id": "285acd89-b79b-49e6-8425-5d60d5101233",
+    "type": "choice",
+    "difficulty": "easy",
+    "tags": ["vue", "lifecycle"],
+    "question_markdown": "Vue 2.x 生命周期有哪些？分别做了什么？",
+    "answer_simple_markdown": "beforeCreate → created → beforeMount → mounted...",
+    "answer_analysis_markdown": "详细解析内容...",
+    "files": {
+      "audio_simple": "path/to/audio_simple.mp3",
+      "audio_question": "path/to/audio_question.mp3",
+      "audio_analysis": "path/to/audio_analysis.mp3",
+      "meta": "path/to/meta.json"
+    },
+    "subjectId": "64f1a2b3c4d5e6f789012345",
+    "question_length": 25,
+    "simple_answer_length": 120,
+    "detailed_analysis_length": 500,
+    "created_at": "2023-09-01T10:00:00.000Z"
+  },
+  "message": "操作成功"
+}
+```
+
+**错误响应**:
+
+```
+{"success": false, "data": null, "message": "题目不存在"}
+```
 
 ---
 
@@ -766,7 +600,7 @@ Content-Type: application/json
 {
   "userId": "user123",
   "questionId": "64f1a2b3c4d5e6f789012346",
-  "action": "practiced"
+  "action": "favorited"
 }
 ```
 
@@ -1142,6 +976,98 @@ GET http://localhost:3000/user-actions/current-subject?userId=user123
 - 如果用户没有选择科目记录，将返回第一个启用的默认科目
 - 如果没有启用的科目，将返回 `null`
 
+### 3.8 用户登录
+
+**接口地址**: `POST /user-actions/login`
+
+**接口描述**: 用户登录，获取用户身份认证信息和 token
+
+**请求参数**:
+| 参数名 | 类型 | 位置 | 必填 | 说明 |
+|--------|------|------|------|------|
+| username | string | body | 是 | 用户名 |
+| password | string | body | 是 | 密码 |
+
+**请求示例**:
+
+```
+POST http://localhost:3000/user-actions/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+
+**响应示例**:
+
+```
+{
+  "success": true,
+  "data": {
+    "userId": "64f1a2b3c4d5e6f789012347",
+    "username": "admin",
+    "role": "admin",
+    "token": "token_64f1a2b3c4d5e6f789012347_1622544000000_abc123def456",
+    "lastLogin": "2021-06-01T10:00:00.000Z"
+  },
+  "message": "登录成功"
+}
+```
+
+**错误响应**:
+
+```
+{"success": false, "data": null, "message": "缺少必要参数: username 和 password"}
+```
+
+或
+
+```
+{"success": false, "data": null, "message": "用户名或密码错误"}
+```
+
+### 3.9 用户退出登录
+
+**接口地址**: `POST /user-actions/logout`
+
+**接口描述**: 用户退出登录，清除用户身份认证信息
+
+**请求参数**:
+| 参数名 | 类型 | 位置 | 必填 | 说明 |
+|--------|------|------|------|------|
+| userId | string | body | 是 | 用户 ID |
+| token | string | body | 是 | 用户登录时获取的 token |
+
+**请求示例**:
+
+```
+POST http://localhost:3000/user-actions/logout
+Content-Type: application/json
+
+{
+  "userId": "64f1a2b3c4d5e6f789012347",
+  "token": "token_64f1a2b3c4d5e6f789012347_1622544000000_abc123def456"
+}
+```
+
+**响应示例**:
+
+```
+{
+  "success": true,
+  "data": null,
+  "message": "退出登录成功"
+}
+```
+
+**错误响应**:
+
+```
+{"success": false, "data": null, "message": "缺少必要参数: userId 和 token"}
+```
+
 ---
 
 ## 4. 状态码说明
@@ -1152,3 +1078,411 @@ GET http://localhost:3000/user-actions/current-subject?userId=user123
 | 400         | 请求参数错误   |
 | 404         | 资源不存在     |
 | 500         | 服务器内部错误 |
+
+---
+
+## 5. 错误处理
+
+所有 API 接口在发生错误时都会返回统一格式的错误响应：
+
+```
+{
+  "success": false,
+  "data": null,
+  "message": "具体错误信息"
+}
+```
+
+常见错误信息：
+
+- "缺少必要参数"
+- "无效的行为类型"
+- "科目不存在"
+- "暂无符合条件的题目"
+- "服务器错误"
+
+---
+
+## 6. 数据模型
+
+### 6.1 科目 (Subject)
+
+```
+{
+  "_id": "ObjectId",
+  "name": "科目名称",
+  "code": "科目代码",
+  "description": "科目描述",
+  "tags": [
+    {
+      "name": "标签名称",
+      "type": "标签类型"
+    }
+  ],
+  "difficultyLevels": ["简单", "中等", "困难"],
+  "isEnabled": true,
+  "createdAt": "Date",
+  "updatedAt": "Date"
+}
+```
+
+### 6.2 题目 (Question)
+
+```
+{
+  "_id": "ObjectId",
+  "id": "题目唯一标识",
+  "type": "题目类型",
+  "difficulty": "难度等级",
+  "tags": ["标签数组"],
+  "question_markdown": "题目内容",
+  "answer_simple_markdown": "简答内容",
+  "answer_analysis_markdown": "详细解析",
+  "files": {
+    "audio_simple": "简答音频文件",
+    "audio_question": "题目音频文件",
+    "audio_analysis": "解析音频文件",
+    "meta": "元数据文件"
+  },
+  "subjectId": "ObjectId",
+  "question_length": "Number",
+  "simple_answer_length": "Number",
+  "detailed_analysis_length": "Number",
+  "created_at": "Date"
+}
+```
+
+### 6.3 用户 (User)
+
+```
+{
+  "_id": "ObjectId",
+  "username": "用户名",
+  "password": "密码",
+  "role": "用户角色",
+  "isEnabled": true,
+  "lastLogin": "Date",
+  "createdAt": "Date",
+  "updatedAt": "Date"
+}
+```
+
+### 6.4 用户行为 (UserAction)
+
+```
+{
+  "_id": "ObjectId",
+  "userId": "用户ID",
+  "questionId": "ObjectId",
+  "action": "favorited|deleted|selected_subject|login|logout",
+  "username": "用户名",
+  "role": "用户角色",
+  "token": "认证token",
+  "logoutTime": "Date",
+  "createdAt": "Date",
+  "updatedAt": "Date"
+}
+```
+
+---
+
+## 7. 开发环境配置
+
+### 7.1 启动服务
+
+```
+# 安装依赖
+npm install
+
+# 启动服务
+npm start
+```
+
+### 7.2 初始化数据库
+
+```
+# 运行数据库初始化脚本
+node init-db.js
+```
+
+### 7.3 环境变量
+
+创建 `.env` 文件并配置：
+
+```
+PORT=3000
+MONGODB_URI=mongodb://127.0.0.1:27017
+DB_NAME=shuati
+```
+
+---
+
+## 8. 示例代码
+
+### 8.1 JavaScript/Fetch 示例
+
+```
+// 获取科目列表
+async function getSubjects() {
+  const response = await fetch("http://localhost:3000/subjects");
+  const result = await response.json();
+  console.log(result);
+}
+
+// 获取所有科目详细信息
+async function getAllSubjects() {
+  const response = await fetch("http://localhost:3000/subjects/all");
+  const result = await response.json();
+  console.log(result);
+}
+
+// 根据科目 ID 获取标签
+async function getTagsBySubjectId(subjectId) {
+  const response = await fetch(
+    `http://localhost:3000/subjects/${subjectId}/tags`
+  );
+  const result = await response.json();
+  console.log(result);
+}
+
+// 获取随机题目
+async function getRandomQuestion(subjectId, difficulty) {
+  const params = new URLSearchParams();
+  if (subjectId) params.append("subjectId", subjectId);
+  if (difficulty) params.append("difficulty", difficulty);
+
+  const response = await fetch(
+    `http://localhost:3000/questions/random?${params}`
+  );
+  const result = await response.json();
+  console.log(result);
+}
+
+// 获取随机题目列表
+async function getRandomQuestionList(subjectId, options = {}) {
+  const requestBody = {
+    subjectId,
+    ...options,
+  };
+
+  const response = await fetch("http://localhost:3000/questions/random-list", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  });
+  const result = await response.json();
+  console.log(result);
+}
+
+// 获取过滤的题目列表
+async function getFilteredQuestionList(filters = {}) {
+  const requestBody = {
+    page: 1,
+    limit: 20,
+    ...filters,
+  };
+
+  const response = await fetch("http://localhost:3000/questions/list", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  });
+  const result = await response.json();
+  console.log(result);
+}
+
+// 记录用户行为
+async function recordAction(userId, questionId, action) {
+  const response = await fetch("http://localhost:3000/user-actions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      userId,
+      questionId,
+      action: "favorited",
+    }),
+  });
+  const result = await response.json();
+  console.log(result);
+}
+
+// 记录用户选择的科目
+async function selectSubject(userId, subjectId) {
+  const response = await fetch("http://localhost:3000/user-actions/select-subject", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      userId,
+      subjectId,
+    }),
+  });
+  const result = await response.json();
+  console.log(result);
+}
+
+// 获取用户当前选择的科目
+async function getCurrentSubject(userId) {
+  const params = new URLSearchParams();
+  if (userId) params.append("userId", userId);
+
+  const response = await fetch(
+    `http://localhost:3000/user-actions/current-subject?${params}`
+  );
+  const result = await response.json();
+  console.log(result);
+}
+
+// 用户登录
+async function login(username, password) {
+  const response = await fetch("http://localhost:3000/user-actions/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      username,
+      password,
+    }),
+  });
+  const result = await response.json();
+  console.log(result);
+}
+
+// 用户退出登录
+async function logout(userId, token) {
+  const response = await fetch("http://localhost:3000/user-actions/logout", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      userId,
+      token
+    }),
+  });
+  const result = await response.json();
+  console.log(result);
+}
+```
+
+### 8.2 cURL 示例
+
+```
+# 获取科目列表
+curl -X GET http://localhost:3000/subjects
+
+# 获取所有科目详细信息
+curl -X GET http://localhost:3000/subjects/all
+
+# 根据科目 ID 获取标签
+curl -X GET http://localhost:3000/subjects/64f1a2b3c4d5e6f789012345/tags
+
+# 获取随机题目
+curl -X GET "http://localhost:3000/questions/random?difficulty=中等"
+
+# 获取随机题目列表（默认配置）
+curl -X POST http://localhost:3000/questions/random-list \
+  -H "Content-Type: application/json" \
+  -d '{"subjectId":"64f1a2b3c4d5e6f789012345"}'
+
+# 获取随机题目列表（自定义雾度分布）
+curl -X POST http://localhost:3000/questions/random-list \
+  -H "Content-Type: application/json" \
+  -d '{"subjectId":"64f1a2b3c4d5e6f789012345","total":20,"difficultyConfig":{"easy":0.5,"medium":0.3,"hard":0.2}}'
+
+# 获取过滤的题目列表
+curl -X POST http://localhost:3000/questions/list \
+  -H "Content-Type: application/json" \
+  -d '{"subjectId":"64f1a2b3c4d5e6f789012345","difficulty":["easy","medium"],"tags":["vue","javascript"],"page":1,"limit":10}'
+
+# 记录用户行为
+curl -X POST http://localhost:3000/user-actions \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"user123","questionId":"64f1a2b3c4d5e6f789012346","action":"favorited"}'
+
+# 记录用户选择的科目
+curl -X POST http://localhost:3000/user-actions/select-subject \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"user123","subjectId":"64f1a2b3c4d5e6f789012345"}'
+
+# 获取用户当前选择的科目
+curl -X GET "http://localhost:3000/user-actions/current-subject?userId=user123"
+
+# 获取用户统计
+curl -X GET "http://localhost:3000/user-actions/stats?userId=user123"
+
+# 用户登录
+curl -X POST http://localhost:3000/user-actions/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"user123","password":"123456"}'
+
+# 用户退出登录
+curl -X POST http://localhost:3000/user-actions/logout \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"64f1a2b3c4d5e6f789012347","token":"token_64f1a2b3c4d5e6f789012347_1622544000000_abc123def456"}'
+```
+
+---
+
+## 9. 更新日志
+
+### v1.7.0 (2024-05-24)
+
+- 新增用户登录接口 (`POST /user-actions/login`)
+- 新增用户退出登录接口 (`POST /user-actions/logout`)
+- 新增 users 集合，支持用户身份认证
+- 更新 userActionController.js 中的 login 和 logout 函数，使用 users 集合进行认证
+- 更新用户行为数据模型，支持用户登录状态管理
+- 在示例代码中添加登录和退出登录的使用示例
+- 在 API 文档中添加用户(User)数据模型定义
+- 在 init-db.js 中添加 users 集合初始化和默认管理员用户创建
+
+### v1.6.0 (2024-05-23)
+
+- 新增记录用户选择科目的接口 (`POST /user-actions/select-subject`)
+- 新增获取用户当前选择科目的接口 (`GET /user-actions/current-subject`)
+- 更新用户行为数据模型，添加 `updatedAt` 字段和 `selected_subject` 行为类型
+- 添加相关示例代码
+
+### v1.5.0 (2024-05-22)
+
+- 修改根据科目 ID 获取标签接口名称为 getTagCountBySubjectId
+- 新增根据科目 ID 获取所有标签接口（不带统计）
+
+### v1.4.0 (2024-05-21)
+
+- 更新用户行为类型为英文：favorited、deleted
+- 更新相关文档和示例代码
+
+### v1.3.0
+
+- 新增过滤的题目列表 API (`POST /questions/list`)
+- 支持按科目、雾度和多个标签过滤
+- 支持多个雾度等级过滤（数组支持）
+- 支持分页显示
+- 支持组合过滤条件
+
+### v1.1.0
+
+- 新增获取所有科目详细信息 API (`GET /subjects/all`)
+- 新增根据科目 ID 获取标签 API (`GET /subjects/:id/tags-count`)
+- 新增随机获取题目列表 API (`POST /questions/random-list`)
+- 支持自定义难度分布配置
+- 支持按标签过滤题目
+- 支持题目数量统计信息
+
+### v1.0.0
+
+- 实现科目管理 API
+- 实现题目随机获取 API
+- 实现用户行为记录 API
+- 实现用户统计数据 API
+- 支持从 meta.json 文件批量导入题目数据

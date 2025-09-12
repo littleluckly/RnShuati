@@ -7,9 +7,12 @@ import {View, Text, StyleSheet, TouchableOpacity, Alert} from 'react-native';
 import {Button} from 'react-native-paper';
 import {useNavigation} from '@react-navigation/native';
 import {resetOnboarding} from '@/utils/onboardingUtils'; // 导入重置新手引导的工具
+import {useAuthContext} from '@/contexts/AuthContext'; // 导入认证上下文
+import {routeNameMap} from '@/navigation/constant'; // 导入路由名称映射
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
+  const {isAuthenticated, userInfo, logout} = useAuthContext();
 
   const navigateToApiDemo = () => {
     // @ts-ignore
@@ -39,7 +42,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <View style={[{flex: 1}]}>
+    <View style={{flex: 1, backgroundColor: '#f5f5f5'}}>
       <View
         style={{
           backgroundColor: '#fff',
@@ -66,8 +69,45 @@ export default function ProfileScreen() {
             flexDirection: 'row',
             alignItems: 'center',
           }}>
-          <Text>游客你好，</Text>
-          <Button>立即登录</Button>
+          {isAuthenticated && userInfo ? (
+            <View style={{alignItems: 'center'}}>
+              <Text style={{fontSize: 16, fontWeight: 'bold', marginBottom: 4}}>
+                你好，{userInfo.username}
+              </Text>
+              {userInfo.email && (
+                <Text style={{fontSize: 14, color: '#666', marginBottom: 8}}>
+                  {userInfo.email}
+                </Text>
+              )}
+              <TouchableOpacity
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 6,
+                  backgroundColor: '#e74c3c',
+                  borderRadius: 20,
+                }}
+                onPress={async () => {
+                  try {
+                    await logout();
+                    Alert.alert('退出成功', '您已成功退出登录');
+                  } catch (error) {
+                    Alert.alert('退出失败', '退出登录时出现错误，请稍后再试');
+                  }
+                }}>
+                <Text style={{color: '#fff', fontSize: 14}}>退出登录</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <Text>游客你好，</Text>
+              <TouchableOpacity
+                onPress={() =>
+                  (navigation as any).navigate(routeNameMap.loginScreen)
+                }>
+                <Text style={{color: '#3498db', fontSize: 14}}>立即登录</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </View>
       <TouchableOpacity style={styles.setItem} onPress={navigateToApiDemo}>
@@ -133,5 +173,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderRadius: 48,
     padding: 12,
+  },
+  // 认证相关样式
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  divider: {
+    height: 8,
+    backgroundColor: '#f5f5f5',
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+  },
+  settingItemText: {
+    fontSize: 16,
   },
 });

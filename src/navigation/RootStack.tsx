@@ -16,10 +16,37 @@ import {routeNameMap} from './constant';
 import {Host} from 'react-native-portalize';
 import ApiDemoScreen from '@/screen/profile/ApiDemoScreen';
 import {QuestionProvider} from '@/contexts/QuestionContext';
+import LoginScreen from '@/screen/auth/LoginScreen';
+import RegisterScreen from '@/screen/auth/RegisterScreen';
+import ForgotPasswordScreen from '@/screen/auth/ForgotPasswordScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
+// 认证相关导航栈
+const AuthStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen
+        name={routeNameMap.loginScreen}
+        component={LoginScreen}
+        options={{title: '登录'}}
+      />
+      <Stack.Screen
+        name={routeNameMap.registerScreen}
+        component={RegisterScreen}
+        options={{title: '注册'}}
+      />
+      <Stack.Screen
+        name={routeNameMap.forgotPasswordScreen}
+        component={ForgotPasswordScreen}
+        options={{title: '忘记密码'}}
+      />
+    </Stack.Navigator>
+  );
+};
+
+// 个人中心导航栈
 const ProfileStack = () => {
   return (
     <Stack.Navigator screenOptions={{headerShown: true}}>
@@ -33,13 +60,18 @@ const ProfileStack = () => {
         component={ApiDemoScreen}
         options={{title: 'API 演示'}}
       />
+      {/* 个人中心页面可以导航到登录页 */}
+      <Stack.Screen
+        name={routeNameMap.loginScreen}
+        component={LoginScreen}
+        options={{title: '登录', presentation: 'modal'}}
+      />
     </Stack.Navigator>
   );
 };
 
-const RootTabNavigator: React.FC<{initialRouteName?: string}> = ({
-  initialRouteName = routeNameMap.homeTab,
-}) => {
+// 主应用导航组件
+const RootAppNavigator: React.FC = () => {
   return (
     <Host>
       <QuestionProvider>
@@ -59,7 +91,7 @@ const RootTabNavigator: React.FC<{initialRouteName?: string}> = ({
                     display:
                       routeName === routeNameMap.subjectSelectionScreen
                         ? 'none'
-                        : 'block',
+                        : 'flex', // 使用'flex'而不是'block'，因为React Native样式系统使用flexbox
                   },
                   tabBarIcon: ({focused}) => (
                     <LottieView
@@ -98,4 +130,13 @@ const RootTabNavigator: React.FC<{initialRouteName?: string}> = ({
   );
 };
 
-export default RootTabNavigator;
+// 应用的主导航组件
+const RootStack: React.FC = () => {
+  // 这里可以添加认证检查逻辑，决定是显示认证页面还是主应用
+  // 目前直接返回主应用
+  return <RootAppNavigator />;
+};
+
+export default RootStack;
+
+// export default RootTabNavigator; // 注释掉原来的默认导出，使用新的RootStack组件作为默认导出

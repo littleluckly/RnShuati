@@ -1,4 +1,4 @@
-export const routeNameMap: Record<string, string> = {
+export const routeNameMap = {
   homeTab: 'HomeTab',
   homeScreen: 'HomeScreen',
   detailScreen: 'DetailScreen',
@@ -6,5 +6,10 @@ export const routeNameMap: Record<string, string> = {
 
   profileTab: 'ProfileTab',
   profileScreen: 'ProfileScreen',
-  apiDemoScreen: 'ApiDemo'
+  apiDemoScreen: 'ApiDemo',
+  
+  // 认证相关路由
+  loginScreen: 'LoginScreen',
+  registerScreen: 'RegisterScreen',
+  forgotPasswordScreen: 'ForgotPasswordScreen'
 }

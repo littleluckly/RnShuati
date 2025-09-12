@@ -9,6 +9,7 @@ import {v4 as uuidv4} from 'uuid';
 const ANONYMOUS_USER_ID_KEY = 'anonymous_user_id';
 const SELECTED_SUBJECT_KEY = 'selected_subject';
 const IS_LOGGED_IN_KEY = 'is_logged_in';
+const USER_LOGIN_INFO_KEY = 'user_login_info';
 
 /**
  * 获取或创建匿名用户ID
@@ -114,6 +115,61 @@ export const markUserAsLoggedIn = async (): Promise<void> => {
  * 检查用户是否已登录
  * @returns {Promise<boolean>} 是否已登录
  */
+export interface UserLoginInfo {
+  userId: string;
+  username: string;
+  role: string;
+  token: string;
+  lastLogin: string;
+  email?: string;
+}
+
+/**
+ * 保存用户登录信息
+ * @param loginInfo 用户登录信息对象
+ */
+export const saveUserLoginInfo = async (loginInfo: UserLoginInfo): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(USER_LOGIN_INFO_KEY, JSON.stringify(loginInfo));
+    await AsyncStorage.setItem(IS_LOGGED_IN_KEY, 'true');
+  } catch (error) {
+    console.error('Error saving user login info:', error);
+  }
+};
+
+/**
+ * 获取用户登录信息
+ * @returns 用户登录信息对象或null
+ */
+export const getUserLoginInfo = async (): Promise<UserLoginInfo | null> => {
+  try {
+    const loginInfoStr = await AsyncStorage.getItem(USER_LOGIN_INFO_KEY);
+    if (loginInfoStr) {
+      return JSON.parse(loginInfoStr);
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting user login info:', error);
+    return null;
+  }
+};
+
+/**
+ * 移除用户登录信息
+ */
+export const removeUserLoginInfo = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(USER_LOGIN_INFO_KEY);
+    await AsyncStorage.setItem(IS_LOGGED_IN_KEY, 'false');
+  } catch (error) {
+    console.error('Error removing user login info:', error);
+  }
+};
+
+/**
+ * 检查用户是否已登录
+ * @returns Promise<boolean> 用户是否已登录
+ */
 export const isUserLoggedIn = async (): Promise<boolean> => {
   try {
     const isLoggedIn = await AsyncStorage.getItem(IS_LOGGED_IN_KEY);
@@ -125,13 +181,24 @@ export const isUserLoggedIn = async (): Promise<boolean> => {
 };
 
 /**
- * 登出用户
+ * 用户登录处理
+ * @param loginInfo 用户登录信息
+ */
+export const loginUser = async (loginInfo: UserLoginInfo): Promise<void> => {
+  await saveUserLoginInfo(loginInfo);
+  // 清除匿名用户数据
+  await clearAnonymousUserData();
+};
+
+/**
+ * 用户退出登录处理
  */
 export const logoutUser = async (): Promise<void> => {
+  await removeUserLoginInfo();
+  // 清除匿名用户ID，但保留已选择的科目
   try {
-    await AsyncStorage.removeItem(IS_LOGGED_IN_KEY);
-    // 保留已选择的科目和匿名用户ID
+    await AsyncStorage.removeItem(ANONYMOUS_USER_ID_KEY);
   } catch (error) {
-    console.error('Error logging out user:', error);
+    console.error('Error removing anonymous user ID:', error);
   }
 };

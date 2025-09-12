@@ -8,6 +8,7 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {PaperProvider} from 'react-native-paper';
 import Toast from 'react-native-toast-message';
 import {SharedTransitionProvider} from '@/contexts/sharedTransitionContext';
+import {AuthProvider} from '@/contexts/AuthContext';
 
 // 使用forwardRef转发Toast组件的ref
 const ToastComponent = forwardRef<any, any>((props, ref) => {
@@ -19,9 +20,11 @@ export default function App() {
     <SafeAreaProvider>
       <GestureHandlerRootView>
         <SharedTransitionProvider>
-          <PaperProvider>
-            <RootStack />
-          </PaperProvider>
+          <AuthProvider>
+            <PaperProvider>
+              <RootStack />
+            </PaperProvider>
+          </AuthProvider>
         </SharedTransitionProvider>
         <ToastComponent />
       </GestureHandlerRootView>
