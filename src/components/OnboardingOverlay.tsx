@@ -30,71 +30,16 @@ const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
 
       <ScrollView
         style={styles.content}
-        contentContainerStyle={styles.contentContainer}>
-        <View style={styles.section}>
-          <View style={styles.iconContainer}>
-            <Icon name="touch-app" size={48} color="#1da1f2" />
+        contentContainerStyle={[styles.contentContainer, {flexGrow: 1}]}>
+        <View style={[{flex: 1}, styles.flexCenter]}>
+          <View style={styles.section}>
+            <View style={styles.iconContainer}>
+              <Icon name="touch-app" size={48} color="#1da1f2" />
+            </View>
+            <Text style={styles.description}>
+              点击屏幕任意位置可以显示或隐藏顶部和底部导航栏，为您提供沉浸式阅读体验。
+            </Text>
           </View>
-          <Text style={styles.title}>欢迎使用详情页</Text>
-          <Text style={styles.description}>
-            点击屏幕任意位置可以显示或隐藏顶部和底部导航栏，为您提供沉浸式阅读体验。
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.iconContainer}>
-            <Icon name="swipe" size={48} color="#1da1f2" />
-          </View>
-          <Text style={styles.title}>滚动隐藏导航栏</Text>
-          <Text style={styles.description}>
-            当您上下滚动内容时，导航栏会自动隐藏，让您专注于阅读内容。
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.iconContainer}>
-            <Icon name="arrow-back" size={48} color="#1da1f2" />
-            <Icon
-              name="arrow-forward"
-              size={48}
-              color="#1da1f2"
-              style={styles.iconSpacing}
-            />
-          </View>
-          <Text style={styles.title}>题目导航</Text>
-          <Text style={styles.description}>
-            使用底部导航栏的左右箭头按钮可以快速切换到上一题或下一题。
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.iconContainer}>
-            <Icon name="list" size={48} color="#1da1f2" />
-          </View>
-          <Text style={styles.title}>题目目录</Text>
-          <Text style={styles.description}>
-            点击目录按钮可以打开题目目录，方便您快速跳转到任意题目。
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.iconContainer}>
-            <Icon name="play-arrow" size={48} color="#1da1f2" />
-          </View>
-          <Text style={styles.title}>音频播放</Text>
-          <Text style={styles.description}>
-            点击播放按钮可以听取题目的音频讲解，支持播放、暂停和继续播放。
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.iconContainer}>
-            <Icon name="settings" size={48} color="#1da1f2" />
-          </View>
-          <Text style={styles.title}>设置选项</Text>
-          <Text style={styles.description}>
-            点击设置按钮可以访问更多功能，包括关闭新手引导。
-          </Text>
         </View>
       </ScrollView>
 
@@ -114,7 +59,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     zIndex: 1000,
     padding: 20,
   },
@@ -140,7 +85,12 @@ const styles = StyleSheet.create({
   },
   section: {
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 30,
+  },
+  flexCenter: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   iconContainer: {
     flexDirection: 'row',
@@ -160,7 +110,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 16,
-    color: '#ccc',
+    color: 'white',
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 20,
