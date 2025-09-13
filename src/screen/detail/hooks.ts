@@ -226,22 +226,41 @@ export const useDetailScreen = (route: any) => {
     return { loading: false };
   }, [state.loading]);
 
+  // 添加内容高度和滚动视图高度的跟踪
+  const contentHeight = useRef(0);
+  const scrollViewHeight = useRef(0);
+
   // 处理滚动事件
   const handleScroll = useCallback(
     (event: any) => {
       const currentOffset = event.nativeEvent.contentOffset.y;
       const delta = currentOffset - scrollOffset.current;
 
-      // 只有当滚动偏移量超过阈值时才隐藏导航栏
-      if (Math.abs(delta) > scrollOffsetThreshold) {
-        // 无论向上还是向下滚动，都隐藏导航栏
-        if (showNav) {
-          animateNav(false);
-        }
+      // 获取内容高度和滚动视图高度
+      contentHeight.current = event.nativeEvent.contentSize.height;
+      scrollViewHeight.current = event.nativeEvent.layoutMeasurement.height;
 
-        // 更新滚动偏移量
-        scrollOffset.current = currentOffset;
+      // 检测是否滚动到顶部或底部
+      const isAtTop = currentOffset <= 0;
+      const isAtBottom = currentOffset + scrollViewHeight.current >= contentHeight.current - 1; // 1px容差
+
+      // 如果滚动到顶部或底部，显示导航栏
+      if (isAtTop || isAtBottom) {
+        if (!showNav) {
+          animateNav(true);
+        }
+      } else {
+        // 只有当滚动偏移量超过阈值时才隐藏导航栏
+        if (Math.abs(delta) > scrollOffsetThreshold) {
+          // 无论向上还是向下滚动，都隐藏导航栏
+          if (showNav) {
+            animateNav(false);
+          }
+        }
       }
+
+      // 更新滚动偏移量
+      scrollOffset.current = currentOffset;
     },
     [showNav, animateNav],
   );
