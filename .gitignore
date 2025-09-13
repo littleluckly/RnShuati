@@ -75,3 +75,4 @@ yarn-error.log
 android/app/src/main/res/raw/*
 shuatipai.keystore
 mycert.cer
+src/assets/question-audios

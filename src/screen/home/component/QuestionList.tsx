@@ -24,6 +24,7 @@ interface Props {
   subjectId: string;
   filters?: {difficulty?: string | string[]; tags?: string[]};
 }
+import soundMap from '@/assets/question-audios/soundMap';
 
 // 屏幕尺寸
 const {width} = Dimensions.get('window');
@@ -133,12 +134,14 @@ const OptimizedFlatList: React.FC<Props> = ({
             audioUrl = 'qf53a5ea5_audio_answer_simple.mp3';
           }
           console.log('audioUrl', audioUrl);
+          const name =
+            soundMap[question.files.audio_answer_simple?.split('.')[0]];
 
           // 添加音频到队列
           await TrackPlayer.add([
             {
               id: '1',
-              url: require('./qf53a5ea5_audio_answer_simple.mp3'),
+              url: name,
               title: '题目音频',
               artist: '刷题派',
               type: 'common',
