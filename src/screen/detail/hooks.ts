@@ -104,16 +104,22 @@ export const useDetailScreen = (route: any) => {
       if (prevQuestion) {
         // 停止当前音频播放
         AudioManager.stopCurrent();
-        // 重置内容区域滚动位置
-        // @ts-ignore
-        contentScrollViewRef.current?.scrollTo({ y: 0, animated: true });
-        navigation.navigate(routeNameMap.detailScreen, {
-          id: prevQuestion._id,
-          currentIndex: prevIndex,
+        // 重置内容区域滚动位置，但不触发导航栏隐藏
+        // 先强制显示导航栏并暂时禁用滚动事件处理
+        animateNav(true);
+        // 使用requestAnimationFrame确保在下一帧执行滚动，避免与当前动画冲突
+        requestAnimationFrame(() => {
+          // @ts-ignore
+          contentScrollViewRef.current?.scrollTo({ y: 0, animated: false });
+          // 立即导航到新题目，避免滚动事件触发
+          navigation.navigate(routeNameMap.detailScreen, {
+            id: prevQuestion._id,
+            currentIndex: prevIndex,
+          });
         });
       }
     }
-  }, [currentIndex, navigation, state.questions]);
+  }, [currentIndex, navigation, state.questions, animateNav]);
 
   // 处理下一题
   const handleNext = useCallback(() => {
@@ -123,16 +129,22 @@ export const useDetailScreen = (route: any) => {
       if (nextQuestion) {
         // 停止当前音频播放
         AudioManager.stopCurrent();
-        // 重置内容区域滚动位置
-        // @ts-ignore
-        contentScrollViewRef.current?.scrollTo({ y: 0, animated: true });
-        navigation.navigate(routeNameMap.detailScreen, {
-          id: nextQuestion._id,
-          currentIndex: nextIndex,
+        // 重置内容区域滚动位置，但不触发导航栏隐藏
+        // 先强制显示导航栏并暂时禁用滚动事件处理
+        animateNav(true);
+        // 使用requestAnimationFrame确保在下一帧执行滚动，避免与当前动画冲突
+        requestAnimationFrame(() => {
+          // @ts-ignore
+          contentScrollViewRef.current?.scrollTo({ y: 0, animated: false });
+          // 立即导航到新题目，避免滚动事件触发
+          navigation.navigate(routeNameMap.detailScreen, {
+            id: nextQuestion._id,
+            currentIndex: nextIndex,
+          });
         });
       }
     }
-  }, [currentIndex, navigation, state.questions]);
+  }, [currentIndex, navigation, state.questions, animateNav]);
 
   // 处理目录导航
   const handleDirectory = useCallback(() => {
@@ -147,16 +159,21 @@ export const useDetailScreen = (route: any) => {
       AudioManager.stopCurrent();
       // 关闭目录抽屉
       animateDirectory(false);
-      // 重置内容区域滚动位置
-      // @ts-ignore
-      contentScrollViewRef.current?.scrollTo({ y: 0, animated: true });
-      // 导航到选中的题目
-      navigation.navigate(routeNameMap.detailScreen, {
-        id: questionId,
-        currentIndex: index,
+      // 重置内容区域滚动位置，但不触发导航栏隐藏
+      // 先强制显示导航栏并暂时禁用滚动事件处理
+      animateNav(true);
+      // 使用requestAnimationFrame确保在下一帧执行滚动，避免与当前动画冲突
+      requestAnimationFrame(() => {
+        // @ts-ignore
+        contentScrollViewRef.current?.scrollTo({ y: 0, animated: false });
+        // 立即导航到新题目，避免滚动事件触发
+        navigation.navigate(routeNameMap.detailScreen, {
+          id: questionId,
+          currentIndex: index,
+        });
       });
     },
-    [navigation, animateDirectory],
+    [navigation, animateDirectory, animateNav],
   );
 
   // 处理播放/暂停
