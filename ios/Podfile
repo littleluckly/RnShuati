@@ -5,7 +5,7 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
-platform :ios, min_ios_version_supported
+platform :ios, '16.0'
 prepare_react_native_project!
 
 linkage = ENV['USE_FRAMEWORKS']
@@ -14,7 +14,7 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target '刷题派' do
+target 'shuatipai' do
   config = use_native_modules!
 
   use_react_native!(
@@ -23,7 +23,7 @@ target '刷题派' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  target '刷题派Tests' do
+  target 'shuatipaiTests' do
     inherit! :complete
     # Pods for testing
   end

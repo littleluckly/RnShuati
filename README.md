@@ -14,7 +14,7 @@
 
 ```bash
 # 使用 npm
-npm start
+npx react-native start --reset-cache
 
 # 或者使用 Yarn
 yarn start
@@ -28,7 +28,7 @@ yarn start
 
 ```bash
 # 使用 npm
-npm run android
+npx react-native run-android
 
 # 或者使用 Yarn
 yarn android
@@ -37,7 +37,14 @@ yarn android
 ### iOS 版本
 
 ```bash
+# 安装依赖
+cd ios
+pod install 或者 npx pod-install
 # 使用 npm
+npx react-native run-ios
+# 或
+npx react-native run-ios --simulator "iPhone 16 Pro"
+# 或
 npm run ios
 
 # 或者使用 Yarn
@@ -128,6 +135,18 @@ module.exports = {
 `npx react-native run-android   # 或 run-ios`
 
 如果还报错再执行`yarn config set nodeLinker node-modules`
+
+#### react-native-sound 兼容 ios 问题
+
+用项目更目录下的 RNSound.mm 替换 node_modules/react-native-sound/ios/RNSound.mm
+方案二：降级
+
+```bash
+npm uninstall react-native-sound
+npm install react-native-sound@0.11.0
+```
+
+方案三：使用 react-native-track-player
 
 #### 引入 gesture 后报错
 
