@@ -26,7 +26,10 @@ const BreathingCard = ({style, children, delay}) => {
 
     pulse.start();
 
-    return () => pulse.stop();
+    return () => {
+      pulse.stop();
+      scaleAnim.stopAnimation(); // 确保完全停止动画
+    };
   }, [scaleAnim, delay]);
 
   return (
