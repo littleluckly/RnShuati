@@ -19,12 +19,10 @@ import {HomeStackNavigation} from '@/navigation/Types';
 import {routeNameMap} from '@/navigation/constant';
 import {useQuestionContext} from '@/contexts/QuestionContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import TrackPlayer, {State} from 'react-native-track-player';
 interface Props {
   subjectId: string;
   filters?: {difficulty?: string | string[]; tags?: string[]};
 }
-import soundMap from '@/assets/question-audios/soundMap';
 
 // 屏幕尺寸
 const {width} = Dimensions.get('window');
@@ -113,157 +111,32 @@ const OptimizedFlatList: React.FC<Props> = ({
   // 处理播放/暂停点击
   const handlePlayPause = useCallback(
     (question: Question) => {
-      // 设置播放队列并播放本地 MP3
-      const playLocalSound = async () => {
-        try {
-          // 播放器已在 App.tsx 中全局初始化，这里直接使用
-
-          // 清空现有队列
-          await TrackPlayer.reset();
-          console.log('队列已清空');
-
-          // 添加本地音频到队列（跨平台支持）
-          let audioUrl: string;
-
-          // 根据平台选择不同的音频源
-          if (Platform.OS === 'android') {
-            // Android: 使用 raw 资源
-            audioUrl = 'rawresource:///raw/qf53a5ea5_audio_answer_simple';
-          } else {
-            // iOS: 使用本地音频文件
-            audioUrl = 'qf53a5ea5_audio_answer_simple.mp3';
-          }
-          console.log('audioUrl', audioUrl);
-          const name =
-            soundMap[question.files.audio_answer_simple?.split('.')[0]];
-
-          // 添加音频到队列
-          await TrackPlayer.add([
-            {
-              id: '1',
-              url: name,
-              title: '题目音频',
-              artist: '刷题派',
-              type: 'common',
-            },
-          ]);
-          console.log('音频已添加到队列');
-
-          // 开始播放
-          await TrackPlayer.play();
-          console.log('播放命令已发送');
-
-          // 检查播放状态
-          const playState = await TrackPlayer.getState();
-          const currentTrack = await TrackPlayer.getCurrentTrack();
-          console.log('播放状态:', playState, '当前曲目:', currentTrack);
-
-          // 更新播放状态
-          setPlaybackInfo(prev => ({
-            ...prev,
-            currentItemId: question.id,
-            state: 'playing',
-            currentAudioIndex: 0,
-            totalAudios: 1,
-          }));
-        } catch (error) {
-          console.error('播放失败:', error);
-          // 更新播放状态为错误
-          setPlaybackInfo(prev => ({
-            ...prev,
-            state: 'error',
-          }));
-        }
-      };
-      playLocalSound();
-      // const {files: audioFiles, id} = question;
-      // // console.log('Audio files available:', audioFiles);
-      // // 开始播放序列：题目 → 简单答案 → 详细答案
-      // // todo 详细解析内容过长，默认不播放，通过个人喜好设定
-      // // 每个音频播放循环次数可以通过个人喜好设定
-      // // 如何支持耳机控制上一曲，下一曲
-      // AudioManager.addListener(id, setPlaybackInfo);
-      // AudioManager.startPlayback(id, {
-      //   audio_question: audioFiles.audio_question,
-      //   audio_answer_simple: audioFiles.audio_answer_simple,
-      //   audio_answer_detail: audioFiles.audio_answer_detail,
-      // });
-      // setPlaybackId(playbackId === id ? '' : id);
+      const {files: audioFiles, id} = question;
+      // console.log('Audio files available:', audioFiles);
+      // 开始播放序列：题目 → 简单答案 → 详细答案
+      // todo 详细解析内容过长，默认不播放，通过个人喜好设定
+      // 每个音频播放循环次数可以通过个人喜好设定
+      // 如何支持耳机控制上一曲，下一曲
+      AudioManager.addListener(id, setPlaybackInfo);
+      AudioManager.startPlayback(id, {
+        audio_question: audioFiles.audio_question,
+        audio_answer_simple: audioFiles.audio_answer_simple,
+        audio_answer_detail: audioFiles.audio_answer_detail,
+      });
+      setPlaybackId(playbackId === id ? '' : id);
     },
     [playbackId],
   );
 
-  // 定期检查播放状态
+  // 组件卸载时清理音频监听器
   useEffect(() => {
-    let mounted = true;
-    let interval: NodeJS.Timeout;
-
-    const checkPlaybackState = async () => {
-      if (!mounted) return;
-
-      try {
-        const state = await TrackPlayer.getState();
-        console.log('当前播放状态:', state);
-
-        if (state === State.Playing) {
-          setPlaybackInfo(prev => ({...prev, state: 'playing'}));
-        } else if (state === State.Paused) {
-          setPlaybackInfo(prev => ({...prev, state: 'paused'}));
-        } else if (state === State.Stopped || state === State.None) {
-          setPlaybackInfo(prev => ({...prev, state: 'idle'}));
-        } else if (state === State.Buffering) {
-          setPlaybackInfo(prev => ({...prev, state: 'buffering'}));
-        }
-      } catch (error) {
-        console.error('检查播放状态失败:', error);
+    return () => {
+      // 组件卸载时移除所有监听器
+      if (playbackId) {
+        AudioManager.removeListener(playbackId);
       }
     };
-
-    interval = setInterval(checkPlaybackState, 1000);
-
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
-  }, []);
-
-  // 监听播放完成事件
-  useEffect(() => {
-    const subscription = TrackPlayer.addEventListener(
-      'playback-track-changed',
-      async data => {
-        if (data.nextTrack == null) {
-          // 播放完成
-          console.log('音频播放完成');
-          setPlaybackInfo(prev => ({
-            ...prev,
-            state: 'idle',
-            currentItemId: null,
-          }));
-        }
-      },
-    );
-
-    return () => {
-      subscription.remove();
-    };
-  }, []);
-
-  // 组件卸载时清理音频播放器
-  useEffect(() => {
-    return () => {
-      // 组件卸载时停止播放并重置播放器
-      const cleanupPlayer = async () => {
-        try {
-          await TrackPlayer.stop();
-          await TrackPlayer.reset();
-        } catch (error) {
-          console.warn('清理音频播放器时出错:', error);
-        }
-      };
-      cleanupPlayer();
-    };
-  }, []);
+  }, [playbackId]);
   // 渲染列表项
   const renderItem = useCallback(
     ({item, index}: {item: Question; index: number}) => (

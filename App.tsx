@@ -10,6 +10,7 @@ import Toast from 'react-native-toast-message';
 import {SharedTransitionProvider} from '@/contexts/sharedTransitionContext';
 import {AuthProvider} from '@/contexts/AuthContext';
 import TrackPlayer, { Capability } from 'react-native-track-player';
+import { setGlobalTrackPlayerInitialized } from '@/services/AudioManager';
 
 // 使用forwardRef转发Toast组件的ref
 const ToastComponent = forwardRef<any, any>((props, ref) => {
@@ -48,6 +49,8 @@ export default function App() {
         });
         
         console.log('TrackPlayer 初始化成功');
+        // 通知 AudioManager 全局初始化已完成
+        setGlobalTrackPlayerInitialized(true);
       } catch (error) {
         console.error('TrackPlayer 初始化失败:', error);
       }
