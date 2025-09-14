@@ -315,7 +315,18 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginHorizontal: 6,
     marginBottom: 6,
-    elevation: 6,
+    // 跨平台阴影设置
+    ...Platform.select({
+      android: {
+        elevation: 6,
+      },
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+    }),
   },
   icon: {
     width: 52,
