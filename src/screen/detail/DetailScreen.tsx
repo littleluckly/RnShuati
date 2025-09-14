@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
-import {View, StatusBar, BackHandler, Text, SafeAreaView} from 'react-native';
+import {View, StatusBar, BackHandler, Text, Platform} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useRoute, useNavigation} from '@react-navigation/native';
 import OnboardingOverlay from '@/components/OnboardingOverlay';
 import {useDetailScreen} from './hooks';
@@ -18,6 +19,7 @@ export default function DetailScreen() {
   const route = useRoute<DetailScreenRouteProp>();
   const navigation = useNavigation<HomeStackNavigation>();
   const [isAutoLoading, setIsAutoLoading] = useState(false); // 添加自动加载状态
+  const insets = useSafeAreaInsets();
   const {
     // State
     showNav,
@@ -78,7 +80,10 @@ export default function DetailScreen() {
   useEffect(() => {
     // 设置状态栏样式
     StatusBar.setBarStyle('dark-content');
-    StatusBar.setBackgroundColor('#ffffff');
+    // 只在Android平台上设置状态栏背景色
+    if (Platform.OS === 'android') {
+      StatusBar.setBackgroundColor('#ffffff');
+    }
 
     // 隐藏底部标签栏
     navigation.getParent()?.setOptions({
@@ -88,7 +93,10 @@ export default function DetailScreen() {
     return () => {
       // 组件卸载时恢复状态栏设置
       StatusBar.setBarStyle('dark-content');
-      StatusBar.setBackgroundColor('#f5f7fa');
+      // 只在Android平台上设置状态栏背景色
+      if (Platform.OS === 'android') {
+        StatusBar.setBackgroundColor('#f5f7fa');
+      }
       // 恢复底部标签栏
       navigation.getParent()?.setOptions({
         tabBarStyle: {display: 'flex'},
@@ -134,7 +142,16 @@ export default function DetailScreen() {
 
   if (!currentQuestion) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          {
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+            paddingLeft: insets.left,
+            paddingRight: insets.right,
+          },
+        ]}>
         <TopNavigationBar
           navOpacity={navOpacity}
           navTranslateYTop={navTranslateYTop}
@@ -145,7 +162,7 @@ export default function DetailScreen() {
         <View style={styles.content}>
           <Text style={styles.notFoundText}>题目未找到</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -154,7 +171,16 @@ export default function DetailScreen() {
     playbackInfo.state === 'playing';
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
+        },
+      ]}>
       {/* 目录抽屉 */}
       <DirectoryDrawer
         showDirectory={showDirectory}
@@ -176,6 +202,7 @@ export default function DetailScreen() {
         handleBack={handleBack}
         currentIndex={currentIndex}
         total={state.pagination.total}
+        title={currentQuestion.question_markdown}
       />
 
       {/* 内容区域 - 全屏展示 */}
@@ -210,6 +237,6 @@ export default function DetailScreen() {
           onSkip={handleOnboardingSkip}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }

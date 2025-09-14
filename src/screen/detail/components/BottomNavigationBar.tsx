@@ -1,7 +1,11 @@
 import React from 'react';
-import {View, TouchableOpacity, Text, SafeAreaView} from 'react-native';
+import {View, TouchableOpacity, Text} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import Animated, {useAnimatedStyle, SharedValue} from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  type SharedValue,
+} from 'react-native-reanimated';
 import {styles} from '../styles/styles';
 
 interface BottomNavigationBarProps {
@@ -31,29 +35,44 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({
 }) => {
   const isFirstQuestion = currentIndex === 0;
   const isLastQuestion = currentIndex === totalQuestions - 1;
-  
+  const insets = useSafeAreaInsets();
+
   // 创建动画样式
   const animatedStyle = useAnimatedStyle(() => {
     return {
       opacity: navOpacity.value,
       transform: [{translateY: navTranslateYBottom.value}],
+      backgroundColor: navOpacity.value > 0 ? '#fff' : 'transparent',
+      height: navOpacity.value > 0 ? 60 : 0,
     };
   });
 
   return (
-    <SafeAreaView style={{backgroundColor: '#fff'}}>
+    <>
       {/* PlayButton放在导航栏上方 */}
-      <Animated.View style={[styles.playButtonContainer, animatedStyle]}>
+      <Animated.View
+        style={[
+          styles.playButtonContainer,
+          animatedStyle,
+          {
+            bottom: 70 + insets.bottom,
+          },
+        ]}>
         <TouchableOpacity style={styles.playButton} onPress={handlePlayPause}>
           <Text style={styles.playButtonText}>{isPlaying ? '停' : '听'}</Text>
         </TouchableOpacity>
       </Animated.View>
-      
+
       {/* 底部导航栏 */}
       <Animated.View
         style={[
           styles.navBottom,
           animatedStyle,
+          // {
+          //   paddingBottom: insets.bottom,
+          //   paddingLeft: insets.left,
+          //   paddingRight: insets.right,
+          // },
         ]}>
         <TouchableOpacity
           style={styles.navButton}
@@ -106,6 +125,6 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({
           </View>
         </TouchableOpacity>
       </Animated.View>
-    </SafeAreaView>
+    </>
   );
 };

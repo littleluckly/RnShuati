@@ -38,7 +38,7 @@ export const styles = StyleSheet.create({
   navTop: {
     left: 0,
     right: 0,
-    height: 60,
+    height: 30,
     backgroundColor: '#fff', // 与内容区背景一致
     flexDirection: 'row',
     alignItems: 'center',
@@ -48,7 +48,7 @@ export const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
   },
   navBackButton: {
-    padding: 8,
+    paddingHorizontal: 8,
   },
   navSpacer: {
     width: 40, // 与返回按钮宽度相等，确保标题真正居中
