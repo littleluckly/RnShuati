@@ -1,9 +1,15 @@
-import { Platform } from 'react-native';
-import TrackPlayer, { State, Event } from 'react-native-track-player';
-import soundMap from '@/assets/question-audios/soundMap';
+import TrackPlayer, { Capability, State, Event } from 'react-native-track-player';
 
 // 全局标记，表示 TrackPlayer 是否已在 App.tsx 中初始化
 let isGlobalTrackPlayerInitialized = false;
+
+// 全局存储音频映射表，由 App.tsx 在启动时设置
+let soundMap: Record<string, any> = {};
+
+// 设置音频映射表（由 App.tsx 调用）
+export const setSoundMap = (map: Record<string, any>) => {
+  soundMap = map;
+};
 
 // 设置全局初始化状态（由 App.tsx 调用）
 export const setGlobalTrackPlayerInitialized = (initialized: boolean) => {
@@ -44,19 +50,19 @@ class AudioManagerService {
       await TrackPlayer.setupPlayer();
       await TrackPlayer.updateOptions({
         capabilities: [
-          TrackPlayer.Capability.Play,
-          TrackPlayer.Capability.Pause,
-          TrackPlayer.Capability.Stop,
-          TrackPlayer.Capability.SeekTo,
+          Capability.Play,
+          Capability.Pause,
+          Capability.Stop,
+          Capability.SeekTo,
         ],
         compactCapabilities: [
-          TrackPlayer.Capability.Play,
-          TrackPlayer.Capability.Pause,
+          Capability.Play,
+          Capability.Pause,
         ],
         notificationCapabilities: [
-          TrackPlayer.Capability.Play,
-          TrackPlayer.Capability.Pause,
-          TrackPlayer.Capability.Stop,
+          Capability.Play,
+          Capability.Pause,
+          Capability.Stop,
         ],
         progressUpdateEventInterval: 1000,
       });
@@ -65,7 +71,7 @@ class AudioManagerService {
 
       // 设置播放完成事件监听
       this.setupTrackPlayerEvents();
-    } catch (error) {
+    } catch (error: any) {
       // 如果初始化失败，检查是否是因为已经初始化过
       if (error.message.includes('already been initialized')) {
         console.log('TrackPlayer 已经初始化过');
@@ -144,7 +150,7 @@ class AudioManagerService {
         await TrackPlayer.stop();
         await TrackPlayer.reset();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.warn('停止播放时出错:', error);
     }
 
@@ -164,7 +170,7 @@ class AudioManagerService {
         }
         this.playbackState = 'paused';
         this.notifyListeners();
-      } catch (error) {
+      } catch (error: any) {
         console.error('暂停播放失败:', error);
       }
     }
@@ -179,7 +185,7 @@ class AudioManagerService {
           this.playbackState = 'playing';
           this.notifyListeners();
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('恢复播放失败:', error);
         this.handlePlaybackError();
       }
@@ -216,8 +222,6 @@ class AudioManagerService {
 
       // 构建音频队列
       this.audioQueue = [];
-      console.log(audioFiles.audio_answer_detail, 'audioFiles.audio_answer_detail');
-      console.log(audioFiles.audio_answer_simple, 'audioFiles.audio_answer_simple');
       if (audioFiles.audio_question) this.audioQueue.push(audioFiles.audio_question);
       if (audioFiles.audio_answer_simple) this.audioQueue.push(audioFiles.audio_answer_simple);
       if (audioFiles.audio_answer_detail) this.audioQueue.push(audioFiles.audio_answer_detail);
@@ -230,7 +234,7 @@ class AudioManagerService {
       this.currentItemId = itemId;
       this.currentAudioIndex = 0;
       await this.playCurrentAudioWithTrackPlayer();
-    } catch (error) {
+    } catch (error: any) {
       console.error('开始播放失败:', error);
       this.handlePlaybackError();
     }
@@ -291,7 +295,7 @@ class AudioManagerService {
       this.playbackState = 'playing';
       this.notifyListeners();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('播放失败:', error);
       this.handlePlaybackError();
     }
