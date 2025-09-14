@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, TouchableOpacity, Text} from 'react-native';
+import {View, TouchableOpacity, Text, SafeAreaView} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Animated, {useAnimatedStyle, SharedValue} from 'react-native-reanimated';
 import {styles} from '../styles/styles';
@@ -13,6 +13,8 @@ interface BottomNavigationBarProps {
   handleSettings: () => void;
   currentIndex: number;
   totalQuestions: number;
+  handlePlayPause: () => void;
+  isPlaying: boolean;
 }
 
 export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({
@@ -24,6 +26,8 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({
   handleSettings,
   currentIndex,
   totalQuestions,
+  handlePlayPause,
+  isPlaying,
 }) => {
   const isFirstQuestion = currentIndex === 0;
   const isLastQuestion = currentIndex === totalQuestions - 1;
@@ -37,61 +41,71 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({
   });
 
   return (
-    <Animated.View
-      style={[
-        styles.navBottom,
-        animatedStyle,
-      ]}>
-      <TouchableOpacity
-        style={styles.navButton}
-        onPress={handlePrev}
-        disabled={isFirstQuestion}>
-        <View style={styles.navButtonContainer}>
-          <Icon
-            name="arrow-back"
-            size={24}
-            color={isFirstQuestion ? '#ccc' : '#000'}
-          />
-          <Text
-            style={[
-              styles.navButtonText,
-              {color: isFirstQuestion ? '#ccc' : '#000'},
-            ]}>
-            上一题
-          </Text>
-        </View>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.navButton}
-        onPress={handleNext}
-        disabled={isLastQuestion}>
-        <View style={styles.navButtonContainer}>
-          <Icon
-            name="arrow-forward"
-            size={24}
-            color={isLastQuestion ? '#ccc' : '#000'}
-          />
-          <Text
-            style={[
-              styles.navButtonText,
-              {color: isLastQuestion ? '#ccc' : '#000'},
-            ]}>
-            下一题
-          </Text>
-        </View>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.navButton} onPress={handleDirectory}>
-        <View style={styles.navButtonContainer}>
-          <Icon name="list" size={24} color="#000" />
-          <Text style={[styles.navButtonText, {color: '#000'}]}>目录</Text>
-        </View>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.navButton} onPress={handleSettings}>
-        <View style={styles.navButtonContainer}>
-          <Icon name="settings" size={24} color="#000" />
-          <Text style={[styles.navButtonText, {color: '#000'}]}>设置</Text>
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
+    <SafeAreaView style={{backgroundColor: '#fff'}}>
+      {/* PlayButton放在导航栏上方 */}
+      <Animated.View style={[styles.playButtonContainer, animatedStyle]}>
+        <TouchableOpacity style={styles.playButton} onPress={handlePlayPause}>
+          <Text style={styles.playButtonText}>{isPlaying ? '停' : '听'}</Text>
+        </TouchableOpacity>
+      </Animated.View>
+      
+      {/* 底部导航栏 */}
+      <Animated.View
+        style={[
+          styles.navBottom,
+          animatedStyle,
+        ]}>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={handlePrev}
+          disabled={isFirstQuestion}>
+          <View style={styles.navButtonContainer}>
+            <Icon
+              name="arrow-back"
+              size={24}
+              color={isFirstQuestion ? '#ccc' : '#000'}
+            />
+            <Text
+              style={[
+                styles.navButtonText,
+                {color: isFirstQuestion ? '#ccc' : '#000'},
+              ]}>
+              上一题
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={handleNext}
+          disabled={isLastQuestion}>
+          <View style={styles.navButtonContainer}>
+            <Icon
+              name="arrow-forward"
+              size={24}
+              color={isLastQuestion ? '#ccc' : '#000'}
+            />
+            <Text
+              style={[
+                styles.navButtonText,
+                {color: isLastQuestion ? '#ccc' : '#000'},
+              ]}>
+              下一题
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navButton} onPress={handleDirectory}>
+          <View style={styles.navButtonContainer}>
+            <Icon name="list" size={24} color="#000" />
+            <Text style={[styles.navButtonText, {color: '#000'}]}>目录</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navButton} onPress={handleSettings}>
+          <View style={styles.navButtonContainer}>
+            <Icon name="settings" size={24} color="#000" />
+            <Text style={[styles.navButtonText, {color: '#000'}]}>设置</Text>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    </SafeAreaView>
   );
 };

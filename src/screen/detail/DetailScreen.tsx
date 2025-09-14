@@ -1,11 +1,10 @@
 import React, {useEffect, useState} from 'react';
-import {View, StatusBar, BackHandler, Text} from 'react-native';
+import {View, StatusBar, BackHandler, Text, SafeAreaView} from 'react-native';
 import {useRoute, useNavigation} from '@react-navigation/native';
 import OnboardingOverlay from '@/components/OnboardingOverlay';
 import {useDetailScreen} from './hooks';
 import {TopNavigationBar} from './components/TopNavigationBar';
 import {BottomNavigationBar} from './components/BottomNavigationBar';
-import {PlayButton} from './components/PlayButton';
 import {DirectoryDrawer} from './components/DirectoryDrawer';
 import {ContentArea} from './components/ContentArea';
 import {styles} from './styles/styles';
@@ -135,7 +134,7 @@ export default function DetailScreen() {
 
   if (!currentQuestion) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <TopNavigationBar
           navOpacity={navOpacity}
           navTranslateYTop={navTranslateYTop}
@@ -146,7 +145,7 @@ export default function DetailScreen() {
         <View style={styles.content}>
           <Text style={styles.notFoundText}>题目未找到</Text>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -155,7 +154,7 @@ export default function DetailScreen() {
     playbackInfo.state === 'playing';
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* 目录抽屉 */}
       <DirectoryDrawer
         showDirectory={showDirectory}
@@ -200,12 +199,6 @@ export default function DetailScreen() {
         handleSettings={handleSettings}
         currentIndex={currentIndex}
         totalQuestions={state.questions.length}
-      />
-
-      {/* 播放按钮 - 紧挨着底部导航的右上侧 */}
-      <PlayButton
-        navOpacity={navOpacity}
-        navTranslateYBottom={navTranslateYBottom}
         handlePlayPause={handlePlayPause}
         isPlaying={isPlaying}
       />
@@ -217,6 +210,6 @@ export default function DetailScreen() {
           onSkip={handleOnboardingSkip}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }

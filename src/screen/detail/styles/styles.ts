@@ -12,8 +12,8 @@ export const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    paddingTop: 60, // 为顶部导航栏留出空间
-    paddingBottom: 60, // 为底部导航栏留出空间
+    paddingTop: 0, // 减少顶部边距，因为SafeAreaView已经处理了状态栏
+    paddingBottom: 0, // 减少底部边距，因为SafeAreaView已经处理了底部区域
   },
   // 题目标题样式 - 更加突出
   questionTitle: {
@@ -36,8 +36,6 @@ export const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
   },
   navTop: {
-    position: 'absolute',
-    top: 0,
     left: 0,
     right: 0,
     height: 60,
@@ -63,8 +61,6 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   navBottom: {
-    position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
     height: 60,
@@ -101,7 +97,7 @@ export const styles = StyleSheet.create({
   // 播放按钮样式
   playButtonContainer: {
     position: 'absolute',
-    bottom: 70, // 紧挨着底部导航的右上侧
+    bottom: 70, // 调整位置，使其位于底部导航栏的上方
     right: 20,
     zIndex: 101,
   },
