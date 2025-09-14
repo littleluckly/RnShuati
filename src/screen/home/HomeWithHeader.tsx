@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, StatusBar, Platform } from 'react-native';
 import HomeScreen from './HomeScreen';
 import SearchableHeader from '../../navigation/SearchableHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +10,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
  */
 const HomeWithHeader = () => {
   const insets = useSafeAreaInsets();
+  
+  // 为Android设置状态栏背景色，确保与自定义页头颜色一致
+  if (Platform.OS === 'android') {
+    StatusBar.setBackgroundColor('white', true);
+    StatusBar.setBarStyle('dark-content');
+  }
 
   return (
     <View style={styles.container}>
