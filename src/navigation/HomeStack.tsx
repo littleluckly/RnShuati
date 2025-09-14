@@ -4,7 +4,7 @@ import {
   createStackNavigator,
   CardStyleInterpolators,
 } from '@react-navigation/stack';
-import HomeScreen from '@/screen/home/HomeScreen';
+import HomeWithHeader from '@/screen/home/HomeWithHeader';
 import DetailScreen from '@/screen/detail';
 import {routeNameMap} from './constant';
 import SubjectSelectionScreen from '@/screen/home/SubjectSelectionScreen';
@@ -86,8 +86,8 @@ export default function HomeStack() {
     <Stack.Navigator
       initialRouteName={initialRoute}
       screenOptions={{
-        headerShown: true,
-        header: () => <SearchableHeader />,
+        // 禁用默认的header，我们会使用自定义的SearchableHeader
+        headerShown: false,
       }}>
       <Stack.Screen
         name={routeNameMap.subjectSelectionScreen}
@@ -96,7 +96,7 @@ export default function HomeStack() {
           headerShown: false,
         }}
       />
-      <Stack.Screen name={routeNameMap.homeScreen} component={HomeScreen} />
+      <Stack.Screen name={routeNameMap.homeScreen} component={HomeWithHeader} />
       <Stack.Screen
         name={routeNameMap.detailScreen}
         component={DetailScreen}

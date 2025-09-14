@@ -11,11 +11,12 @@ import {
   TouchableOpacity,
   Text,
   StyleSheet,
+  Platform,
+  StatusBar
 } from 'react-native';
 import {RootNavigation} from './Types';
 import {useHeaderHeight} from '@react-navigation/elements';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {Platform, StatusBar} from 'react-native';
 import GlobalStyles from '@/styles/globalStyles';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
@@ -30,33 +31,11 @@ const SearchableHeader = () => {
   const navigation = useNavigation<RootNavigation>();
   const canGoBack = navigation.canGoBack();
   const headerHeight = useHeaderHeight();
-
-  // 默认 header 高度和样式（跨平台）
-  const getDefaultHeaderStyle = useCallback(() => {
-    const isIos = Platform.OS === 'ios';
-    const finalHeight = Math.max(headerHeight || 56, 56); // 确保最小高度
-    return {
-      height: finalHeight, // 自动适配实际 header 高度（含状态栏）
-      minHeight: 56, // 确保最小高度
-      backgroundColor: 'white',
-      borderBottomWidth: isIos ? StyleSheet.hairlineWidth : 0,
-      borderBottomColor: '#C8C7CC',
-      elevation: isIos ? 0 : 4, // Android 加阴影
-      shadowColor: isIos ? '#000' : undefined,
-      shadowOffset: isIos ? {width: 0, height: 0.5} : undefined,
-      shadowOpacity: isIos ? 0.3 : undefined,
-      shadowRadius: isIos ? 1 : undefined,
-    };
-  }, [headerHeight]); // 修复依赖数组
-
-  const progress = useSharedValue(0);
-  const [headerVisible, setHeaderVisible] = useState(false); // 🔑 控制头部是否显示
-
   const insets = useSafeAreaInsets(); // 获取安全区域
+  
   const route = useRoute();
   // 类型断言，确保route.params可以访问subjectName属性
   const params = route.params as {subjectName?: string} | undefined;
-  const navigationState = useNavigationState(state => state);
   const [isSearching, setIsSearching] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -76,12 +55,13 @@ const SearchableHeader = () => {
 
   const title = getChineseTitle();
 
-  const style = {
-    paddingTop:
-      insets.top || (Platform.OS === 'android' ? StatusBar.currentHeight : 0),
-    paddingLeft: insets.left + 8,
-    paddingRight: insets.right + 8,
-    height: headerHeight, // 包含状态栏 + header 高度
+  // 计算标题容器的样式，根据是否有返回按钮调整对齐方式
+  const getTitleContainerStyle = () => {
+    return {
+      flex: 1,
+      alignItems: canGoBack ? 'flex-start' as const : 'center' as const,
+      justifyContent: 'center' as const,
+    };
   };
 
   const onSubmit = () => {
@@ -98,15 +78,10 @@ const SearchableHeader = () => {
     setQuery('');
   };
 
-  // // 🔑 只有在 headerVisible 为 true 时才渲染头部
-  // if (!headerVisible && !isSearching) {
-  //   return null; // 返回 null 以完全隐藏头部
-  // }
-
   // 动态渲染 header
   if (isSearching) {
     return (
-      <View style={[styles.searchHeader, isSearching && {padding: 0}]}>
+      <View style={[styles.headerContainer, styles.searchHeader]}>
         <TextInput
           style={[styles.searchInput]}
           value={query}
@@ -125,54 +100,90 @@ const SearchableHeader = () => {
   }
 
   return (
-    <View style={[styles.defaultHeader, {zIndex: 9999}]}>
+    <View style={[styles.headerContainer, styles.defaultHeader]}>
       {/* 左侧：返回按钮（仅在可以返回时显示） */}
       {canGoBack && (
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity 
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back-outline" size={20} color="#333"></Ionicons>
         </TouchableOpacity>
       )}
-      <Text style={[styles.title, {flex: 1}]}>{title}</Text>
-      <TouchableOpacity onPress={() => setIsSearching(true)}>
+      <View style={getTitleContainerStyle()}>
+        <Text style={styles.title} numberOfLines={1}>
+          {title || '题库'}
+        </Text>
+      </View>
+      <TouchableOpacity 
+        onPress={() => setIsSearching(true)}
+        style={styles.searchButton}
+      >
         <Ionicons name="search" size={20} color="gray" />
       </TouchableOpacity>
-
-      {/* 右侧：其他按钮，如菜单 */}
-      {/* <TouchableOpacity>
-        <Ionicons name="ellipsis-vertical-sharp" size={20} color="gray" />
-      </TouchableOpacity> */}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  // 基础头部容器样式，包含安全区域适配
+  headerContainer: {
+    paddingTop: 0, // 通过 useSafeAreaInsets 已经在更高层级处理了
+    backgroundColor: 'white',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#C8C7CC',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 0.5},
+        shadowOpacity: 0.3,
+        shadowRadius: 1,
+        elevation: 0,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+    zIndex: 9999,
+  },
+  
+  // 默认头部样式
   defaultHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    minHeight: 56, // 确保最小高度
     height: 56,
     overflow: 'hidden',
-    backgroundColor: '',
   },
+  
+  // 搜索头部样式
   searchHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
     height: 56,
     overflow: 'hidden',
-    backgroundColor: 'white',
   },
+  
   title: {
     fontSize: 17,
     fontWeight: '600',
     color: 'black',
     textAlign: 'center',
   },
-  searchIcon: {
-    fontSize: 24,
+  
+  // 按钮样式
+  backButton: {
+    padding: 8,
+    marginLeft: -8, // 抵消部分 paddingHorizontal
   },
+  
+  searchButton: {
+    padding: 8,
+    marginRight: -8, // 抵消部分 paddingHorizontal
+  },
+  
   searchInput: {
     flex: 1,
     height: 40,
@@ -182,10 +193,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'black',
   },
+  
   cancelBtn: {
     paddingHorizontal: 12,
     marginLeft: 8,
+    height: '100%',
+    justifyContent: 'center',
   },
+  
   cancelText: {
     fontSize: 17,
     color: '#007AFF', // iOS 风格蓝色
