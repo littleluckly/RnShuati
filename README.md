@@ -40,10 +40,13 @@ yarn android
 # 安装依赖
 cd ios
 pod install 或者 npx pod-install
+# 打开 xcode 项目
+open shuatipai.xcodeproj
+# 左侧菜单栏上方点击运行构建
 # 使用 npm
 npx react-native run-ios
 # 或
-npx react-native run-ios --simulator "iPhone 16 Pro"
+npx react-native run-ios --simulator "iPhone 14"
 # 或
 npm run ios
 
@@ -54,6 +57,37 @@ yarn ios
 如果一切设置 _正确_，您应该很快就能在 _Android 模拟器_ 或 _iOS 模拟器_ 中看到您的新应用运行，前提是您已正确设置了模拟器。
 
 这是运行应用的一种方式——您也可以分别从 Android Studio 和 Xcode 中直接运行它。
+
+### 清除缓存重新安装
+
+```bash
+# 删除 node_modules 和 package-lock.json (或 yarn.lock)
+rm -rf node_modules package-lock.json   # npm
+# 或
+rm -rf node_modules yarn.lock          # yarn
+
+# ios依赖清理
+cd ios
+xcodebuild clean
+# 清除 CocoaPods 缓存
+pod deintegrate || echo "CocoaPods not installed"
+rm -rf Pods/ Podfile.lock build/ DerivedData/
+cd ..
+
+# 重新安装
+# 使用 npm
+npm install
+
+# 使用 yarn
+yarn install
+
+# 安装 iOS 依赖
+cd ios
+pod install
+# 打开 xcode 项目
+open shuatipai.xcodeproj
+# 左侧菜单栏上方点击运行构建
+```
 
 ## 步骤 3: 修改您的应用
 

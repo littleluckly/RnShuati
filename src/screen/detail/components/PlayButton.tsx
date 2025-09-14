@@ -1,6 +1,10 @@
 import React from 'react';
 import {TouchableOpacity, Text} from 'react-native';
-import Animated, {useAnimatedStyle, SharedValue, withTiming} from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  SharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import {styles} from '../styles/styles';
 
 interface PlayButtonProps {
@@ -27,11 +31,7 @@ export const PlayButton: React.FC<PlayButtonProps> = ({
   });
 
   return (
-    <Animated.View
-      style={[
-        styles.playButtonContainer,
-        animatedStyle,
-      ]}>
+    <Animated.View style={[styles.playButtonContainer, animatedStyle]}>
       <TouchableOpacity style={styles.playButton} onPress={handlePlayPause}>
         <Text style={styles.playButtonText}>{isPlaying ? '停' : '听'}</Text>
       </TouchableOpacity>

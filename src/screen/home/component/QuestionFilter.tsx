@@ -34,15 +34,32 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
   ]);
 
   const [active, setActive] = useState(''); // 当前展开的筛选项名
-  const filterOptions = useMemo(() => {
-    if (active === 'difficulty') {
-      return difficultyItems;
+
+  // 检查筛选条件是否有效
+  const hasValidFilter = (filterType: string) => {
+    switch (filterType) {
+      case 'difficulty':
+        return difficulty.length > 0 && !difficulty.includes('');
+      case 'tags':
+        return tag.length > 0 && !tag.includes('');
+      default:
+        return false;
     }
-    if (active === 'tags') {
-      return tagItems;
+  };
+
+  // 获取筛选器显示文本
+  const getFilterDisplayText = (filterType: string, filterName: string) => {
+    const isValid = hasValidFilter(filterType);
+
+    switch (filterType) {
+      case 'difficulty':
+        return isValid ? `${filterName}(${difficulty.length})` : filterName;
+      case 'tags':
+        return isValid ? `${filterName}(${tag.length})` : filterName;
+      default:
+        return filterName;
     }
-    return [];
-  }, [active, difficultyItems, tagItems]);
+  };
 
   // 获取难度选项数据
   useEffect(() => {
@@ -94,7 +111,7 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
   // 渲染难度选项（保持单列）
   const renderDifficultyOptions = () => (
     <View style={styles.optionsContainer}>
-      {difficultyItems.map((item) => {
+      {difficultyItems.map(item => {
         const isSelected = difficulty.includes(item.value);
         return (
           <TouchableOpacity
@@ -112,13 +129,10 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
                     : [...prev.filter(v => v !== ''), item.value];
 
                   // 如果没有选择任何项，则默认选择"全部"
-                  return newDifficulty.length > 0
-                    ? newDifficulty
-                    : [''];
+                  return newDifficulty.length > 0 ? newDifficulty : [''];
                 }
               });
-            }}
-          >
+            }}>
             <Text style={isSelected && styles.optionTextSelected}>
               {item.name}
             </Text>
@@ -141,8 +155,7 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
     <ScrollView
       showsVerticalScrollIndicator={true}
       style={styles.tagsScrollContainer}
-      contentContainerStyle={styles.tagsContainer}
-    >
+      contentContainerStyle={styles.tagsContainer}>
       <View style={styles.tagsHeaderContainer}>
         {/* 全选标签保持单列显示 */}
         {tagItems.find(item => item.value === '') && (
@@ -150,8 +163,7 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
             style={[styles.option, tag.includes('') && styles.optionSelected]}
             onPress={() => {
               setTag(tag.includes('') ? [] : ['']);
-            }}
-          >
+            }}>
             <Text style={tag.includes('') && styles.optionTextSelected}>
               {tagItems.find(item => item.value === '')?.name}
             </Text>
@@ -166,20 +178,17 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
           </TouchableOpacity>
         )}
       </View>
-      
+
       {/* 标签列表改为徽标样式，一行多个 */}
       <View style={styles.tagChipsContainer}>
         {tagItems
           .filter(item => item.value !== '')
-          .map((item) => {
+          .map(item => {
             const isSelected = tag.includes(item.value);
             return (
               <TouchableOpacity
                 key={item.value}
-                style={[
-                  styles.tagChip,
-                  isSelected && styles.tagChipSelected
-                ]}
+                style={[styles.tagChip, isSelected && styles.tagChipSelected]}
                 onPress={() => {
                   setTag(prev => {
                     if (prev.includes(item.value)) {
@@ -192,14 +201,12 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
                       return [...prev.filter(v => v !== ''), item.value];
                     }
                   });
-                }}
-              >
-                <Text 
+                }}>
+                <Text
                   style={[
                     styles.tagChipText,
-                    isSelected && styles.tagChipTextSelected
-                  ]}
-                >
+                    isSelected && styles.tagChipTextSelected,
+                  ]}>
                   {item.name}
                 </Text>
                 {isSelected && (
@@ -247,41 +254,51 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
         style={styles.filterBar}
         contentContainerStyle={styles.filterBarContent}>
         {filters.map(({name, value}) => {
-          // 获取当前筛选项的显示文本
-          let displayText = name;
-          if (
-            value === 'difficulty' &&
-            difficulty.length > 0 &&
-            !difficulty.includes('')
-          ) {
-            displayText = `${name}(${difficulty.length})`;
-          } else if (value === 'tags' && tag.length > 0 && !tag.includes('')) {
-            displayText = `${name}(${tag.includes('') ? tag.length : tag.length})`;
-          }
+          const isActive = hasValidFilter(value);
+          const displayText = getFilterDisplayText(value, name);
 
           return (
             <TouchableOpacity
               key={value}
-              style={[styles.chip, active === value && styles.chipActive]}
+              style={[styles.chip, isActive && styles.chipActive]}
               onPress={() => onClickFilter(value)}>
               <Text
-                style={[
-                  styles.chipText,
-                  active === value && styles.chipTextActive,
-                ]}>
+                style={[styles.chipText, isActive && styles.chipTextActive]}>
                 {displayText}
               </Text>
               <Icon
                 name="chevron-down"
                 size={14}
-                color={active === value ? '#fff' : '#666'}
+                color={isActive ? '#fff' : '#666'}
                 style={{marginLeft: 4}}
               />
             </TouchableOpacity>
           );
         })}
+
+        {/* 重置按钮 */}
+        <TouchableOpacity
+          style={[styles.chip, styles.resetButton]}
+          onPress={() => {
+            // 重置所有筛选条件
+            setDifficulty(['']);
+            setTag(['']);
+            // 清除筛选条件
+            updateFilters({
+              difficulty: undefined,
+              tags: undefined,
+            });
+          }}>
+          <Icon
+            name="refresh"
+            size={14}
+            color="#666"
+            style={{marginRight: 4}}
+          />
+          <Text style={styles.chipText}>重置</Text>
+        </TouchableOpacity>
       </ScrollView>
-      
+
       {/* 弹窗 */}
       <Portal>
         <Modalize
@@ -299,15 +316,15 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
                       difficulty.includes('') || difficulty.length === 0
                         ? undefined
                         : difficulty,
-                    tags: tag.includes('') || tag.length === 0 ? undefined : tag,
+                    tags:
+                      tag.includes('') || tag.length === 0 ? undefined : tag,
                   });
                   closeFilter();
                 }}>
                 <Text style={styles.confirmButtonText}>确定</Text>
               </TouchableOpacity>
             </View>
-          }
-        >
+          }>
           {renderModalContent()}
         </Modalize>
       </Portal>
@@ -414,7 +431,6 @@ const styles = StyleSheet.create({
   },
   tagsScrollContainer: {
     maxHeight: 400, // 设置最大高度以启用滚动
-    
   },
   tagsContainer: {
     padding: 8,
@@ -452,5 +468,10 @@ const styles = StyleSheet.create({
   },
   tagChipCheckIcon: {
     marginLeft: 4,
+  },
+  // 重置按钮样式
+  resetButton: {
+    borderColor: '#ff3b30',
+    backgroundColor: '#fff',
   },
 });

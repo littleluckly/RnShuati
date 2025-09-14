@@ -31,7 +31,7 @@ class AudioManagerService {
   // 检查并确保 TrackPlayer 已就绪
   private async ensureTrackPlayerReady(): Promise<void> {
     if (this.isTrackPlayerInitialized) return;
-    
+
     try {
       // 如果已经在 App.tsx 中全局初始化，直接标记为已初始化
       if (isGlobalTrackPlayerInitialized) {
@@ -39,7 +39,7 @@ class AudioManagerService {
         console.log('TrackPlayer 已在 App.tsx 中全局初始化');
         return;
       }
-      
+
       // 否则尝试初始化（备用方案）
       await TrackPlayer.setupPlayer();
       await TrackPlayer.updateOptions({
@@ -62,7 +62,7 @@ class AudioManagerService {
       });
       this.isTrackPlayerInitialized = true;
       console.log('TrackPlayer 本地初始化成功');
-      
+
       // 设置播放完成事件监听
       this.setupTrackPlayerEvents();
     } catch (error) {
@@ -100,7 +100,7 @@ class AudioManagerService {
 
     TrackPlayer.addEventListener(Event.PlaybackState, async (data) => {
       console.log('播放状态变化:', data.state);
-      
+
       if (data.state === State.Playing) {
         this.playbackState = 'playing';
       } else if (data.state === State.Paused) {
@@ -110,7 +110,7 @@ class AudioManagerService {
       } else if (data.state === State.Buffering) {
         this.playbackState = 'buffering';
       }
-      
+
       this.notifyListeners();
     });
   }
@@ -147,7 +147,7 @@ class AudioManagerService {
     } catch (error) {
       console.warn('停止播放时出错:', error);
     }
-    
+
     this.currentItemId = null;
     this.currentAudioIndex = 0;
     this.audioQueue = [];
@@ -260,7 +260,7 @@ class AudioManagerService {
             console.warn(`音频资源未找到: ${file}`);
             return null;
           }
-          
+
           return {
             id: index.toString(),
             url: audioResource,
