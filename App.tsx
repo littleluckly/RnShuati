@@ -9,7 +9,10 @@ import {PaperProvider} from 'react-native-paper';
 import Toast from 'react-native-toast-message';
 import {SharedTransitionProvider} from '@/contexts/sharedTransitionContext';
 import {AuthProvider} from '@/contexts/AuthContext';
-import { safeInitializeTrackPlayer, resetTrackPlayer } from '@/services/TrackPlayerInitializer';
+import {
+  safeInitializeTrackPlayer,
+  resetTrackPlayer,
+} from '@/services/TrackPlayerInitializer';
 
 // 使用forwardRef转发Toast组件的ref
 const ToastComponent = forwardRef<any, any>((props, ref) => {

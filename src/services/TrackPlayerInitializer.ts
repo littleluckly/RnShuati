@@ -45,7 +45,7 @@ export const initializeTrackPlayer = async (
   try {
     // 设置播放器
     await TrackPlayer.setupPlayer();
-    
+
     // 构建能力配置
     const capabilities: Capability[] = [];
     if (options.enablePlay) capabilities.push(Capability.Play);
@@ -69,21 +69,21 @@ export const initializeTrackPlayer = async (
       // 后台播放配置
       android: {
         // 应用被杀死时的播放行为
-        appKilledPlaybackBehavior: options.enableBackgroundPlayback 
-          ? AppKilledPlaybackBehavior.ContinuePlayback 
+        appKilledPlaybackBehavior: options.enableBackgroundPlayback
+          ? AppKilledPlaybackBehavior.ContinuePlayback
           : AppKilledPlaybackBehavior.PausePlayback,
       },
     });
-    
+
     console.log('✅ TrackPlayer 初始化成功');
-    
+
     // 通知 AudioManager 全局初始化已完成
     setGlobalTrackPlayerInitialized(true);
-    
+
     return true;
   } catch (error) {
     console.error('❌ TrackPlayer 初始化失败:', error);
-    
+
     // 处理特定的初始化错误
     if (error instanceof Error) {
       if (error.message.includes('already been initialized')) {
@@ -92,7 +92,7 @@ export const initializeTrackPlayer = async (
         return true;
       }
     }
-    
+
     return false;
   }
 };
