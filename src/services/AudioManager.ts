@@ -1,10 +1,30 @@
 import TrackPlayer, { Capability, State, Event } from 'react-native-track-player';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 全局标记，表示 TrackPlayer 是否已在 App.tsx 中初始化
 let isGlobalTrackPlayerInitialized = false;
 
 // 全局存储音频映射表，由 App.tsx 在启动时设置
 let soundMap: Record<string, any> = {};
+
+// 存储键
+const PLAYBACK_CONTENT_SETTINGS_KEY = 'playback_content_settings';
+const PLAYBACK_SPEED_KEY = 'playback_speed';
+
+// 播放内容设置类型
+export interface PlaybackContentSettings {
+  includeSimpleAnswer: boolean; // 是否包含精简答案
+  includeDetailAnswer: boolean; // 是否包含扩展答案
+}
+
+// 默认播放内容设置
+export const DEFAULT_PLAYBACK_CONTENT_SETTINGS: PlaybackContentSettings = {
+  includeSimpleAnswer: true,
+  includeDetailAnswer: true,
+};
+
+// 默认播放速度
+const DEFAULT_PLAYBACK_SPEED = 1.0;
 
 // 设置音频映射表（由 App.tsx 调用）
 export const setSoundMap = (map: Record<string, any>) => {
@@ -33,6 +53,8 @@ class AudioManagerService {
   private playbackState: AudioPlaybackState = 'idle';
   private listeners: Map<string, AudioPlaybackListener> = new Map();
   private isTrackPlayerInitialized: boolean = false;
+  private playbackContentSettings: PlaybackContentSettings = DEFAULT_PLAYBACK_CONTENT_SETTINGS;
+  private playbackSpeed: number = DEFAULT_PLAYBACK_SPEED; // 添加播放速度缓存
 
   // 检查并确保 TrackPlayer 已就绪
   private async ensureTrackPlayerReady(): Promise<void> {
@@ -43,6 +65,27 @@ class AudioManagerService {
       if (isGlobalTrackPlayerInitialized) {
         this.isTrackPlayerInitialized = true;
         console.log('TrackPlayer 已在 App.tsx 中全局初始化');
+        
+        // 加载用户的播放设置
+        await this.loadPlaybackContentSettings();
+        await this.loadPlaybackSpeed(); // 加载播放速度设置
+        
+        // 设置播放完成事件监听
+        this.setupTrackPlayerEvents();
+        
+        // 应用保存的播放速度
+        if (this.playbackSpeed !== DEFAULT_PLAYBACK_SPEED) {
+          await TrackPlayer.setRate(this.playbackSpeed);
+          console.log(`应用保存的播放速度: ${this.playbackSpeed}x`);
+        } else {
+          // 确保TrackPlayer的速度与默认速度一致
+          const currentRate = await TrackPlayer.getRate();
+          if (currentRate !== DEFAULT_PLAYBACK_SPEED) {
+            await TrackPlayer.setRate(DEFAULT_PLAYBACK_SPEED);
+            console.log(`重置播放速度为默认值: ${DEFAULT_PLAYBACK_SPEED}x`);
+          }
+        }
+        
         return;
       }
 
@@ -69,6 +112,16 @@ class AudioManagerService {
       this.isTrackPlayerInitialized = true;
       console.log('TrackPlayer 本地初始化成功');
 
+      // 加载用户的播放设置
+      await this.loadPlaybackContentSettings();
+      await this.loadPlaybackSpeed(); // 加载播放速度设置
+      
+      // 应用保存的播放速度
+      if (this.playbackSpeed !== DEFAULT_PLAYBACK_SPEED) {
+        await TrackPlayer.setRate(this.playbackSpeed);
+        console.log(`应用保存的播放速度: ${this.playbackSpeed}x`);
+      }
+
       // 设置播放完成事件监听
       this.setupTrackPlayerEvents();
     } catch (error: any) {
@@ -76,6 +129,17 @@ class AudioManagerService {
       if (error.message.includes('already been initialized')) {
         console.log('TrackPlayer 已经初始化过');
         this.isTrackPlayerInitialized = true;
+        
+        // 加载用户的播放设置
+        await this.loadPlaybackContentSettings();
+        await this.loadPlaybackSpeed(); // 加载播放速度设置
+        
+        // 应用保存的播放速度
+        if (this.playbackSpeed !== DEFAULT_PLAYBACK_SPEED) {
+          await TrackPlayer.setRate(this.playbackSpeed);
+          console.log(`应用保存的播放速度: ${this.playbackSpeed}x`);
+        }
+        
         return;
       }
       console.error('TrackPlayer 初始化失败:', error);
@@ -192,6 +256,94 @@ class AudioManagerService {
     }
   }
 
+  // 加载播放内容设置
+  private async loadPlaybackContentSettings(): Promise<void> {
+    try {
+      const savedSettings = await AsyncStorage.getItem(PLAYBACK_CONTENT_SETTINGS_KEY);
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings) as PlaybackContentSettings;
+        
+        // 确保至少有一个选项被选中
+        if (settings.includeSimpleAnswer || settings.includeDetailAnswer) {
+          this.playbackContentSettings = settings;
+          console.log('播放内容设置已加载:', this.playbackContentSettings);
+        } else {
+          // 如果两个都未选中，则使用默认设置
+          console.warn('无效的播放内容设置，使用默认设置');
+          this.playbackContentSettings = DEFAULT_PLAYBACK_CONTENT_SETTINGS;
+          await this.savePlaybackContentSettings();
+        }
+      } else {
+        console.log('没有找到保存的播放内容设置，使用默认设置');
+        // 保存默认设置
+        await this.savePlaybackContentSettings();
+      }
+    } catch (error) {
+      console.error('加载播放内容设置失败:', error);
+      // 出错时使用默认设置
+      this.playbackContentSettings = DEFAULT_PLAYBACK_CONTENT_SETTINGS;
+    }
+  }
+
+  // 保存播放内容设置
+  private async savePlaybackContentSettings(): Promise<void> {
+    try {
+      await AsyncStorage.setItem(PLAYBACK_CONTENT_SETTINGS_KEY, JSON.stringify(this.playbackContentSettings));
+      console.log('播放内容设置已保存');
+    } catch (error) {
+      console.error('保存播放内容设置失败:', error);
+    }
+  }
+
+  // 加载播放速度设置
+  private async loadPlaybackSpeed(): Promise<void> {
+    try {
+      const savedSpeed = await AsyncStorage.getItem(PLAYBACK_SPEED_KEY);
+      if (savedSpeed) {
+        const speed = parseFloat(savedSpeed);
+        if (!isNaN(speed) && speed >= 0.5 && speed <= 2.0) {
+          this.playbackSpeed = speed;
+          console.log('播放速度已加载:', this.playbackSpeed);
+        } else {
+          console.warn('无效的播放速度设置，使用默认速度');
+          this.playbackSpeed = DEFAULT_PLAYBACK_SPEED;
+        }
+      } else {
+        console.log('没有找到保存的播放速度，使用默认速度');
+        this.playbackSpeed = DEFAULT_PLAYBACK_SPEED;
+      }
+    } catch (error) {
+      console.error('加载播放速度失败:', error);
+      this.playbackSpeed = DEFAULT_PLAYBACK_SPEED;
+    }
+  }
+
+  // 保存播放速度设置
+  private async savePlaybackSpeed(): Promise<void> {
+    try {
+      await AsyncStorage.setItem(PLAYBACK_SPEED_KEY, this.playbackSpeed.toString());
+      console.log('播放速度已保存:', this.playbackSpeed);
+    } catch (error) {
+      console.error('保存播放速度失败:', error);
+    }
+  }
+
+  // 设置播放内容选项
+  public async setPlaybackContentSettings(settings: PlaybackContentSettings): Promise<void> {
+    // 确保至少有一个选项被选中
+    if (!settings.includeSimpleAnswer && !settings.includeDetailAnswer) {
+      throw new Error('至少需要选择一个播放内容选项');
+    }
+    
+    this.playbackContentSettings = settings;
+    await this.savePlaybackContentSettings();
+  }
+
+  // 获取当前播放内容设置
+  public getPlaybackContentSettings(): PlaybackContentSettings {
+    return { ...this.playbackContentSettings };
+  }
+
   // 开始播放音频队列
   public async startPlayback(itemId: string, audioFiles: {
     audio_question?: string;
@@ -220,11 +372,15 @@ class AudioManagerService {
         await this.stopCurrent();
       }
 
-      // 构建音频队列
+      // 根据用户设置构建音频队列
       this.audioQueue = [];
       if (audioFiles.audio_question) this.audioQueue.push(audioFiles.audio_question);
-      if (audioFiles.audio_answer_simple) this.audioQueue.push(audioFiles.audio_answer_simple);
-      if (audioFiles.audio_answer_detail) this.audioQueue.push(audioFiles.audio_answer_detail);
+      if (this.playbackContentSettings.includeSimpleAnswer && audioFiles.audio_answer_simple) {
+        this.audioQueue.push(audioFiles.audio_answer_simple);
+      }
+      if (this.playbackContentSettings.includeDetailAnswer && audioFiles.audio_answer_detail) {
+        this.audioQueue.push(audioFiles.audio_answer_detail);
+      }
 
       if (this.audioQueue.length === 0) {
         console.warn('No audio files available for playback');
@@ -271,7 +427,7 @@ class AudioManagerService {
             title: this.getAudioTitle(index),
             artist: '刷题派',
           };
-        }).filter(track => track !== null);
+        }).filter((track): track is NonNullable<typeof track> => track !== null);
 
         if (tracks.length === 0) {
           console.warn('没有有效的音频资源');
@@ -318,6 +474,49 @@ class AudioManagerService {
     setTimeout(() => {
       this.stopCurrent();
     }, 3000);
+  }
+
+  // 设置播放速度
+  public async setPlaybackSpeed(speed: number): Promise<void> {
+    try {
+      // 验证速度值的有效性
+      if (speed < 0.5 || speed > 2.0) {
+        throw new Error('播放速度必须在0.5x到2.0x之间');
+      }
+      
+      this.playbackSpeed = speed; // 更新缓存
+      await this.savePlaybackSpeed(); // 保存到本地存储
+      
+      if (this.isTrackPlayerInitialized) {
+        await TrackPlayer.setRate(speed);
+        console.log(`设置播放速度为: ${speed}x`);
+      }
+    } catch (error: any) {
+      console.error('设置播放速度失败:', error);
+      throw error;
+    }
+  }
+
+  // 获取当前播放速度
+  public async getPlaybackSpeed(): Promise<number> {
+    try {
+      if (this.isTrackPlayerInitialized) {
+        const rate = await TrackPlayer.getRate();
+        console.log(`当前播放速度: ${rate}x`);
+        // 确保缓存的速度与TrackPlayer的实际速度一致
+        if (rate !== this.playbackSpeed) {
+          this.playbackSpeed = rate;
+          await this.savePlaybackSpeed();
+        }
+        return rate;
+      }
+    } catch (error: any) {
+      console.error('获取播放速度失败:', error);
+    }
+    
+    // 如果TrackPlayer未初始化，返回缓存的速度值
+    console.log(`返回缓存的播放速度: ${this.playbackSpeed}x`);
+    return this.playbackSpeed;
   }
 
   // 获取当前播放信息

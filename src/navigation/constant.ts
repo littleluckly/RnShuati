@@ -7,6 +7,7 @@ export const routeNameMap = {
   profileTab: 'ProfileTab',
   profileScreen: 'ProfileScreen',
   apiDemoScreen: 'ApiDemo',
+  playbackSettingsScreen: 'PlaybackSettings',
   
   // 认证相关路由
   loginScreen: 'LoginScreen',

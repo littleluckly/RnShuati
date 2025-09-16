@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { HomeStackNavigation } from '@/navigation/Types';
 import { routeNameMap } from '@/navigation/constant';
 import { useQuestionContext } from '@/contexts/QuestionContext';
-import { AudioManager, AudioPlaybackInfo } from '@/services/AudioManager';
+import { AudioManager, AudioPlaybackInfo, PlaybackContentSettings } from '@/services/AudioManager';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 import {
   shouldShowOnboarding,
@@ -43,6 +43,16 @@ export const useDetailScreen = (route: any) => {
   const directoryTranslateX = useSharedValue(-width * 0.8);
   const overlayOpacity = useSharedValue(0); // 遮罩层透明度
 
+  // 控制设置面板显示状态
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+  const settingsPanelTranslateY = useSharedValue(300); // 设置面板初始位置在屏幕下方
+  const settingsOverlayOpacity = useSharedValue(0); // 设置面板遮罩层透明度
+  const [playbackSpeed, setPlaybackSpeed] = useState(1.0); // 播放速度状态
+  const [playbackContentSettings, setPlaybackContentSettings] = useState<PlaybackContentSettings>({
+    includeSimpleAnswer: true,
+    includeDetailAnswer: true,
+  }); // 播放内容设置状态
+
   // 音频播放状态
   const [playbackInfo, setPlaybackInfo] = useState<AudioPlaybackInfo>({
     currentItemId: null,
@@ -65,6 +75,29 @@ export const useDetailScreen = (route: any) => {
     checkOnboarding();
   }, []);
 
+  // 组件挂载时添加音频监听器
+  useEffect(() => {
+    AudioManager.addListener('detailScreen', setPlaybackInfo);
+    
+    // 初始化播放速度
+    const initPlaybackSpeed = async () => {
+      try {
+        const speed = await AudioManager.getPlaybackSpeed();
+        setPlaybackSpeed(speed);
+      } catch (error) {
+        console.error('初始化播放速度失败:', error);
+        // 出错时使用默认速度1.0
+        setPlaybackSpeed(1.0);
+      }
+    };
+    
+    initPlaybackSpeed();
+    
+    return () => {
+      AudioManager.removeListener('detailScreen');
+    };
+  }, []);
+
   // 导航栏动画
   const animateNav = useCallback(
     (show: boolean) => {
@@ -85,6 +118,48 @@ export const useDetailScreen = (route: any) => {
     },
     [directoryTranslateX, overlayOpacity],
   );
+
+  // 设置面板动画
+  const animateSettingsPanel = useCallback(
+    async (show: boolean) => {
+      settingsPanelTranslateY.value = withTiming(show ? 0 : 300, { duration: 300 });
+      settingsOverlayOpacity.value = withTiming(show ? 1 : 0, { duration: 200 });
+      setShowSettingsPanel(show);
+      
+      // 如果显示设置面板，获取当前播放速度和内容设置
+      if (show) {
+        try {
+          // 获取播放速度
+          const speed = await AudioManager.getPlaybackSpeed();
+          setPlaybackSpeed(speed);
+          
+          // 获取播放内容设置
+          const settings = AudioManager.getPlaybackContentSettings();
+          setPlaybackContentSettings(settings);
+        } catch (error) {
+          console.error('获取播放设置失败:', error);
+        }
+      }
+    },
+    [settingsPanelTranslateY, settingsOverlayOpacity],
+  );
+
+  // 添加useEffect监听设置面板状态变化
+  useEffect(() => {
+    if (showSettingsPanel) {
+      // 当设置面板打开时，获取最新的播放速度
+      const updatePlaybackSpeed = async () => {
+        try {
+          const speed = await AudioManager.getPlaybackSpeed();
+          setPlaybackSpeed(speed);
+        } catch (error) {
+          console.error('获取播放速度失败:', error);
+        }
+      };
+      
+      updatePlaybackSpeed();
+    }
+  }, [showSettingsPanel]);
 
   // 切换导航栏显示
   const toggleNav = useCallback(() => {
@@ -188,11 +263,17 @@ export const useDetailScreen = (route: any) => {
         AudioManager.pauseCurrent();
       } else if (playbackInfo.state === 'paused') {
         AudioManager.resumeCurrent();
+      } else if (playbackInfo.state === 'idle') {
+        // 如果当前是idle状态，重新开始播放
+        AudioManager.startPlayback(questionId, {
+          audio_question: audioFiles.audio_question,
+          audio_answer_simple: audioFiles.audio_answer_simple,
+          audio_answer_detail: audioFiles.audio_answer_detail,
+        });
       }
     }
     // 如果没有播放任何内容或播放的是其他题目，则开始播放
     else {
-      AudioManager.addListener('detailScreen', setPlaybackInfo);
       AudioManager.startPlayback(questionId, {
         audio_question: audioFiles.audio_question,
         audio_answer_simple: audioFiles.audio_answer_simple,
@@ -201,12 +282,45 @@ export const useDetailScreen = (route: any) => {
     }
   }, [currentQuestion, playbackInfo]);
 
+  // 组件卸载时清理音频监听器
+  useEffect(() => {
+    return () => {
+      AudioManager.removeListener('detailScreen');
+    };
+  }, []);
+
   // 处理设置
   const handleSettings = useCallback(() => {
-    // 导航到Profile标签页，用户可以在那里访问设置选项
-    // @ts-ignore
-    navigation.navigate(routeNameMap.profileTab);
-  }, [navigation]);
+    // 显示设置面板
+    animateSettingsPanel(true);
+  }, [animateSettingsPanel]);
+
+  // 处理播放速度变化
+  const handleSpeedChange = useCallback(async (speed: number) => {
+    setPlaybackSpeed(speed);
+    await AudioManager.setPlaybackSpeed(speed);
+  }, []);
+
+  // 处理播放内容设置变化
+  const handleContentSettingsChange = useCallback(async (settings: PlaybackContentSettings) => {
+    try {
+      setPlaybackContentSettings(settings);
+      await AudioManager.setPlaybackContentSettings(settings);
+      // 如果当前正在播放，重新开始播放以应用新的内容设置
+      if (playbackInfo.currentItemId && currentQuestion) {
+        AudioManager.stopCurrent();
+        AudioManager.startPlayback(playbackInfo.currentItemId, {
+          audio_question: currentQuestion.files?.audio_question,
+          audio_answer_simple: currentQuestion.files?.audio_answer_simple,
+          audio_answer_detail: currentQuestion.files?.audio_answer_detail,
+        });
+      }
+    } catch (error) {
+      console.error('设置播放内容失败:', error);
+      // 恢复之前的设置
+      setPlaybackContentSettings(AudioManager.getPlaybackContentSettings());
+    }
+  }, [playbackInfo.currentItemId, currentQuestion]);
 
   // 处理新手引导完成
   const handleOnboardingComplete = useCallback(async () => {
@@ -282,6 +396,23 @@ export const useDetailScreen = (route: any) => {
     [showNav, animateNav],
   );
 
+  // 添加useEffect监听设置面板状态变化
+  useEffect(() => {
+    if (showSettingsPanel) {
+      // 当设置面板打开时，获取最新的播放速度
+      const updatePlaybackSpeed = async () => {
+        try {
+          const speed = await AudioManager.getPlaybackSpeed();
+          setPlaybackSpeed(speed);
+        } catch (error) {
+          console.error('获取播放速度失败:', error);
+        }
+      };
+      
+      updatePlaybackSpeed();
+    }
+  }, [showSettingsPanel]);
+
   return {
     // State
     showNav,
@@ -299,8 +430,15 @@ export const useDetailScreen = (route: any) => {
     currentQuestion,
     currentIndex,
     state,
+    
+    // 设置面板相关状态
+    showSettingsPanel,
+    settingsPanelTranslateY,
+      settingsOverlayOpacity,
+      playbackSpeed,
+      playbackContentSettings,
 
-    // Functions
+      // Functions
     animateNav,
     animateDirectory,
     toggleNav,
@@ -316,5 +454,8 @@ export const useDetailScreen = (route: any) => {
     handleDirectoryEndReached,
     renderDirectoryFooter,
     handleScroll,
+    animateSettingsPanel,
+    handleSpeedChange,
+    handleContentSettingsChange,
   };
 };

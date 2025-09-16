@@ -1822,6 +1822,11 @@
     prompts "^2.4.2"
     semver "^7.5.2"
 
+"@react-native-community/slider@^5.0.1":
+  version "5.0.1"
+  resolved "https://mirrors.tencent.com/npm/@react-native-community/slider/-/slider-5.0.1.tgz#478789e526af31e0660c6f49fa5c5429d8d4287b"
+  integrity sha512-K3JRWkIW4wQ79YJ6+BPZzp1SamoikxfPRw7Yw4B4PElEQmqZFrmH9M5LxvIo460/3QSrZF/wCgi3qizJt7g/iw==
+
 "@react-native-vector-icons/common@^12.3.0":
   version "12.3.0"
   resolved "https://mirrors.tencent.com/npm/@react-native-vector-icons/common/-/common-12.3.0.tgz#8a3cb778fd197e971da0fa69a35fa4fc8b030f1a"

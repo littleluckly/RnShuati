@@ -8,10 +8,11 @@ import {TopNavigationBar} from './components/TopNavigationBar';
 import {BottomNavigationBar} from './components/BottomNavigationBar';
 import {DirectoryDrawer} from './components/DirectoryDrawer';
 import {ContentArea} from './components/ContentArea';
+import {SettingsPanel} from './components/SettingsPanel';
 import {styles} from './styles/styles';
 import {DetailScreenRouteProp} from './types';
 import {HomeStackNavigation} from '@/navigation/Types';
-import {AudioManager} from '@/services/AudioManager';
+import {AudioManager, AudioPlaybackInfo} from '@/services/AudioManager';
 import {useQuestionContext} from '@/contexts/QuestionContext';
 
 export default function DetailScreen() {
@@ -38,6 +39,13 @@ export default function DetailScreen() {
     state,
     setPlaybackInfo,
 
+    // 设置面板相关状态
+    showSettingsPanel,
+    settingsPanelTranslateY,
+    settingsOverlayOpacity,
+    playbackSpeed,
+    playbackContentSettings,
+
     // Functions
     animateNav,
     animateDirectory,
@@ -54,6 +62,9 @@ export default function DetailScreen() {
     handleDirectoryEndReached,
     renderDirectoryFooter,
     handleScroll,
+    animateSettingsPanel,
+    handleSpeedChange,
+    handleContentSettingsChange,
   } = useDetailScreen(route);
 
   // // 处理硬件返回键
@@ -105,6 +116,14 @@ export default function DetailScreen() {
       AudioManager.stopCurrent();
     };
   }, [navigation]);
+
+  // 确保在设置面板打开时导航栏不隐藏
+  useEffect(() => {
+    if (showSettingsPanel) {
+      // 如果设置面板打开，确保导航栏显示
+      animateNav(true);
+    }
+  }, [showSettingsPanel, animateNav]);
 
   // 检查剩余题目数量，当少于5题时触发加载更多
   useEffect(() => {
@@ -166,9 +185,36 @@ export default function DetailScreen() {
     );
   }
 
-  const isPlaying =
-    playbackInfo.currentItemId === currentQuestion._id &&
-    playbackInfo.state === 'playing';
+  // 使用useState和useEffect结合，确保UI能响应AudioManager状态变化
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // 监听AudioManager状态变化，确保播放状态与UI同步
+  useEffect(() => {
+    // 初始状态检查
+    setIsPlaying(AudioManager.isItemPlaying(currentQuestion._id));
+
+    // 添加状态变化监听器
+    const handlePlaybackChange = (playbackInfo: AudioPlaybackInfo) => {
+      console.log(
+        'playbackInfo',
+        playbackInfo,
+        playbackInfo.currentItemId === currentQuestion._id &&
+          playbackInfo.state === 'playing',
+      );
+      // 直接使用AudioManager传递的播放信息更新状态
+      setIsPlaying(
+        playbackInfo.currentItemId === currentQuestion._id &&
+          playbackInfo.state === 'playing',
+      );
+    };
+
+    AudioManager.addListener('detailScreenPlayState', handlePlaybackChange);
+
+    // 组件卸载时移除监听器
+    return () => {
+      AudioManager.removeListener('detailScreenPlayState');
+    };
+  }, [currentQuestion._id]);
 
   return (
     <View
@@ -228,6 +274,18 @@ export default function DetailScreen() {
         totalQuestions={state.questions.length}
         handlePlayPause={handlePlayPause}
         isPlaying={isPlaying}
+      />
+
+      {/* 设置面板 */}
+      <SettingsPanel
+        show={showSettingsPanel}
+        settingsPanelTranslateY={settingsPanelTranslateY}
+        settingsOverlayOpacity={settingsOverlayOpacity}
+        playbackSpeed={playbackSpeed}
+        playbackContentSettings={playbackContentSettings}
+        handleSpeedChange={handleSpeedChange}
+        handleContentSettingsChange={handleContentSettingsChange}
+        animateSettingsPanel={animateSettingsPanel}
       />
 
       {/* 新手引导覆盖层 */}

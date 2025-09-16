@@ -102,9 +102,9 @@ export const styles = StyleSheet.create({
     zIndex: 101,
   },
   playButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: '#1da1f2',
     justifyContent: 'center',
     alignItems: 'center',
@@ -117,10 +117,26 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  // 播放状态下的按钮样式
+  playingButton: {
+    backgroundColor: '#e02020', // 播放时使用红色
+    // 播放时添加脉冲效果的外部阴影
+    shadowColor: '#e02020',
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+  },
   playButtonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  // 波形动画容器样式
+  waveformContainer: {
+    width: 30,
+    height: 24,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   // 目录抽屉样式
   directoryContainer: {

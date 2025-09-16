@@ -1266,6 +1266,27 @@ PODS:
     - React-Core
   - react-native-safe-area-context (5.6.1):
     - React-Core
+  - react-native-slider (5.0.1):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - react-native-track-player (4.1.2):
     - React-Core
     - SwiftAudioEx (= 1.1.0)
@@ -1738,6 +1759,7 @@ DEPENDENCIES:
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - react-native-get-random-values (from `../node_modules/react-native-get-random-values`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
   - react-native-track-player (from `../node_modules/react-native-track-player`)
   - "react-native-vector-icons-material-design-icons (from `../node_modules/@react-native-vector-icons/material-design-icons`)"
   - React-nativeconfig (from `../node_modules/react-native/ReactCommon`)
@@ -1864,6 +1886,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-get-random-values"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
+  react-native-slider:
+    :path: "../node_modules/@react-native-community/slider"
   react-native-track-player:
     :path: "../node_modules/react-native-track-player"
   react-native-vector-icons-material-design-icons:
@@ -1982,6 +2006,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: 8b2d1ac72763e0f7aa2d1dcbe26ea84124948ec8
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
   react-native-safe-area-context: 2243039f43d10cb1ea30ec5ac57fc6d1448413f4
+  react-native-slider: 3c4aee9018d2f876a4dbdb18e7a8946bd20a80f1
   react-native-track-player: dd56f9948e03756a217c75e0a61aa04aab65b5a1
   react-native-vector-icons-material-design-icons: 6b7b503b1c6deabae8fea584dd4b22311130d564
   React-nativeconfig: 57781b79e11d5af7573e6f77cbf1143b71802a6d

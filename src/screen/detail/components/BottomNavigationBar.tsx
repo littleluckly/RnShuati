@@ -7,6 +7,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import {styles} from '../styles/styles';
+import {PlayButton} from './PlayButton';
 
 interface BottomNavigationBarProps {
   navOpacity: SharedValue<number>;
@@ -43,25 +44,20 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({
       opacity: navOpacity.value,
       transform: [{translateY: navTranslateYBottom.value}],
       backgroundColor: navOpacity.value > 0 ? '#fff' : 'transparent',
-      height: navOpacity.value > 0 ? 60 : 0,
+      // 让高度随着透明度平滑变化，而不是突兀地切换
+      height: navOpacity.value * 60,
     };
   });
 
   return (
     <>
-      {/* PlayButton放在导航栏上方 */}
-      <Animated.View
-        style={[
-          styles.playButtonContainer,
-          animatedStyle,
-          {
-            bottom: 70 + insets.bottom,
-          },
-        ]}>
-        <TouchableOpacity style={styles.playButton} onPress={handlePlayPause}>
-          <Text style={styles.playButtonText}>{isPlaying ? '停' : '听'}</Text>
-        </TouchableOpacity>
-      </Animated.View>
+      {/* 使用封装的PlayButton组件 */}
+      <PlayButton
+        navOpacity={navOpacity}
+        navTranslateYBottom={navTranslateYBottom}
+        handlePlayPause={handlePlayPause}
+        isPlaying={isPlaying}
+      />
 
       {/* 底部导航栏 */}
       <Animated.View

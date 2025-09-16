@@ -15,6 +15,7 @@ import LottieView from 'lottie-react-native';
 import {routeNameMap} from './constant';
 import {Host} from 'react-native-portalize';
 import ApiDemoScreen from '@/screen/profile/ApiDemoScreen';
+import PlaybackSettingsScreen from '@/screen/profile/PlaybackSettingsScreen';
 import {QuestionProvider} from '@/contexts/QuestionContext';
 import LoginScreen from '@/screen/auth/LoginScreen';
 import RegisterScreen from '@/screen/auth/RegisterScreen';
@@ -36,6 +37,11 @@ const ProfileStack = () => {
         name="ApiDemo"
         component={ApiDemoScreen}
         options={{title: 'API 演示'}}
+      />
+      <Stack.Screen
+        name={routeNameMap.playbackSettingsScreen}
+        component={PlaybackSettingsScreen}
+        options={{title: '播放设置'}}
       />
       {/* 个人中心页面可以导航到登录页 */}
       <Stack.Screen

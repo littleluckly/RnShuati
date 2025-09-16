@@ -41,6 +41,12 @@ export default function ProfileScreen() {
     );
   };
 
+  // 导航到播放设置页面
+  const navigateToPlaybackSettings = () => {
+    // @ts-ignore
+    navigation.navigate('PlaybackSettings');
+  };
+
   return (
     <View style={{flex: 1, backgroundColor: '#f5f5f5'}}>
       <View
@@ -148,6 +154,17 @@ export default function ProfileScreen() {
         <Text style={{flex: 1}}>我的编辑</Text>
         <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
       </View>
+      {/* 播放设置选项 */}
+      <TouchableOpacity style={styles.setItem} onPress={navigateToPlaybackSettings}>
+        <Ionicons
+          name="volume-high-outline"
+          size={24}
+          color="#3498db"
+          style={{marginRight: 6}}
+        />
+        <Text style={{flex: 1}}>播放设置</Text>
+        <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
+      </TouchableOpacity>
       {/* 新增重置新手引导选项 */}
       <TouchableOpacity style={styles.setItem} onPress={handleResetOnboarding}>
         <Ionicons

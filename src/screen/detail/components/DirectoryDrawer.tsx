@@ -1,9 +1,16 @@
 import React, {useCallback, memo, useEffect, useState} from 'react';
 import {View, TouchableOpacity, Text, FlatList} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import Animated, {useSharedValue, useAnimatedStyle, withTiming, useAnimatedReaction, type SharedValue, runOnJS} from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  useAnimatedReaction,
+  type SharedValue,
+  runOnJS,
+} from 'react-native-reanimated';
 import {styles} from '../styles/styles';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 
 // 创建一个优化的目录项组件
 const DirectoryItem = memo(
@@ -95,7 +102,7 @@ export const DirectoryDrawer: React.FC<DirectoryDrawerProps> = ({
   // 使用useAnimatedReaction监听isRendered的变化，更新React状态
   useAnimatedReaction(
     () => isRendered.value,
-    (currentValue) => {
+    currentValue => {
       if (showDirectory) {
         // 当显示目录时，始终设置为可见
         runOnJS(setIsVisible)(true);
@@ -104,7 +111,7 @@ export const DirectoryDrawer: React.FC<DirectoryDrawerProps> = ({
         runOnJS(setIsVisible)(false);
       }
     },
-    [showDirectory]
+    [showDirectory],
   );
   // 渲染目录项
   const renderDirectoryItem = useCallback(
@@ -154,8 +161,8 @@ export const DirectoryDrawer: React.FC<DirectoryDrawerProps> = ({
           containerStyle,
           {
             paddingTop: insets.top,
-            paddingBottom: insets.bottom
-          }
+            paddingBottom: insets.bottom,
+          },
         ]}>
         <View style={styles.directoryHeader}>
           <Text style={styles.directoryTitle}>题目目录</Text>
