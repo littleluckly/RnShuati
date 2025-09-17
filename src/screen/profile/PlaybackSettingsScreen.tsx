@@ -1,11 +1,19 @@
 import React, {useState, useEffect, useLayoutEffect} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, Alert} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ScrollView,
+} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {AudioManager, PlaybackContentSettings} from '@/services/AudioManager';
 import Slider from '@react-native-community/slider';
 import {useNavigation} from '@react-navigation/native';
 import {HomeStackNavigation} from '@/navigation/Types';
+import loopAudioManager, {LoopMode} from '@/services/LoopAudioManager';
 
 export default function PlaybackSettingsScreen() {
   const navigation = useNavigation<HomeStackNavigation>();
@@ -26,9 +34,31 @@ export default function PlaybackSettingsScreen() {
       includeDetailAnswer: true,
     });
 
+  // 循环播放模式状态
+  const [loopMode, setLoopMode] = useState<LoopMode>(LoopMode.None);
+
+  // 单题循环设置状态
+  // const [singleQuestionLoopSettings, setSingleQuestionLoopSettings] =
+  //   useState<SingleQuestionLoopSettings>({
+  //     simpleAnswerPlayCount: 1,
+  //     detailAnswerPlayCount: 1,
+  //   });
+
   // 初始化时加载当前设置
   useEffect(() => {
-    loadCurrentSettings();
+    const loadSettings = async () => {
+      try {
+        const speed = await AudioManager.getPlaybackSpeed();
+        setPlaybackSpeed(speed);
+
+        const settings = await AudioManager.getPlaybackContentSettings();
+        setPlaybackContentSettings(settings);
+      } catch (error) {
+        console.error('加载播放设置失败:', error);
+      }
+    };
+
+    loadSettings();
   }, []);
 
   // 加载当前设置
@@ -87,6 +117,25 @@ export default function PlaybackSettingsScreen() {
     }
   };
 
+  // 处理循环播放模式变化
+  const handleLoopModeChange = (mode: LoopMode) => {
+    setLoopMode(mode);
+    loopAudioManager.setLoopMode(mode);
+    // loopPlaybackManager.setLoopMode(mode);
+  };
+
+  // // 处理单题循环设置变化
+  // const handleSingleQuestionLoopSettingsChange = (
+  //   key: keyof SingleQuestionLoopSettings,
+  //   value: number,
+  // ) => {
+  //   setSingleQuestionLoopSettings(prev => {
+  //     const newSettings = {...prev, [key]: value};
+  //     loopPlaybackManager.setSingleQuestionLoopSettings(newSettings);
+  //     return newSettings;
+  //   });
+  // };
+
   // 预设的播放速度选项
   const speedPresets = [0.5, 1.0, 1.5, 2.0];
 
@@ -112,7 +161,7 @@ export default function PlaybackSettingsScreen() {
       </View>
 
       {/* 设置内容区域 */}
-      <View style={styles.content}>
+      <ScrollView style={styles.content}>
         {/* 播放速度设置 */}
         <View style={styles.settingSection}>
           <Text style={styles.sectionTitle}>语音播放速度</Text>
@@ -232,7 +281,64 @@ export default function PlaybackSettingsScreen() {
             </Text>
           </View>
         </View>
-      </View>
+
+        {/* 循环播放设置 */}
+        <View style={styles.settingSection}>
+          <Text style={styles.sectionTitle}>循环播放设置</Text>
+
+          {/* 循环模式选项 */}
+          <View style={styles.contentOptionContainer}>
+            <TouchableOpacity
+              style={[
+                styles.contentOption,
+                loopMode === 'none' && styles.contentOptionSelected,
+              ]}
+              onPress={() => handleLoopModeChange(LoopMode.None)}
+              activeOpacity={0.7}>
+              <Text style={styles.contentOptionText}>关闭循环</Text>
+              {loopMode === LoopMode.None && (
+                <Icon name="check" size={16} color="#4CAF50" />
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.contentOption,
+                loopMode === LoopMode.Single && styles.contentOptionSelected,
+              ]}
+              onPress={() => handleLoopModeChange(LoopMode.Single)}
+              activeOpacity={0.7}>
+              <Text style={styles.contentOptionText}>单题循环</Text>
+              {loopMode === LoopMode.Single && (
+                <Icon name="check" size={16} color="#4CAF50" />
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.contentOption,
+                loopMode === 'list' && styles.contentOptionSelected,
+              ]}
+              onPress={() => handleLoopModeChange(LoopMode.List)}
+              activeOpacity={0.7}>
+              <Text style={styles.contentOptionText}>列表循环</Text>
+              {loopMode === LoopMode.List && (
+                <Icon name="check" size={16} color="#4CAF50" />
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* 循环模式说明 */}
+          <View style={styles.tipContainer}>
+            <Text style={styles.tipText}>
+              {loopMode === 'none' && '关闭循环：每道题只播放一次'}
+              {loopMode === 'single' &&
+                '单题循环：重复播放当前题目直到手动切换'}
+              {loopMode === 'list' && '列表循环：播放完所有题目后重新开始播放'}
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -366,6 +472,44 @@ const styles = StyleSheet.create({
   tipText: {
     fontSize: 12,
     color: '#666',
+    textAlign: 'center',
+  },
+  singleLoopSettingsContainer: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+  },
+  singleLoopSettingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  singleLoopSettingLabel: {
+    fontSize: 14,
+    color: '#333',
+    flex: 1,
+  },
+  numberInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  numberButton: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  numberValue: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+    minWidth: 32,
     textAlign: 'center',
   },
 });

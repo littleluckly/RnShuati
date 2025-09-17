@@ -28,3 +28,11 @@ export type HomeStackParamList = {
   [routeNameMap.playbackSettingsScreen]: undefined;
 };
 export type HomeStackNavigation = NavigationProp<HomeStackParamList>;
+
+
+export type ProfileStackParamList = {
+  [routeNameMap.profileTab]: undefined;
+  [routeNameMap.profileScreen]: undefined;
+  [routeNameMap.playbackSettingsScreen]: { from?: 'detailScreen' | 'profileScreen' | string };
+};
+export type ProfileStackNavigation = NavigationProp<ProfileStackParamList>;

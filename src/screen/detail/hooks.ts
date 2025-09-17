@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { HomeStackNavigation } from '@/navigation/Types';
 import { routeNameMap } from '@/navigation/constant';
 import { useQuestionContext } from '@/contexts/QuestionContext';
 import { AudioManager, AudioPlaybackInfo, PlaybackContentSettings } from '@/services/AudioManager';
+import loopAudioManager, { LoopMode } from '@/services/LoopAudioManager';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 import {
   shouldShowOnboarding,
@@ -52,6 +53,7 @@ export const useDetailScreen = (route: any) => {
     includeSimpleAnswer: true,
     includeDetailAnswer: true,
   }); // 播放内容设置状态
+  const [loopMode, setLoopMode] = useState<LoopMode>(LoopMode.None); // 循环模式状态
 
   // 音频播放状态
   const [playbackInfo, setPlaybackInfo] = useState<AudioPlaybackInfo>({
@@ -78,21 +80,27 @@ export const useDetailScreen = (route: any) => {
   // 组件挂载时添加音频监听器
   useEffect(() => {
     AudioManager.addListener('detailScreen', setPlaybackInfo);
-    
-    // 初始化播放速度
-    const initPlaybackSpeed = async () => {
+
+    // 初始化播放设置
+    const initPlaybackSettings = async () => {
       try {
+        // 初始化播放速度
         const speed = await AudioManager.getPlaybackSpeed();
         setPlaybackSpeed(speed);
+
+        // 初始化循环模式
+        await loopAudioManager.loadLocalLoopMode();
+        setLoopMode(loopAudioManager.loopMode);
       } catch (error) {
-        console.error('初始化播放速度失败:', error);
-        // 出错时使用默认速度1.0
+        console.error('初始化播放设置失败:', error);
+        // 出错时使用默认值
         setPlaybackSpeed(1.0);
+        setLoopMode(LoopMode.None);
       }
     };
-    
-    initPlaybackSpeed();
-    
+
+    initPlaybackSettings();
+
     return () => {
       AudioManager.removeListener('detailScreen');
     };
@@ -125,17 +133,25 @@ export const useDetailScreen = (route: any) => {
       settingsPanelTranslateY.value = withTiming(show ? 0 : 300, { duration: 300 });
       settingsOverlayOpacity.value = withTiming(show ? 1 : 0, { duration: 200 });
       setShowSettingsPanel(show);
-      
+
       // 如果显示设置面板，获取当前播放速度和内容设置
       if (show) {
         try {
           // 获取播放速度
+          await AudioManager.loadPlaybackSpeed();
           const speed = await AudioManager.getPlaybackSpeed();
           setPlaybackSpeed(speed);
-          
+
           // 获取播放内容设置
+
+          // 加载用户的播放设置
+          await AudioManager.loadPlaybackContentSettings();
           const settings = AudioManager.getPlaybackContentSettings();
           setPlaybackContentSettings(settings);
+
+          // 获取循环模式
+          await loopAudioManager.loadLocalLoopMode();
+          setLoopMode(loopAudioManager.loopMode);
         } catch (error) {
           console.error('获取播放设置失败:', error);
         }
@@ -156,7 +172,7 @@ export const useDetailScreen = (route: any) => {
           console.error('获取播放速度失败:', error);
         }
       };
-      
+
       updatePlaybackSpeed();
     }
   }, [showSettingsPanel]);
@@ -322,6 +338,29 @@ export const useDetailScreen = (route: any) => {
     }
   }, [playbackInfo.currentItemId, currentQuestion]);
 
+  // 处理循环模式变化
+  const handleLoopModeChange = useCallback(async (mode: LoopMode) => {
+    try {
+      setLoopMode(mode);
+      await loopAudioManager.setLoopMode(mode);
+      // 如果当前正在播放，重新开始播放以应用新的循环模式
+      if (playbackInfo.currentItemId && currentQuestion) {
+        AudioManager.stopCurrent();
+        // todo: 切换循环模式后，需要在播放结束中判断循环模式，决定是否重新播放，还是切换到下一题
+        // AudioManager.startPlayback(playbackInfo.currentItemId, {
+        //   audio_question: currentQuestion.files?.audio_question,
+        //   audio_answer_simple: currentQuestion.files?.audio_answer_simple,
+        //   audio_answer_detail: currentQuestion.files?.audio_answer_detail,
+        // });
+      }
+    } catch (error) {
+      console.error('设置循环模式失败:', error);
+      // 恢复之前的模式
+      await loopAudioManager.loadLocalLoopMode();
+      setLoopMode(loopAudioManager.loopMode);
+    }
+  }, [playbackInfo.currentItemId, currentQuestion]);
+
   // 处理新手引导完成
   const handleOnboardingComplete = useCallback(async () => {
     await markOnboardingCompleted();
@@ -408,7 +447,7 @@ export const useDetailScreen = (route: any) => {
           console.error('获取播放速度失败:', error);
         }
       };
-      
+
       updatePlaybackSpeed();
     }
   }, [showSettingsPanel]);
@@ -430,15 +469,16 @@ export const useDetailScreen = (route: any) => {
     currentQuestion,
     currentIndex,
     state,
-    
+
     // 设置面板相关状态
     showSettingsPanel,
     settingsPanelTranslateY,
-      settingsOverlayOpacity,
-      playbackSpeed,
-      playbackContentSettings,
+    settingsOverlayOpacity,
+    playbackSpeed,
+    playbackContentSettings,
+    loopMode,
 
-      // Functions
+    // Functions
     animateNav,
     animateDirectory,
     toggleNav,
@@ -457,5 +497,6 @@ export const useDetailScreen = (route: any) => {
     animateSettingsPanel,
     handleSpeedChange,
     handleContentSettingsChange,
+    handleLoopModeChange,
   };
 };

@@ -45,6 +45,7 @@ export default function DetailScreen() {
     settingsOverlayOpacity,
     playbackSpeed,
     playbackContentSettings,
+    loopMode,
 
     // Functions
     animateNav,
@@ -64,6 +65,7 @@ export default function DetailScreen() {
     handleScroll,
     animateSettingsPanel,
     handleSpeedChange,
+    handleLoopModeChange,
     handleContentSettingsChange,
   } = useDetailScreen(route);
 
@@ -276,8 +278,10 @@ export default function DetailScreen() {
         settingsPanelTranslateY={settingsPanelTranslateY}
         settingsOverlayOpacity={settingsOverlayOpacity}
         playbackSpeed={playbackSpeed}
+        loopMode={loopMode}
         playbackContentSettings={playbackContentSettings}
         handleSpeedChange={handleSpeedChange}
+        handleLoopModeChange={handleLoopModeChange}
         handleContentSettingsChange={handleContentSettingsChange}
         animateSettingsPanel={animateSettingsPanel}
       />

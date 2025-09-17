@@ -297,7 +297,7 @@ class AudioManagerService {
   }
 
   // 加载播放速度设置
-  private async loadPlaybackSpeed(): Promise<void> {
+  public async loadPlaybackSpeed(): Promise<void> {
     try {
       const savedSpeed = await AsyncStorage.getItem(PLAYBACK_SPEED_KEY);
       if (savedSpeed) {

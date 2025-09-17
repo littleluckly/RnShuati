@@ -1,5 +1,11 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
 import Slider from '@react-native-community/slider';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Animated, {
@@ -7,6 +13,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import loopAudioManager, {LoopMode} from '@/services/LoopAudioManager';
 
 export interface PlaybackContentSettings {
   includeSimpleAnswer: boolean;
@@ -19,8 +26,10 @@ interface SettingsPanelProps {
   settingsOverlayOpacity: SharedValue<number>;
   playbackSpeed: number;
   playbackContentSettings: PlaybackContentSettings;
+  loopMode: LoopMode;
   handleSpeedChange: (speed: number) => void;
   handleContentSettingsChange: (settings: PlaybackContentSettings) => void;
+  handleLoopModeChange: (mode: LoopMode) => void;
   animateSettingsPanel: (show: boolean) => void;
 }
 
@@ -30,8 +39,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   settingsOverlayOpacity,
   playbackSpeed,
   playbackContentSettings,
+  loopMode,
   handleSpeedChange,
   handleContentSettingsChange,
+  handleLoopModeChange,
   animateSettingsPanel,
 }) => {
   const insets = useSafeAreaInsets();
@@ -92,126 +103,186 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </TouchableOpacity>
         </View>
 
-        {/* 播放速度设置 */}
-        <View style={styles.settingSection}>
-          <Text style={styles.settingTitle}>语音播放速度</Text>
+        <ScrollView>
+          {/* 播放速度设置 */}
+          <View style={styles.settingSection}>
+            <Text style={styles.settingTitle}>语音播放速度</Text>
 
-          {/* 进度条控制 */}
-          <View style={styles.sliderContainer}>
-            <Text style={styles.speedLabel}>0.5x</Text>
-            <Slider
-              key={`slider-${playbackSpeed}`}
-              style={styles.slider}
-              minimumValue={0.5}
-              maximumValue={2.0}
-              step={0.1}
-              value={playbackSpeed}
-              onValueChange={handleSpeedChange}
-              minimumTrackTintColor="#4CAF50"
-              maximumTrackTintColor="#DDD"
-              thumbTintColor="#4CAF50"
-            />
-            <Text style={styles.speedLabel}>2.0x</Text>
-          </View>
+            {/* 进度条控制 */}
+            <View style={styles.sliderContainer}>
+              <Text style={styles.speedLabel}>0.5x</Text>
+              <Slider
+                key={`slider-${playbackSpeed}`}
+                style={styles.slider}
+                minimumValue={0.5}
+                maximumValue={2.0}
+                step={0.1}
+                value={playbackSpeed}
+                onValueChange={handleSpeedChange}
+                minimumTrackTintColor="#4CAF50"
+                maximumTrackTintColor="#DDD"
+                thumbTintColor="#4CAF50"
+              />
+              <Text style={styles.speedLabel}>2.0x</Text>
+            </View>
 
-          {/* 预设速度按钮 */}
-          <View style={styles.presetContainer}>
-            {speedPresets.map(speed => (
-              <TouchableOpacity
-                key={speed}
-                style={[
-                  styles.presetButton,
-                  playbackSpeed === speed && styles.presetButtonActive,
-                ]}
-                onPress={() => handleSpeedChange(speed)}
-                activeOpacity={0.7}>
-                <Text
+            {/* 预设速度按钮 */}
+            <View style={styles.presetContainer}>
+              {speedPresets.map(speed => (
+                <TouchableOpacity
+                  key={speed}
                   style={[
-                    styles.presetButtonText,
-                    playbackSpeed === speed && styles.presetButtonTextActive,
-                  ]}>
-                  {formatSpeedText(speed)}
-                </Text>
+                    styles.presetButton,
+                    playbackSpeed === speed && styles.presetButtonActive,
+                  ]}
+                  onPress={() => handleSpeedChange(speed)}
+                  activeOpacity={0.7}>
+                  <Text
+                    style={[
+                      styles.presetButtonText,
+                      playbackSpeed === speed && styles.presetButtonTextActive,
+                    ]}>
+                    {formatSpeedText(speed)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* 当前速度显示 */}
+            <View style={styles.currentSpeedContainer}>
+              <Text style={styles.currentSpeedText}>
+                当前速度: {formatSpeedText(playbackSpeed)}
+              </Text>
+            </View>
+          </View>
+
+          {/* 播放内容设置 */}
+          <View style={[styles.settingSection, styles.borderTop]}>
+            <Text style={styles.settingTitle}>播放内容设置</Text>
+
+            {/* 内容选项开关 */}
+            <View style={styles.contentOptionContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.contentOption,
+                  playbackContentSettings.includeSimpleAnswer &&
+                    styles.contentOptionSelected,
+                ]}
+                onPress={() => {
+                  // 确保至少有一个选项被选中
+                  if (
+                    !playbackContentSettings.includeSimpleAnswer &&
+                    !playbackContentSettings.includeDetailAnswer
+                  ) {
+                    return;
+                  }
+                  handleContentSettingsChange({
+                    ...playbackContentSettings,
+                    includeSimpleAnswer:
+                      !playbackContentSettings.includeSimpleAnswer,
+                  });
+                }}
+                activeOpacity={0.7}>
+                <Text style={styles.contentOptionText}>精简答案</Text>
+                {playbackContentSettings.includeSimpleAnswer && (
+                  <Icon name="check" size={16} color="#4CAF50" />
+                )}
               </TouchableOpacity>
-            ))}
+
+              <TouchableOpacity
+                style={[
+                  styles.contentOption,
+                  playbackContentSettings.includeDetailAnswer &&
+                    styles.contentOptionSelected,
+                ]}
+                onPress={() => {
+                  // 确保至少有一个选项被选中
+                  if (
+                    !playbackContentSettings.includeSimpleAnswer &&
+                    !playbackContentSettings.includeDetailAnswer
+                  ) {
+                    return;
+                  }
+                  handleContentSettingsChange({
+                    ...playbackContentSettings,
+                    includeDetailAnswer:
+                      !playbackContentSettings.includeDetailAnswer,
+                  });
+                }}
+                activeOpacity={0.7}>
+                <Text style={styles.contentOptionText}>扩展答案</Text>
+                {playbackContentSettings.includeDetailAnswer && (
+                  <Icon name="check" size={16} color="#4CAF50" />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* 提示信息 */}
+            <View style={styles.tipContainer}>
+              <Text style={styles.tipText}>
+                至少选择一个播放内容选项。详细解析不支持播放。
+              </Text>
+            </View>
           </View>
 
-          {/* 当前速度显示 */}
-          <View style={styles.currentSpeedContainer}>
-            <Text style={styles.currentSpeedText}>
-              当前速度: {formatSpeedText(playbackSpeed)}
-            </Text>
+          {/* 循环播放设置 */}
+          <View style={[styles.settingSection, styles.borderTop]}>
+            <Text style={styles.settingTitle}>循环播放设置</Text>
+
+            {/* 循环模式选项 */}
+            <View style={styles.contentOptionContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.contentOption,
+                  loopMode === LoopMode.None && styles.contentOptionSelected,
+                ]}
+                onPress={() => handleLoopModeChange(LoopMode.None)}
+                activeOpacity={0.7}>
+                <Text style={styles.contentOptionText}>关闭循环</Text>
+                {loopMode === LoopMode.None && (
+                  <Icon name="check" size={16} color="#4CAF50" />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.contentOption,
+                  loopMode === LoopMode.Single && styles.contentOptionSelected,
+                ]}
+                onPress={() => handleLoopModeChange(LoopMode.Single)}
+                activeOpacity={0.7}>
+                <Text style={styles.contentOptionText}>单题循环</Text>
+                {loopMode === LoopMode.Single && (
+                  <Icon name="check" size={16} color="#4CAF50" />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.contentOption,
+                  loopMode === LoopMode.List && styles.contentOptionSelected,
+                ]}
+                onPress={() => handleLoopModeChange(LoopMode.List)}
+                activeOpacity={0.7}>
+                <Text style={styles.contentOptionText}>列表循环</Text>
+                {loopMode === LoopMode.List && (
+                  <Icon name="check" size={16} color="#4CAF50" />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* 循环模式说明 */}
+            <View style={styles.tipContainer}>
+              <Text style={styles.tipText}>
+                {loopMode === LoopMode.None && '关闭循环：每道题只播放一次'}
+                {loopMode === LoopMode.Single &&
+                  '单题循环：重复播放当前题目直到手动切换'}
+                {loopMode === LoopMode.List &&
+                  '列表循环：播放完所有题目后重新开始播放'}
+              </Text>
+            </View>
           </View>
-        </View>
-
-        {/* 播放内容设置 */}
-        <View style={[styles.settingSection, styles.borderTop]}>
-          <Text style={styles.settingTitle}>播放内容设置</Text>
-
-          {/* 内容选项开关 */}
-          <View style={styles.contentOptionContainer}>
-            <TouchableOpacity
-              style={[
-                styles.contentOption,
-                playbackContentSettings.includeSimpleAnswer &&
-                  styles.contentOptionSelected,
-              ]}
-              onPress={() => {
-                // 确保至少有一个选项被选中
-                if (
-                  !playbackContentSettings.includeSimpleAnswer &&
-                  !playbackContentSettings.includeDetailAnswer
-                ) {
-                  return;
-                }
-                handleContentSettingsChange({
-                  ...playbackContentSettings,
-                  includeSimpleAnswer:
-                    !playbackContentSettings.includeSimpleAnswer,
-                });
-              }}
-              activeOpacity={0.7}>
-              <Text style={styles.contentOptionText}>精简答案</Text>
-              {playbackContentSettings.includeSimpleAnswer && (
-                <Icon name="check" size={16} color="#4CAF50" />
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.contentOption,
-                playbackContentSettings.includeDetailAnswer &&
-                  styles.contentOptionSelected,
-              ]}
-              onPress={() => {
-                // 确保至少有一个选项被选中
-                if (
-                  !playbackContentSettings.includeSimpleAnswer &&
-                  !playbackContentSettings.includeDetailAnswer
-                ) {
-                  return;
-                }
-                handleContentSettingsChange({
-                  ...playbackContentSettings,
-                  includeDetailAnswer:
-                    !playbackContentSettings.includeDetailAnswer,
-                });
-              }}
-              activeOpacity={0.7}>
-              <Text style={styles.contentOptionText}>扩展答案</Text>
-              {playbackContentSettings.includeDetailAnswer && (
-                <Icon name="check" size={16} color="#4CAF50" />
-              )}
-            </TouchableOpacity>
-          </View>
-
-          {/* 提示信息 */}
-          <View style={styles.tipContainer}>
-            <Text style={styles.tipText}>
-              至少选择一个播放内容选项。详细解析不支持播放。
-            </Text>
-          </View>
-        </View>
+        </ScrollView>
 
         {/* 面板底部空间 */}
         <View style={styles.bottomSpacer} />
