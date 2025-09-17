@@ -39,6 +39,7 @@ export default function PlaybackSettingsScreen() {
       setPlaybackSpeed(speed);
 
       // 获取播放内容设置
+      await AudioManager.loadPlaybackContentSettings();
       const contentSettings = AudioManager.getPlaybackContentSettings();
       setPlaybackContentSettings(contentSettings);
     } catch (error) {
