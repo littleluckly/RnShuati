@@ -195,12 +195,6 @@ export default function DetailScreen() {
 
     // 添加状态变化监听器
     const handlePlaybackChange = (playbackInfo: AudioPlaybackInfo) => {
-      console.log(
-        'playbackInfo',
-        playbackInfo,
-        playbackInfo.currentItemId === currentQuestion._id &&
-          playbackInfo.state === 'playing',
-      );
       // 直接使用AudioManager传递的播放信息更新状态
       setIsPlaying(
         playbackInfo.currentItemId === currentQuestion._id &&
