@@ -54,6 +54,8 @@ class AudioManagerService {
   private playbackState: State = State.None;
   private listeners: Map<string, AudioPlaybackListener> = new Map();
   private isTrackPlayerInitialized: boolean = false;
+  private hasSetUpEvents: boolean = false; // 新增：标记是否已设置事件监听器
+  private eventSubscriptions: Array<{ remove: () => void }> = []; // 存储事件监听器引用
   private playbackContentSettings: PlaybackContentSettings = DEFAULT_PLAYBACK_CONTENT_SETTINGS;
   private playbackSpeed: number = DEFAULT_PLAYBACK_SPEED; // 添加播放速度缓存
 
@@ -150,38 +152,76 @@ class AudioManagerService {
 
   // 设置 TrackPlayer 事件监听
   private setupTrackPlayerEvents(): void {
-    TrackPlayer.addEventListener(Event.PlaybackQueueEnded, async () => {
-      // 整个音频队列播放完成
-      console.log('所有音频播放完成');
-      this.playbackState = State.Ended;
-      this.previousItemId = this.currentItemId; // 切换到下一个音频时，更新前一个音频的ID
-      this.currentItemId = null;
-      this.currentAudioIndex = 0;
-      this.audioQueue = [];
+    // 如果已经设置过事件监听器，则不再重复设置
+    if (this.hasSetUpEvents) {
+      console.log('事件监听器已经设置过，跳过重复设置');
+      return;
+    }
 
-      this.notifyListeners();
-    });
+    // 存储每个事件监听器的引用
+    this.eventSubscriptions.push(
+      TrackPlayer.addEventListener(Event.PlaybackQueueEnded, async () => {
+        // 整个音频队列播放完成
+        console.log('所有音频播放完成');
+        this.playbackState = State.Ended;
+        this.previousItemId = this.currentItemId; // 切换到下一个音频时，更新前一个音频的ID
+        this.currentItemId = null;
+        this.currentAudioIndex = 0;
+        this.audioQueue = [];
+
+        this.notifyListeners();
+      })
+    );
 
     // todo 事件名称已废弃，改成PlaybackActiveTrackChanged
-    TrackPlayer.addEventListener(Event.PlaybackTrackChanged, async (data) => {
-      // 当前播放的音频发生变化
-      if (data.nextTrack !== null && data.nextTrack !== undefined) {
-        this.currentAudioIndex = data.nextTrack;
-        console.log(`切换到音频 ${this.currentAudioIndex + 1}/${this.audioQueue.length}`);
+    this.eventSubscriptions.push(
+      TrackPlayer.addEventListener(Event.PlaybackTrackChanged, async (data) => {
+        // 当前播放的音频发生变化
+        if (data.nextTrack !== null && data.nextTrack !== undefined) {
+          this.currentAudioIndex = data.nextTrack;
+          console.log(`切换到音频 ${this.currentAudioIndex + 1}/${this.audioQueue.length}`);
+          this.notifyListeners();
+        }
+      })
+    );
+
+    this.eventSubscriptions.push(
+      TrackPlayer.addEventListener(Event.PlaybackState, async (data) => {
+        if (data.state !== State.Loading && data.state !== State.Ready && data.state !== State.Buffering) {
+          console.log('播放状态变化:', data.state);
+        }
+        if ([State.Playing, State.Buffering, State.Paused].includes(data.state)) {
+          this.playbackState = data.state;
+        } else if (data.state === State.Stopped || data.state === State.None) {
+          this.playbackState = State.None;
+        }
+
         this.notifyListeners();
-      }
-    });
+      })
+    );
 
-    TrackPlayer.addEventListener(Event.PlaybackState, async (data) => {
-      console.log('播放状态变化:', data.state);
-      if ([State.Playing, State.Buffering, State.Paused].includes(data.state)) {
-        this.playbackState = data.state;
-      } else if (data.state === State.Stopped || data.state === State.None) {
-        this.playbackState = State.None;
-      }
+    // 标记为已设置事件监听器
+    this.hasSetUpEvents = true;
+    console.log('TrackPlayer 事件监听器设置完成');
+  }
 
-      this.notifyListeners();
-    });
+  // 清理 TrackPlayer 事件监听
+  private cleanupTrackPlayerEvents(): void {
+    try {
+      // 移除所有存储的事件监听器
+      this.eventSubscriptions.forEach(subscription => {
+        try {
+          subscription.remove();
+        } catch (error) {
+          console.error('移除单个事件监听器失败:', error);
+        }
+      });
+      this.eventSubscriptions = [];
+      this.hasSetUpEvents = false;
+      console.log('TrackPlayer 事件监听器已清理');
+    } catch (error) {
+      console.error('清理 TrackPlayer 事件监听器失败:', error);
+    }
   }
 
   // 添加监听器
@@ -210,6 +250,8 @@ class AudioManagerService {
   // 停止当前播放
   public async stopCurrent(): Promise<void> {
     try {
+      console.log('停止当前播放--stop');
+      console.log()
       if (this.isTrackPlayerInitialized) {
         await TrackPlayer.stop();
         await TrackPlayer.reset();
@@ -224,6 +266,19 @@ class AudioManagerService {
     this.audioQueue = [];
     this.playbackState = State.None;
     this.notifyListeners();
+  }
+
+  // 清理所有资源
+  public async cleanup(): Promise<void> {
+    try {
+      await this.stopCurrent();
+      this.cleanupTrackPlayerEvents();
+      this.listeners.clear();
+      this.isTrackPlayerInitialized = false;
+      console.log('AudioManager 资源已清理');
+    } catch (error) {
+      console.error('清理 AudioManager 资源失败:', error);
+    }
   }
 
   // 暂停当前播放
@@ -346,6 +401,23 @@ class AudioManagerService {
     return { ...this.playbackContentSettings };
   }
 
+  public async refreshAudioQueue(audioFiles: {
+    audio_question?: string;
+    audio_answer_simple?: string;
+    audio_answer_detail?: string;
+  }): Promise<void> {
+
+    // 根据用户设置构建音频队列
+    this.audioQueue = [];
+    if (audioFiles.audio_question) this.audioQueue.push(audioFiles.audio_question);
+    if (this.playbackContentSettings.includeSimpleAnswer && audioFiles.audio_answer_simple) {
+      this.audioQueue.push(audioFiles.audio_answer_simple);
+    }
+    if (this.playbackContentSettings.includeDetailAnswer && audioFiles.audio_answer_detail) {
+      this.audioQueue.push(audioFiles.audio_answer_detail);
+    }
+  }
+
   // 开始播放音频队列
   public async startPlayback(itemId: string, audioFiles: {
     audio_question?: string;
@@ -355,7 +427,7 @@ class AudioManagerService {
     try {
       // 确保 TrackPlayer 已就绪
       await this.ensureTrackPlayerReady();
-
+      console.log('开始播放音频队列00000', itemId, audioFiles);
       // 如果当前正在播放其他项目，先停止
       if (this.currentItemId && this.currentItemId !== itemId) {
         await this.stopCurrent();
@@ -371,7 +443,7 @@ class AudioManagerService {
           return;
         }
         // 如果是同一个项目但状态是 State.None，重新构建队列
-        await this.stopCurrent();
+        // await this.stopCurrent();
       }
 
       // 根据用户设置构建音频队列
@@ -533,7 +605,13 @@ class AudioManagerService {
   }
 
   // 检查特定项目是否正在播放
-  public isItemPlaying(itemId: string): boolean {
+  public isItemPlaying(itemId: string, isListLoopMode: boolean = false): boolean {
+    // 在列表循环模式下，只要音频在播放中，就认为当前项目在播放
+    // 这是为了确保在切换题目时，播放按钮状态能正确反映实际播放状态
+    if (isListLoopMode) {
+      return this.playbackState === 'playing';
+    }
+    // 非列表循环模式下，需要检查项目ID和播放状态
     return this.currentItemId === itemId && this.playbackState === 'playing';
   }
 

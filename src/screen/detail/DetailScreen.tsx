@@ -15,6 +15,7 @@ import {HomeStackNavigation} from '@/navigation/Types';
 import {audioManager, AudioPlaybackInfo} from '@/services/AudioManager';
 import {useQuestionContext} from '@/contexts/QuestionContext';
 import {State} from 'react-native-track-player';
+import {LoopMode} from '@/services/LoopAudioManager';
 
 export default function DetailScreen() {
   const {state: questionState, loadMore} = useQuestionContext();
@@ -115,6 +116,7 @@ export default function DetailScreen() {
       navigation.getParent()?.setOptions({
         tabBarStyle: {display: 'flex'},
       });
+      console.log('组件卸载时停止音频播放');
       // 组件卸载时停止音频播放
       audioManager.stopCurrent();
     };
@@ -191,18 +193,46 @@ export default function DetailScreen() {
   // 使用useState和useEffect结合，确保UI能响应AudioManager状态变化
   const [isPlaying, setIsPlaying] = useState(false);
 
+  // 用于跟踪列表循环模式下是否正在进行曲目切换
+  const [isSwitchingTrack, setIsSwitchingTrack] = useState(false);
+
   // 监听AudioManager状态变化，确保播放状态与UI同步
   useEffect(() => {
     // 初始状态检查
-    setIsPlaying(audioManager.isItemPlaying(currentQuestion._id));
+    // 在列表循环模式下，传递true以启用特殊的播放状态检查逻辑
+    setIsPlaying(audioManager.isItemPlaying(currentQuestion._id, loopMode === LoopMode.List));
 
     // 添加状态变化监听器
     const handlePlaybackChange = (playbackInfo: AudioPlaybackInfo) => {
-      // 直接使用AudioManager传递的播放信息更新状态
-      setIsPlaying(
-        playbackInfo.currentItemId === currentQuestion._id &&
-          playbackInfo.state === State.Playing,
-      );
+      if (loopMode === LoopMode.List) {
+        // 在列表循环模式下，确保播放状态的连续性
+        // 1. 如果当前正在播放，保持播放状态
+        // 2. 如果当前播放结束(State.Ended)，但即将切换到下一首，保持播放状态
+        // 3. 只有当明确暂停或停止时，才显示暂停状态
+        if (playbackInfo.state === State.Ended) {
+          // 播放结束，但由于是列表循环，即将切换到下一首
+          // 设置切换标志，但暂时保持播放状态
+          setIsSwitchingTrack(true);
+          // 短暂延迟后再检查实际状态，确保切换过程中UI不跳变
+          setTimeout(() => {
+            setIsSwitchingTrack(false);
+          }, 600);
+        } else if (playbackInfo.state === State.Playing) {
+          // 正常播放状态
+          setIsSwitchingTrack(false);
+        }
+
+        // 在列表循环模式下，UI播放状态由以下条件决定：
+        // 1. 音频正在播放
+        // 2. 或者正在进行曲目切换过程中
+        setIsPlaying(playbackInfo.state === State.Playing || isSwitchingTrack);
+      } else {
+        // 非列表循环模式下，只有当前题目的音频播放时才显示播放中状态
+        setIsPlaying(
+          playbackInfo.currentItemId === currentQuestion._id &&
+            playbackInfo.state === State.Playing,
+        );
+      }
     };
 
     audioManager.addListener('detailScreenPlayState', handlePlaybackChange);
@@ -211,7 +241,7 @@ export default function DetailScreen() {
     return () => {
       audioManager.removeListener('detailScreenPlayState');
     };
-  }, [currentQuestion._id]);
+  }, [currentQuestion._id, loopMode, isSwitchingTrack]);
 
   return (
     <View

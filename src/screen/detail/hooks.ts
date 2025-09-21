@@ -224,7 +224,7 @@ export const useDetailScreen = (route: any) => {
         });
       }
     }
-  }, [currentIndex, navigation, state.questions, animateNav]);
+  }, [currentIndex, navigation, state.questions, animateNav, loopMode]);
 
   // 处理下一题
   const handleNext = useCallback(() => {
@@ -251,7 +251,7 @@ export const useDetailScreen = (route: any) => {
         });
       }
     }
-  }, [currentIndex, navigation, state.questions, animateNav]);
+  }, [currentIndex, navigation, state.questions, animateNav, loopMode]);
 
   // 处理目录导航
   const handleDirectory = useCallback(() => {
@@ -263,7 +263,9 @@ export const useDetailScreen = (route: any) => {
   const handleDirectoryItemPress = useCallback(
     (questionId: string, index: number) => {
       // 停止当前音频播放
-      audioManager.stopCurrent();
+      if (loopMode !== LoopMode.List) {
+        audioManager.stopCurrent();
+      }
       // 关闭目录抽屉
       animateDirectory(false);
       // 重置内容区域滚动位置，但不触发导航栏隐藏
@@ -339,7 +341,7 @@ export const useDetailScreen = (route: any) => {
       setPlaybackContentSettings(settings);
       await audioManager.setPlaybackContentSettings(settings);
       // 如果当前正在播放，重新开始播放以应用新的内容设置
-      if (playbackInfo.currentItemId && currentQuestion) {
+      if (playbackInfo.currentItemId && currentQuestion && loopMode !== LoopMode.List) {
         audioManager.stopCurrent();
         audioManager.startPlayback(playbackInfo.currentItemId, {
           audio_question: currentQuestion.files?.audio_question,
@@ -360,7 +362,7 @@ export const useDetailScreen = (route: any) => {
       setLoopMode(mode);
       await loopAudioManager.setLoopMode(mode);
       // 如果当前正在播放，重新开始播放以应用新的循环模式
-      if (playbackInfo.currentItemId && currentQuestion) {
+      if (playbackInfo.currentItemId && currentQuestion && loopMode !== LoopMode.List) {
         audioManager.stopCurrent();
         // todo: 切换循环模式后，需要在播放结束中判断循环模式，决定是否重新播放，还是切换到下一题
         // AudioManager.startPlayback(playbackInfo.currentItemId, {
