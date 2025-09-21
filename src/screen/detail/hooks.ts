@@ -276,9 +276,9 @@ export const useDetailScreen = (route: any) => {
 
     // 如果当前正在播放此题目，则暂停/恢复
     if (playbackInfo.currentItemId === questionId) {
-      if (playbackInfo.state === 'playing') {
+      if (playbackInfo.state === State.Playing) {
         AudioManager.pauseCurrent();
-      } else if (playbackInfo.state === 'paused') {
+      } else if (playbackInfo.state === State.Paused) {
         AudioManager.resumeCurrent();
       } else if (playbackInfo.state === State.None) {
         // 如果当前是State.None状态，重新开始播放
