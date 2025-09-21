@@ -220,6 +220,7 @@ class AudioManagerService {
 
     this.currentItemId = null;
     this.currentAudioIndex = 0;
+    this.previousItemId = null;
     this.audioQueue = [];
     this.playbackState = State.None;
     this.notifyListeners();

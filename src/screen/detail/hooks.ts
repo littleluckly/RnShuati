@@ -109,8 +109,8 @@ export const useDetailScreen = (route: any) => {
   }, []);
 
   useEffect(() => {
-    if (playbackInfo.state === State.Ended) {
-      console.log('playbackInfo.state.end', playbackInfo.previousItemId);
+    if (playbackInfo.state === State.Ended && loopMode === LoopMode.List) {
+
       if (loopMode === LoopMode.List) {
         // 列表循环模式，播放下一个音频
         loopAudioManager.playNext(state.questions, playbackInfo);
@@ -206,7 +206,9 @@ export const useDetailScreen = (route: any) => {
       const prevQuestion = state.questions[prevIndex];
       if (prevQuestion) {
         // 停止当前音频播放
-        audioManager.stopCurrent();
+        if (loopMode !== LoopMode.List) {
+          audioManager.stopCurrent();
+        }
         // 重置内容区域滚动位置，但不触发导航栏隐藏
         // 先强制显示导航栏并暂时禁用滚动事件处理
         animateNav(true);
@@ -231,7 +233,9 @@ export const useDetailScreen = (route: any) => {
       const nextQuestion = state.questions[nextIndex];
       if (nextQuestion) {
         // 停止当前音频播放
-        audioManager.stopCurrent();
+        if (loopMode !== LoopMode.List) {
+          audioManager.stopCurrent();
+        }
         // 重置内容区域滚动位置，但不触发导航栏隐藏
         // 先强制显示导航栏并暂时禁用滚动事件处理
         animateNav(true);
@@ -286,28 +290,28 @@ export const useDetailScreen = (route: any) => {
     const { files: audioFiles, _id: questionId } = currentQuestion;
 
     // 如果当前正在播放此题目，则暂停/恢复
-    if (playbackInfo.currentItemId === questionId) {
-      if (playbackInfo.state === State.Playing) {
-        audioManager.pauseCurrent();
-      } else if (playbackInfo.state === State.Paused) {
-        audioManager.resumeCurrent();
-      } else if (playbackInfo.state === State.None) {
-        // 如果当前是State.None状态，重新开始播放
-        audioManager.startPlayback(questionId, {
-          audio_question: audioFiles.audio_question,
-          audio_answer_simple: audioFiles.audio_answer_simple,
-          audio_answer_detail: audioFiles.audio_answer_detail,
-        });
-      }
-    }
-    // 如果没有播放任何内容或播放的是其他题目，则开始播放
-    else {
+    // if (playbackInfo.currentItemId === questionId) {
+    if (playbackInfo.state === State.Playing) {
+      audioManager.pauseCurrent();
+    } else if (playbackInfo.state === State.Paused) {
+      audioManager.resumeCurrent();
+    } else if (playbackInfo.state === State.None) {
+      // 如果当前是State.None状态，重新开始播放
       audioManager.startPlayback(questionId, {
         audio_question: audioFiles.audio_question,
         audio_answer_simple: audioFiles.audio_answer_simple,
         audio_answer_detail: audioFiles.audio_answer_detail,
       });
     }
+    // }
+    // 如果没有播放任何内容或播放的是其他题目，则开始播放
+    // else {
+    //   audioManager.startPlayback(questionId, {
+    //     audio_question: audioFiles.audio_question,
+    //     audio_answer_simple: audioFiles.audio_answer_simple,
+    //     audio_answer_detail: audioFiles.audio_answer_detail,
+    //   });
+    // }
   }, [currentQuestion, playbackInfo]);
 
   // 组件卸载时清理音频监听器
