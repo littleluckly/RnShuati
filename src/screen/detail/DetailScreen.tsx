@@ -14,6 +14,7 @@ import {DetailScreenRouteProp} from './types';
 import {HomeStackNavigation} from '@/navigation/Types';
 import {AudioManager, AudioPlaybackInfo} from '@/services/AudioManager';
 import {useQuestionContext} from '@/contexts/QuestionContext';
+import {State} from 'react-native-track-player';
 
 export default function DetailScreen() {
   const {state: questionState, loadMore} = useQuestionContext();
@@ -200,7 +201,7 @@ export default function DetailScreen() {
       // 直接使用AudioManager传递的播放信息更新状态
       setIsPlaying(
         playbackInfo.currentItemId === currentQuestion._id &&
-          playbackInfo.state === 'playing',
+          playbackInfo.state === State.Playing,
       );
     };
 

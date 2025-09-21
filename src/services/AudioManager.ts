@@ -38,6 +38,7 @@ export const setGlobalTrackPlayerInitialized = (initialized: boolean) => {
 
 export interface AudioPlaybackInfo {
   currentItemId: string | null;
+  previousItemId: string | null; // 新增前一个音频的ID
   state: State;
   currentAudioIndex: number; // 0: question_markdown, 1: answer_simple_markdown, 2: answer_detail_markdown
   totalAudios: number;
@@ -47,6 +48,7 @@ export type AudioPlaybackListener = (info: AudioPlaybackInfo) => void;
 
 class AudioManagerService {
   private currentItemId: string | null = null;
+  private previousItemId: string | null = null; // 新增前一个音频的ID
   private currentAudioIndex: number = 0;
   private audioQueue: string[] = [];
   private playbackState: State = State.None;
@@ -152,9 +154,11 @@ class AudioManagerService {
       // 整个音频队列播放完成
       console.log('所有音频播放完成');
       this.playbackState = State.Ended;
+      this.previousItemId = this.currentItemId; // 切换到下一个音频时，更新前一个音频的ID
       this.currentItemId = null;
       this.currentAudioIndex = 0;
       this.audioQueue = [];
+
       this.notifyListeners();
     });
 
@@ -196,7 +200,8 @@ class AudioManagerService {
       currentItemId: this.currentItemId,
       state: this.playbackState,
       currentAudioIndex: this.currentAudioIndex,
-      totalAudios: this.audioQueue.length
+      totalAudios: this.audioQueue.length,
+      previousItemId: this.previousItemId,
     };
 
     this.listeners.forEach(listener => listener(info));
@@ -519,6 +524,7 @@ class AudioManagerService {
   public getCurrentPlaybackInfo(): AudioPlaybackInfo {
     return {
       currentItemId: this.currentItemId,
+      previousItemId: this.previousItemId,
       state: this.playbackState,
       currentAudioIndex: this.currentAudioIndex,
       totalAudios: this.audioQueue.length

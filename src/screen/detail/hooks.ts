@@ -62,6 +62,7 @@ export const useDetailScreen = (route: any) => {
     state: State.None,
     currentAudioIndex: 0,
     totalAudios: 0,
+    previousItemId: null,
   });
 
   // 引用组件
@@ -106,6 +107,16 @@ export const useDetailScreen = (route: any) => {
       AudioManager.removeListener('detailScreen');
     };
   }, []);
+
+  useEffect(() => {
+    if (playbackInfo.state === State.Ended) {
+      console.log('playbackInfo.state.end', playbackInfo.previousItemId);
+      if (loopMode === LoopMode.List) {
+        // 列表循环模式，播放下一个音频
+        loopAudioManager.playNext(state.questions, playbackInfo);
+      }
+    }
+  }, [playbackInfo.state, loopMode, playbackInfo.previousItemId])
 
   // 导航栏动画
   const animateNav = useCallback(

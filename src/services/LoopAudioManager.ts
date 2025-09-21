@@ -1,4 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AudioManager, AudioPlaybackInfo } from "./AudioManager";
+import { Question } from "./apiTypes";
 
 export enum LoopMode {
   None = 'none',
@@ -35,6 +37,25 @@ class LoopAudioManager {
       await AsyncStorage.setItem(LOOP_MODE_KEY, this.loopMode);
     } catch (error) {
       console.error('Error saving loop mode:', error);
+    }
+  }
+
+  async playNext(questions: Question[], playbackInfo: AudioPlaybackInfo): Promise<void> {
+    if (this.loopMode === LoopMode.List) {
+      const currentIndex = questions.findIndex(q => q._id === playbackInfo.previousItemId);
+      if (currentIndex !== -1) {
+        const nextIndex = (currentIndex + 1) % questions.length;
+        const nextQuestion = questions[nextIndex];
+        await AudioManager.startPlayback(nextQuestion._id, {
+          audio_question: nextQuestion.files.audio_question,
+          audio_answer_simple: nextQuestion.files.audio_answer_simple,
+          audio_answer_detail: nextQuestion.files.audio_answer_detail,
+        });
+        playbackInfo.previousItemId = playbackInfo.currentItemId; // 更新前一个音频的ID
+        playbackInfo.currentItemId = nextQuestion._id;
+        // playbackInfo.currentAudioIndex = nextIndex;
+        // playbackInfo.totalAudios = questions.length;
+      }
     }
   }
 }

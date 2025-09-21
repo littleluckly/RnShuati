@@ -48,11 +48,18 @@ export default function PlaybackSettingsScreen() {
   useEffect(() => {
     const loadSettings = async () => {
       try {
+        await Promise.all([
+          AudioManager.loadPlaybackSpeed(),
+          AudioManager.loadPlaybackContentSettings(),
+          loopAudioManager.loadLocalLoopMode(),
+        ]);
         const speed = await AudioManager.getPlaybackSpeed();
         setPlaybackSpeed(speed);
 
         const settings = await AudioManager.getPlaybackContentSettings();
         setPlaybackContentSettings(settings);
+
+        setLoopMode(loopAudioManager.loopMode);
       } catch (error) {
         console.error('加载播放设置失败:', error);
       }
@@ -60,22 +67,6 @@ export default function PlaybackSettingsScreen() {
 
     loadSettings();
   }, []);
-
-  // 加载当前设置
-  const loadCurrentSettings = async () => {
-    try {
-      // 获取播放速度
-      const speed = await AudioManager.getPlaybackSpeed();
-      setPlaybackSpeed(speed);
-
-      // 获取播放内容设置
-      await AudioManager.loadPlaybackContentSettings();
-      const contentSettings = AudioManager.getPlaybackContentSettings();
-      setPlaybackContentSettings(contentSettings);
-    } catch (error) {
-      console.error('加载播放设置失败:', error);
-    }
-  };
 
   // 格式化速度显示文本
   const formatSpeedText = (speed: number): string => {
