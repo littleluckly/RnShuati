@@ -19,6 +19,7 @@ import {HomeStackNavigation} from '@/navigation/Types';
 import {routeNameMap} from '@/navigation/constant';
 import {useQuestionContext} from '@/contexts/QuestionContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {State} from 'react-native-track-player';
 interface Props {
   subjectId: string;
   filters?: {difficulty?: string | string[]; tags?: string[]};
@@ -103,7 +104,7 @@ const OptimizedFlatList: React.FC<Props> = ({
   const [playbackId, setPlaybackId] = useState('');
   const [playbackInfo, setPlaybackInfo] = useState<AudioPlaybackInfo>({
     currentItemId: null,
-    state: 'idle',
+    state: State.None,
     currentAudioIndex: 0,
     totalAudios: 0,
   });

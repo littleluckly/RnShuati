@@ -1,6 +1,7 @@
 import { RouteProp } from '@react-navigation/native';
 import { HomeStackParamList } from '@/navigation/Types';
 import { routeNameMap } from '@/navigation/constant';
+import { State } from 'react-native-track-player';
 
 export type DetailScreenRouteProp = RouteProp<
   HomeStackParamList,
@@ -9,7 +10,7 @@ export type DetailScreenRouteProp = RouteProp<
 
 export interface AudioPlaybackInfo {
   currentItemId: string | null;
-  state: 'idle' | 'loading' | 'playing' | 'paused' | 'error';
+  state: State;
   currentAudioIndex: number;
   totalAudios: number;
 }

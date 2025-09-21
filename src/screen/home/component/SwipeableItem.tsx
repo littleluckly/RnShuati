@@ -30,6 +30,7 @@ import {HomeStackNavigation} from '@/navigation/Types';
 import {AudioManager, AudioPlaybackInfo} from '@/services/AudioManager';
 import Icon from '@react-native-vector-icons/material-design-icons';
 import {Question} from '@/services/apiTypes';
+import {State} from 'react-native-track-player';
 
 interface Props {
   metadata: Question;
@@ -56,7 +57,7 @@ const SwipeableItem = React.memo(
     // 音频播放状态
     const [playbackInfo, setPlaybackInfo] = useState<AudioPlaybackInfo>({
       currentItemId: null,
-      state: 'idle',
+      state: State.None,
       currentAudioIndex: 0,
       totalAudios: 0,
     });

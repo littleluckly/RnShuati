@@ -35,12 +35,11 @@ export const setSoundMap = (map: Record<string, any>) => {
 export const setGlobalTrackPlayerInitialized = (initialized: boolean) => {
   isGlobalTrackPlayerInitialized = initialized;
 };
-export type AudioPlaybackState = 'idle' | 'playing' | 'paused' | 'error' | 'buffering';
 
 export interface AudioPlaybackInfo {
   currentItemId: string | null;
-  state: AudioPlaybackState;
-  currentAudioIndex: number; // 0: question, 1: simple_answer, 2: analysis
+  state: State;
+  currentAudioIndex: number; // 0: question_markdown, 1: answer_simple_markdown, 2: answer_detail_markdown
   totalAudios: number;
 }
 
@@ -50,7 +49,7 @@ class AudioManagerService {
   private currentItemId: string | null = null;
   private currentAudioIndex: number = 0;
   private audioQueue: string[] = [];
-  private playbackState: AudioPlaybackState = 'idle';
+  private playbackState: State = State.None;
   private listeners: Map<string, AudioPlaybackListener> = new Map();
   private isTrackPlayerInitialized: boolean = false;
   private playbackContentSettings: PlaybackContentSettings = DEFAULT_PLAYBACK_CONTENT_SETTINGS;
@@ -152,13 +151,14 @@ class AudioManagerService {
     TrackPlayer.addEventListener(Event.PlaybackQueueEnded, async () => {
       // 整个音频队列播放完成
       console.log('所有音频播放完成');
-      this.playbackState = 'idle';
+      this.playbackState = State.Ended;
       this.currentItemId = null;
       this.currentAudioIndex = 0;
       this.audioQueue = [];
       this.notifyListeners();
     });
 
+    // todo 事件名称已废弃，改成PlaybackActiveTrackChanged
     TrackPlayer.addEventListener(Event.PlaybackTrackChanged, async (data) => {
       // 当前播放的音频发生变化
       if (data.nextTrack !== null && data.nextTrack !== undefined) {
@@ -170,15 +170,10 @@ class AudioManagerService {
 
     TrackPlayer.addEventListener(Event.PlaybackState, async (data) => {
       console.log('播放状态变化:', data.state);
-
-      if (data.state === State.Playing) {
-        this.playbackState = 'playing';
-      } else if (data.state === State.Paused) {
-        this.playbackState = 'paused';
+      if ([State.Playing, State.Buffering, State.Paused].includes(data.state)) {
+        this.playbackState = data.state;
       } else if (data.state === State.Stopped || data.state === State.None) {
-        this.playbackState = 'idle';
-      } else if (data.state === State.Buffering) {
-        this.playbackState = 'buffering';
+        this.playbackState = State.None;
       }
 
       this.notifyListeners();
@@ -221,7 +216,7 @@ class AudioManagerService {
     this.currentItemId = null;
     this.currentAudioIndex = 0;
     this.audioQueue = [];
-    this.playbackState = 'idle';
+    this.playbackState = State.None;
     this.notifyListeners();
   }
 
@@ -232,7 +227,7 @@ class AudioManagerService {
         if (this.isTrackPlayerInitialized) {
           await TrackPlayer.pause();
         }
-        this.playbackState = 'paused';
+        this.playbackState = State.Paused;
         this.notifyListeners();
       } catch (error: any) {
         console.error('暂停播放失败:', error);
@@ -242,11 +237,11 @@ class AudioManagerService {
 
   // 恢复播放
   public async resumeCurrent(): Promise<void> {
-    if (this.playbackState === 'paused') {
+    if (this.playbackState === State.Paused) {
       try {
         if (this.isTrackPlayerInitialized) {
           await TrackPlayer.play();
-          this.playbackState = 'playing';
+          this.playbackState = State.Playing;
           this.notifyListeners();
         }
       } catch (error: any) {
@@ -369,7 +364,7 @@ class AudioManagerService {
           await this.resumeCurrent();
           return;
         }
-        // 如果是同一个项目但状态是 idle，重新构建队列
+        // 如果是同一个项目但状态是 State.None，重新构建队列
         await this.stopCurrent();
       }
 
@@ -449,7 +444,7 @@ class AudioManagerService {
       console.log('播放命令已发送');
 
       // 更新播放状态
-      this.playbackState = 'playing';
+      this.playbackState = State.Playing;
       this.notifyListeners();
 
     } catch (error: any) {
@@ -468,7 +463,7 @@ class AudioManagerService {
 
   // 处理播放错误
   private handlePlaybackError(): void {
-    this.playbackState = 'error';
+    this.playbackState = State.Error;
     this.notifyListeners();
 
     // 3秒后重置状态

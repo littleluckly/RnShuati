@@ -12,6 +12,7 @@ import {
   markOnboardingCompleted,
   setSkipOnboarding,
 } from '@/utils/onboardingUtils';
+import { State } from 'react-native-track-player';
 
 const { width } = Dimensions.get('window');
 
@@ -58,7 +59,7 @@ export const useDetailScreen = (route: any) => {
   // 音频播放状态
   const [playbackInfo, setPlaybackInfo] = useState<AudioPlaybackInfo>({
     currentItemId: null,
-    state: 'idle',
+    state: State.None,
     currentAudioIndex: 0,
     totalAudios: 0,
   });
@@ -279,8 +280,8 @@ export const useDetailScreen = (route: any) => {
         AudioManager.pauseCurrent();
       } else if (playbackInfo.state === 'paused') {
         AudioManager.resumeCurrent();
-      } else if (playbackInfo.state === 'idle') {
-        // 如果当前是idle状态，重新开始播放
+      } else if (playbackInfo.state === State.None) {
+        // 如果当前是State.None状态，重新开始播放
         AudioManager.startPlayback(questionId, {
           audio_question: audioFiles.audio_question,
           audio_answer_simple: audioFiles.audio_answer_simple,
