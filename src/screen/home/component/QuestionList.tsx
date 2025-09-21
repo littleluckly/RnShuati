@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import Icon from '@react-native-vector-icons/material-design-icons';
 import {Question} from '@/services/apiTypes';
-import {AudioManager, AudioPlaybackInfo} from '@/services/AudioManager';
+import {audioManager, AudioPlaybackInfo} from '@/services/AudioManager';
 import {useNavigation} from '@react-navigation/native';
 import {HomeStackNavigation} from '@/navigation/Types';
 import {routeNameMap} from '@/navigation/constant';
@@ -69,7 +69,7 @@ const OptimizedFlatList: React.FC<Props> = ({
   const handleNavigateToDetail = React.useCallback(
     (id: string, index: number) => {
       // 立即停止音频以提供即时反馈
-      AudioManager.stopCurrent();
+      audioManager.stopCurrent();
 
       // 获取当前项的ref
       const itemRef = itemRefs.current[index];
@@ -118,8 +118,8 @@ const OptimizedFlatList: React.FC<Props> = ({
       // todo 详细解析内容过长，默认不播放，通过个人喜好设定
       // 每个音频播放循环次数可以通过个人喜好设定
       // 如何支持耳机控制上一曲，下一曲
-      AudioManager.addListener(id, setPlaybackInfo);
-      AudioManager.startPlayback(id, {
+      audioManager.addListener(id, setPlaybackInfo);
+      audioManager.startPlayback(id, {
         audio_question: audioFiles.audio_question,
         audio_answer_simple: audioFiles.audio_answer_simple,
         audio_answer_detail: audioFiles.audio_answer_detail,
@@ -134,7 +134,7 @@ const OptimizedFlatList: React.FC<Props> = ({
     return () => {
       // 组件卸载时移除所有监听器
       if (playbackId) {
-        AudioManager.removeListener(playbackId);
+        audioManager.removeListener(playbackId);
       }
     };
   }, [playbackId]);

@@ -543,4 +543,4 @@ class AudioManagerService {
 }
 
 // 导出单例实例
-export const AudioManager = new AudioManagerService();
+export const audioManager = new AudioManagerService();

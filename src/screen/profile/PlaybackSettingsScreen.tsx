@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {AudioManager, PlaybackContentSettings} from '@/services/AudioManager';
+import {audioManager, PlaybackContentSettings} from '@/services/AudioManager';
 import Slider from '@react-native-community/slider';
 import {useNavigation} from '@react-navigation/native';
 import {HomeStackNavigation} from '@/navigation/Types';
@@ -49,14 +49,14 @@ export default function PlaybackSettingsScreen() {
     const loadSettings = async () => {
       try {
         await Promise.all([
-          AudioManager.loadPlaybackSpeed(),
-          AudioManager.loadPlaybackContentSettings(),
+          audioManager.loadPlaybackSpeed(),
+          audioManager.loadPlaybackContentSettings(),
           loopAudioManager.loadLocalLoopMode(),
         ]);
-        const speed = await AudioManager.getPlaybackSpeed();
+        const speed = await audioManager.getPlaybackSpeed();
         setPlaybackSpeed(speed);
 
-        const settings = await AudioManager.getPlaybackContentSettings();
+        const settings = await audioManager.getPlaybackContentSettings();
         setPlaybackContentSettings(settings);
 
         setLoopMode(loopAudioManager.loopMode);
@@ -83,7 +83,7 @@ export default function PlaybackSettingsScreen() {
       // 确保速度值在有效范围内
       const validSpeed = Math.max(0.5, Math.min(2.0, speed));
       setPlaybackSpeed(validSpeed);
-      await AudioManager.setPlaybackSpeed(validSpeed);
+      await audioManager.setPlaybackSpeed(validSpeed);
     } catch (error) {
       console.error('设置播放速度失败:', error);
       Alert.alert('失败', '设置播放速度时出现错误');
@@ -96,7 +96,7 @@ export default function PlaybackSettingsScreen() {
   ) => {
     try {
       setPlaybackContentSettings(settings);
-      await AudioManager.setPlaybackContentSettings(settings);
+      await audioManager.setPlaybackContentSettings(settings);
     } catch (error) {
       console.error('设置播放内容失败:', error);
       Alert.alert(
@@ -104,7 +104,7 @@ export default function PlaybackSettingsScreen() {
         error instanceof Error ? error.message : '设置播放内容时出现错误',
       );
       // 恢复之前的设置
-      setPlaybackContentSettings(AudioManager.getPlaybackContentSettings());
+      setPlaybackContentSettings(audioManager.getPlaybackContentSettings());
     }
   };
 

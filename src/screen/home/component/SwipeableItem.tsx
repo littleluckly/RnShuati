@@ -27,7 +27,7 @@ import Animated, {
 import {useSharedTransition} from '@/contexts/sharedTransitionContext';
 import {routeNameMap} from '@/navigation/constant';
 import {HomeStackNavigation} from '@/navigation/Types';
-import {AudioManager, AudioPlaybackInfo} from '@/services/AudioManager';
+import {audioManager, AudioPlaybackInfo} from '@/services/AudioManager';
 import Icon from '@react-native-vector-icons/material-design-icons';
 import {Question} from '@/services/apiTypes';
 import {State} from 'react-native-track-player';
@@ -107,13 +107,13 @@ const SwipeableItem = React.memo(
         setPlaybackInfo(info);
       };
 
-      AudioManager.addListener(id, handlePlaybackUpdate);
+      audioManager.addListener(id, handlePlaybackUpdate);
 
       // 初始化状态
-      setPlaybackInfo(AudioManager.getCurrentPlaybackInfo());
+      setPlaybackInfo(audioManager.getCurrentPlaybackInfo());
 
       return () => {
-        AudioManager.removeListener(id);
+        audioManager.removeListener(id);
       };
     }, [id]);
 
@@ -186,7 +186,7 @@ const SwipeableItem = React.memo(
       console.log('Audio files available:', audioFiles);
 
       // 开始播放序列：题目 → 精简答案 → 详细解析
-      AudioManager.startPlayback(id, {
+      audioManager.startPlayback(id, {
         audio_question: audioFiles.audio_question,
         audio_answer_simple: audioFiles.audio_answer_simple,
         audio_answer_detail: audioFiles.audio_answer_detail,
@@ -201,7 +201,7 @@ const SwipeableItem = React.memo(
       }
 
       // 立即停止音频以提供即时反馈
-      AudioManager.stopCurrent();
+      audioManager.stopCurrent();
       dispatch({type: 'START'});
 
       // 添加组件挂载状态检查

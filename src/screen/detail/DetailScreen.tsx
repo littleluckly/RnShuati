@@ -12,7 +12,7 @@ import {SettingsPanel} from './components/SettingsPanel';
 import {styles} from './styles/styles';
 import {DetailScreenRouteProp} from './types';
 import {HomeStackNavigation} from '@/navigation/Types';
-import {AudioManager, AudioPlaybackInfo} from '@/services/AudioManager';
+import {audioManager, AudioPlaybackInfo} from '@/services/AudioManager';
 import {useQuestionContext} from '@/contexts/QuestionContext';
 import {State} from 'react-native-track-player';
 
@@ -116,7 +116,7 @@ export default function DetailScreen() {
         tabBarStyle: {display: 'flex'},
       });
       // 组件卸载时停止音频播放
-      AudioManager.stopCurrent();
+      audioManager.stopCurrent();
     };
   }, [navigation]);
 
@@ -194,7 +194,7 @@ export default function DetailScreen() {
   // 监听AudioManager状态变化，确保播放状态与UI同步
   useEffect(() => {
     // 初始状态检查
-    setIsPlaying(AudioManager.isItemPlaying(currentQuestion._id));
+    setIsPlaying(audioManager.isItemPlaying(currentQuestion._id));
 
     // 添加状态变化监听器
     const handlePlaybackChange = (playbackInfo: AudioPlaybackInfo) => {
@@ -205,11 +205,11 @@ export default function DetailScreen() {
       );
     };
 
-    AudioManager.addListener('detailScreenPlayState', handlePlaybackChange);
+    audioManager.addListener('detailScreenPlayState', handlePlaybackChange);
 
     // 组件卸载时移除监听器
     return () => {
-      AudioManager.removeListener('detailScreenPlayState');
+      audioManager.removeListener('detailScreenPlayState');
     };
   }, [currentQuestion._id]);
 

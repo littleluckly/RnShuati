@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AudioManager, AudioPlaybackInfo } from "./AudioManager";
+import { audioManager, AudioPlaybackInfo } from "./AudioManager";
 import { Question } from "./apiTypes";
 
 export enum LoopMode {
@@ -46,7 +46,7 @@ class LoopAudioManager {
       if (currentIndex !== -1) {
         const nextIndex = (currentIndex + 1) % questions.length;
         const nextQuestion = questions[nextIndex];
-        await AudioManager.startPlayback(nextQuestion._id, {
+        await audioManager.startPlayback(nextQuestion._id, {
           audio_question: nextQuestion.files.audio_question,
           audio_answer_simple: nextQuestion.files.audio_answer_simple,
           audio_answer_detail: nextQuestion.files.audio_answer_detail,

@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { HomeStackNavigation } from '@/navigation/Types';
 import { routeNameMap } from '@/navigation/constant';
 import { useQuestionContext } from '@/contexts/QuestionContext';
-import { AudioManager, AudioPlaybackInfo, PlaybackContentSettings } from '@/services/AudioManager';
+import { audioManager, AudioPlaybackInfo, PlaybackContentSettings } from '@/services/AudioManager';
 import loopAudioManager, { LoopMode } from '@/services/LoopAudioManager';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 import {
@@ -81,13 +81,13 @@ export const useDetailScreen = (route: any) => {
 
   // 组件挂载时添加音频监听器
   useEffect(() => {
-    AudioManager.addListener('detailScreen', setPlaybackInfo);
+    audioManager.addListener('detailScreen', setPlaybackInfo);
 
     // 初始化播放设置
     const initPlaybackSettings = async () => {
       try {
         // 初始化播放速度
-        const speed = await AudioManager.getPlaybackSpeed();
+        const speed = await audioManager.getPlaybackSpeed();
         setPlaybackSpeed(speed);
 
         // 初始化循环模式
@@ -104,7 +104,7 @@ export const useDetailScreen = (route: any) => {
     initPlaybackSettings();
 
     return () => {
-      AudioManager.removeListener('detailScreen');
+      audioManager.removeListener('detailScreen');
     };
   }, []);
 
@@ -150,15 +150,15 @@ export const useDetailScreen = (route: any) => {
       if (show) {
         try {
           // 获取播放速度
-          await AudioManager.loadPlaybackSpeed();
-          const speed = await AudioManager.getPlaybackSpeed();
+          await audioManager.loadPlaybackSpeed();
+          const speed = await audioManager.getPlaybackSpeed();
           setPlaybackSpeed(speed);
 
           // 获取播放内容设置
 
           // 加载用户的播放设置
-          await AudioManager.loadPlaybackContentSettings();
-          const settings = AudioManager.getPlaybackContentSettings();
+          await audioManager.loadPlaybackContentSettings();
+          const settings = audioManager.getPlaybackContentSettings();
           setPlaybackContentSettings(settings);
 
           // 获取循环模式
@@ -178,7 +178,7 @@ export const useDetailScreen = (route: any) => {
       // 当设置面板打开时，获取最新的播放速度
       const updatePlaybackSpeed = async () => {
         try {
-          const speed = await AudioManager.getPlaybackSpeed();
+          const speed = await audioManager.getPlaybackSpeed();
           setPlaybackSpeed(speed);
         } catch (error) {
           console.error('获取播放速度失败:', error);
@@ -206,7 +206,7 @@ export const useDetailScreen = (route: any) => {
       const prevQuestion = state.questions[prevIndex];
       if (prevQuestion) {
         // 停止当前音频播放
-        AudioManager.stopCurrent();
+        audioManager.stopCurrent();
         // 重置内容区域滚动位置，但不触发导航栏隐藏
         // 先强制显示导航栏并暂时禁用滚动事件处理
         animateNav(true);
@@ -231,7 +231,7 @@ export const useDetailScreen = (route: any) => {
       const nextQuestion = state.questions[nextIndex];
       if (nextQuestion) {
         // 停止当前音频播放
-        AudioManager.stopCurrent();
+        audioManager.stopCurrent();
         // 重置内容区域滚动位置，但不触发导航栏隐藏
         // 先强制显示导航栏并暂时禁用滚动事件处理
         animateNav(true);
@@ -259,7 +259,7 @@ export const useDetailScreen = (route: any) => {
   const handleDirectoryItemPress = useCallback(
     (questionId: string, index: number) => {
       // 停止当前音频播放
-      AudioManager.stopCurrent();
+      audioManager.stopCurrent();
       // 关闭目录抽屉
       animateDirectory(false);
       // 重置内容区域滚动位置，但不触发导航栏隐藏
@@ -288,12 +288,12 @@ export const useDetailScreen = (route: any) => {
     // 如果当前正在播放此题目，则暂停/恢复
     if (playbackInfo.currentItemId === questionId) {
       if (playbackInfo.state === State.Playing) {
-        AudioManager.pauseCurrent();
+        audioManager.pauseCurrent();
       } else if (playbackInfo.state === State.Paused) {
-        AudioManager.resumeCurrent();
+        audioManager.resumeCurrent();
       } else if (playbackInfo.state === State.None) {
         // 如果当前是State.None状态，重新开始播放
-        AudioManager.startPlayback(questionId, {
+        audioManager.startPlayback(questionId, {
           audio_question: audioFiles.audio_question,
           audio_answer_simple: audioFiles.audio_answer_simple,
           audio_answer_detail: audioFiles.audio_answer_detail,
@@ -302,7 +302,7 @@ export const useDetailScreen = (route: any) => {
     }
     // 如果没有播放任何内容或播放的是其他题目，则开始播放
     else {
-      AudioManager.startPlayback(questionId, {
+      audioManager.startPlayback(questionId, {
         audio_question: audioFiles.audio_question,
         audio_answer_simple: audioFiles.audio_answer_simple,
         audio_answer_detail: audioFiles.audio_answer_detail,
@@ -313,7 +313,7 @@ export const useDetailScreen = (route: any) => {
   // 组件卸载时清理音频监听器
   useEffect(() => {
     return () => {
-      AudioManager.removeListener('detailScreen');
+      audioManager.removeListener('detailScreen');
     };
   }, []);
 
@@ -326,18 +326,18 @@ export const useDetailScreen = (route: any) => {
   // 处理播放速度变化
   const handleSpeedChange = useCallback(async (speed: number) => {
     setPlaybackSpeed(speed);
-    await AudioManager.setPlaybackSpeed(speed);
+    await audioManager.setPlaybackSpeed(speed);
   }, []);
 
   // 处理播放内容设置变化
   const handleContentSettingsChange = useCallback(async (settings: PlaybackContentSettings) => {
     try {
       setPlaybackContentSettings(settings);
-      await AudioManager.setPlaybackContentSettings(settings);
+      await audioManager.setPlaybackContentSettings(settings);
       // 如果当前正在播放，重新开始播放以应用新的内容设置
       if (playbackInfo.currentItemId && currentQuestion) {
-        AudioManager.stopCurrent();
-        AudioManager.startPlayback(playbackInfo.currentItemId, {
+        audioManager.stopCurrent();
+        audioManager.startPlayback(playbackInfo.currentItemId, {
           audio_question: currentQuestion.files?.audio_question,
           audio_answer_simple: currentQuestion.files?.audio_answer_simple,
           audio_answer_detail: currentQuestion.files?.audio_answer_detail,
@@ -346,7 +346,7 @@ export const useDetailScreen = (route: any) => {
     } catch (error) {
       console.error('设置播放内容失败:', error);
       // 恢复之前的设置
-      setPlaybackContentSettings(AudioManager.getPlaybackContentSettings());
+      setPlaybackContentSettings(audioManager.getPlaybackContentSettings());
     }
   }, [playbackInfo.currentItemId, currentQuestion]);
 
@@ -357,7 +357,7 @@ export const useDetailScreen = (route: any) => {
       await loopAudioManager.setLoopMode(mode);
       // 如果当前正在播放，重新开始播放以应用新的循环模式
       if (playbackInfo.currentItemId && currentQuestion) {
-        AudioManager.stopCurrent();
+        audioManager.stopCurrent();
         // todo: 切换循环模式后，需要在播放结束中判断循环模式，决定是否重新播放，还是切换到下一题
         // AudioManager.startPlayback(playbackInfo.currentItemId, {
         //   audio_question: currentQuestion.files?.audio_question,
@@ -453,7 +453,7 @@ export const useDetailScreen = (route: any) => {
       // 当设置面板打开时，获取最新的播放速度
       const updatePlaybackSpeed = async () => {
         try {
-          const speed = await AudioManager.getPlaybackSpeed();
+          const speed = await audioManager.getPlaybackSpeed();
           setPlaybackSpeed(speed);
         } catch (error) {
           console.error('获取播放速度失败:', error);
