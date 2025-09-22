@@ -1,38 +1,24 @@
+import {useHeaderHeight} from '@react-navigation/elements';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import React, {useState} from 'react';
 import {
-  useNavigation,
-  useRoute,
-  useNavigationState,
-  getFocusedRouteNameFromRoute,
-} from '@react-navigation/native';
-import React, {useState, useEffect, useCallback} from 'react';
-import {
-  View,
+  Platform,
+  StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
-  Text,
-  StyleSheet,
-  Platform,
-  StatusBar
+  View,
 } from 'react-native';
-import {RootNavigation} from './Types';
-import {useHeaderHeight} from '@react-navigation/elements';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import GlobalStyles from '@/styles/globalStyles';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
-import {RouteProp} from '@react-navigation/native';
-import {HomeStackParamList} from './Types';
+import {RootNavigation} from './Types';
 
 const SearchableHeader = () => {
   const navigation = useNavigation<RootNavigation>();
   const canGoBack = navigation.canGoBack();
   const headerHeight = useHeaderHeight();
   const insets = useSafeAreaInsets(); // 获取安全区域
-  
+
   const route = useRoute();
   // 类型断言，确保route.params可以访问subjectName属性
   const params = route.params as {subjectName?: string} | undefined;
@@ -59,7 +45,7 @@ const SearchableHeader = () => {
   const getTitleContainerStyle = () => {
     return {
       flex: 1,
-      alignItems: canGoBack ? 'flex-start' as const : 'center' as const,
+      alignItems: canGoBack ? ('flex-start' as const) : ('center' as const),
       justifyContent: 'center' as const,
     };
   };
@@ -103,10 +89,9 @@ const SearchableHeader = () => {
     <View style={[styles.headerContainer, styles.defaultHeader]}>
       {/* 左侧：返回按钮（仅在可以返回时显示） */}
       {canGoBack && (
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
+          style={styles.backButton}>
           <Ionicons name="arrow-back-outline" size={20} color="#333"></Ionicons>
         </TouchableOpacity>
       )}
@@ -115,10 +100,9 @@ const SearchableHeader = () => {
           {title || '题库'}
         </Text>
       </View>
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={() => setIsSearching(true)}
-        style={styles.searchButton}
-      >
+        style={styles.searchButton}>
         <Ionicons name="search" size={20} color="gray" />
       </TouchableOpacity>
     </View>
@@ -146,7 +130,7 @@ const styles = StyleSheet.create({
     }),
     zIndex: 9999,
   },
-  
+
   // 默认头部样式
   defaultHeader: {
     flexDirection: 'row',
@@ -156,7 +140,7 @@ const styles = StyleSheet.create({
     height: 56,
     overflow: 'hidden',
   },
-  
+
   // 搜索头部样式
   searchHeader: {
     flexDirection: 'row',
@@ -165,25 +149,25 @@ const styles = StyleSheet.create({
     height: 56,
     overflow: 'hidden',
   },
-  
+
   title: {
     fontSize: 17,
     fontWeight: '600',
     color: 'black',
     textAlign: 'center',
   },
-  
+
   // 按钮样式
   backButton: {
     padding: 8,
     marginLeft: -8, // 抵消部分 paddingHorizontal
   },
-  
+
   searchButton: {
     padding: 8,
     marginRight: -8, // 抵消部分 paddingHorizontal
   },
-  
+
   searchInput: {
     flex: 1,
     height: 40,
@@ -193,14 +177,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'black',
   },
-  
+
   cancelBtn: {
     paddingHorizontal: 12,
     marginLeft: 8,
     height: '100%',
     justifyContent: 'center',
   },
-  
+
   cancelText: {
     fontSize: 17,
     color: '#007AFF', // iOS 风格蓝色
