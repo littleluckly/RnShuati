@@ -118,16 +118,19 @@ export default function ProfileScreen() {
           )}
         </View>
       </View>
-      <TouchableOpacity style={styles.setItem} onPress={navigateToApiDemo}>
-        <Ionicons
-          name="code-outline"
-          size={24}
-          color="#3498db"
-          style={{marginRight: 6}}
-        />
-        <Text style={{flex: 1}}>API 演示</Text>
-        <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
-      </TouchableOpacity>
+      {/* 只有管理员角色才显示API演示选项 */}
+      {isAuthenticated && userInfo && userInfo.role === 'admin' && (
+        <TouchableOpacity style={styles.setItem} onPress={navigateToApiDemo}>
+          <Ionicons
+            name="code-outline"
+            size={24}
+            color="#3498db"
+            style={{marginRight: 6}}
+          />
+          <Text style={{flex: 1}}>API 演示</Text>
+          <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
+        </TouchableOpacity>
+      )}
       <View style={styles.setItem}>
         <Ionicons
           name="heart"
@@ -155,7 +158,9 @@ export default function ProfileScreen() {
         <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
       </View>
       {/* 播放设置选项 */}
-      <TouchableOpacity style={styles.setItem} onPress={navigateToPlaybackSettings}>
+      <TouchableOpacity
+        style={styles.setItem}
+        onPress={navigateToPlaybackSettings}>
         <Ionicons
           name="volume-high-outline"
           size={24}
@@ -166,16 +171,20 @@ export default function ProfileScreen() {
         <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
       </TouchableOpacity>
       {/* 新增重置新手引导选项 */}
-      <TouchableOpacity style={styles.setItem} onPress={handleResetOnboarding}>
-        <Ionicons
-          name="information-outline"
-          size={24}
-          color="#f39c12"
-          style={{marginRight: 6}}
-        />
-        <Text style={{flex: 1}}>重置新手引导</Text>
-        <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
-      </TouchableOpacity>
+      {isAuthenticated && userInfo ? (
+        <TouchableOpacity
+          style={styles.setItem}
+          onPress={handleResetOnboarding}>
+          <Ionicons
+            name="information-outline"
+            size={24}
+            color="#f39c12"
+            style={{marginRight: 6}}
+          />
+          <Text style={{flex: 1}}>重置新手引导</Text>
+          <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }

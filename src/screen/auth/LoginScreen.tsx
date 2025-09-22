@@ -27,7 +27,7 @@ const LoginScreen = () => {
   ); // 登录方式
 
   // 使用认证上下文
-  const {login, logout, isLoading} = useAuthContext();
+  const {login, isLoading} = useAuthContext();
 
   /**
    * 处理用户登录
@@ -48,42 +48,12 @@ const LoginScreen = () => {
       );
 
       if (success) {
-        Alert.alert(
-          '登录成功',
-          '欢迎回来！',
-          [
-            {
-              text: '确定',
-              onPress: () => {
-                // 导航到首页或其他需要登录的页面, 直接导航到homeScreen会失败，因为他们处于不同stack
-                navigation.navigate(routeNameMap.homeTab as never);
-              },
-            },
-          ],
-          {cancelable: false},
-        );
+        // 登录成功后关闭当前modal，用户会返回到个人中心页
+        console.log('登录成功，返回个人中心页');
+        navigation.goBack();
       }
     } catch (error) {
       console.error('Login error:', error);
-    }
-  };
-
-  /**
-   * 处理用户退出登录
-   * 使用认证上下文进行退出登录
-   */
-  const handleLogout = async () => {
-    try {
-      // 使用上下文进行退出登录
-      await logout();
-
-      // 重置输入字段
-      setIdentifier('');
-      setPassword('');
-
-      Alert.alert('退出成功', '您已成功退出登录');
-    } catch (error) {
-      console.error('Logout error:', error);
     }
   };
 
@@ -172,13 +142,6 @@ const LoginScreen = () => {
           ) : (
             <Text style={styles.loginButtonText}>登录</Text>
           )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-          activeOpacity={0.8}>
-          <Text style={styles.logoutButtonText}>退出登录 (演示)</Text>
         </TouchableOpacity>
 
         {/* 注册和忘记密码链接 */}
