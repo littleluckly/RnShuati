@@ -171,14 +171,6 @@ const OptimizedFlatList: React.FC<Props> = ({
             {item.question_markdown}
           </Text>
         </View>
-        <View
-          style={{
-            backgroundColor: '#ffe8c7',
-            padding: 8,
-            borderRadius: 24,
-          }}>
-          <Icon name="lock" color="#ffb933" size={28}></Icon>
-        </View>
       </TouchableOpacity>
     ),
     [handleNavigateToDetail, handlePlayPause, playbackId, playbackInfo],
@@ -312,7 +304,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    padding: 18,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
     borderRadius: 16,
     marginHorizontal: 6,
     marginBottom: 6,
