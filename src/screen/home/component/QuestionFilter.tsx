@@ -275,28 +275,6 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
             </TouchableOpacity>
           );
         })}
-
-        {/* 重置按钮 */}
-        <TouchableOpacity
-          style={[styles.chip, styles.resetButton]}
-          onPress={() => {
-            // 重置所有筛选条件
-            setDifficulty(['']);
-            setTag(['']);
-            // 清除筛选条件
-            updateFilters({
-              difficulty: undefined,
-              tags: undefined,
-            });
-          }}>
-          <Icon
-            name="refresh"
-            size={14}
-            color="#666"
-            style={{marginRight: 4}}
-          />
-          <Text style={styles.chipText}>重置</Text>
-        </TouchableOpacity>
       </ScrollView>
 
       {/* 弹窗 */}
@@ -468,10 +446,5 @@ const styles = StyleSheet.create({
   },
   tagChipCheckIcon: {
     marginLeft: 4,
-  },
-  // 重置按钮样式
-  resetButton: {
-    borderColor: '#ff3b30',
-    backgroundColor: '#fff',
   },
 });
