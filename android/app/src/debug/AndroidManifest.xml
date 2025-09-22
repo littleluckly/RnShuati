@@ -2,8 +2,26 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
     <application
         android:usesCleartextTraffic="true"
         tools:targetApi="28"
-        tools:ignore="GoogleAppIndexingWarning"/>
+        tools:ignore="GoogleAppIndexingWarning">
+      <service
+          android:name="com.google.android.exoplayer.SimpleExoPlayerService"
+          android:exported="false"
+          android:foregroundServiceType="mediaPlayback">
+          <intent-filter>
+              <action android:name="androidx.media.session.MediaButtonReceiver" />
+          </intent-filter>
+      </service>
+
+      <receiver android:name="androidx.media.session.MediaButtonReceiver" />
+    </application>
 </manifest>

@@ -1,5 +1,8 @@
 import TrackPlayer, { Capability, State, Event } from 'react-native-track-player';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import { iosAudioController } from './iOSAudioController';
+import { safeInitializeTrackPlayer } from './TrackPlayerInitializer';
 
 // 全局标记，表示 TrackPlayer 是否已在 App.tsx 中初始化
 let isGlobalTrackPlayerInitialized = false;
@@ -64,56 +67,35 @@ class AudioManagerService {
     if (this.isTrackPlayerInitialized) return;
 
     try {
-      // 如果已经在 App.tsx 中全局初始化，直接标记为已初始化
-      if (isGlobalTrackPlayerInitialized) {
-        this.isTrackPlayerInitialized = true;
-        console.log('TrackPlayer 已在 App.tsx 中全局初始化');
-
-        // 加载用户的播放设置
-        await this.loadPlaybackContentSettings();
-        await this.loadPlaybackSpeed(); // 加载播放速度设置
-
-        // 设置播放完成事件监听
-        this.setupTrackPlayerEvents();
-
-        // 应用保存的播放速度
-        if (this.playbackSpeed !== DEFAULT_PLAYBACK_SPEED) {
-          await TrackPlayer.setRate(this.playbackSpeed);
-          console.log(`应用保存的播放速度: ${this.playbackSpeed}x`);
-        } else {
-          // 确保TrackPlayer的速度与默认速度一致
-          const currentRate = await TrackPlayer.getRate();
-          if (currentRate !== DEFAULT_PLAYBACK_SPEED) {
-            await TrackPlayer.setRate(DEFAULT_PLAYBACK_SPEED);
-            console.log(`重置播放速度为默认值: ${DEFAULT_PLAYBACK_SPEED}x`);
-          }
-        }
-
-        return;
+      // 初始化iOS特定的音频控制器
+      if (Platform.OS === 'ios') {
+        await iosAudioController.initialize();
       }
 
-      // 否则尝试初始化（备用方案）
-      await TrackPlayer.setupPlayer();
-      await TrackPlayer.updateOptions({
-        capabilities: [
-          Capability.Play,
-          Capability.Pause,
-          Capability.Stop,
-          Capability.SeekTo,
-        ],
-        compactCapabilities: [
-          Capability.Play,
-          Capability.Pause,
-        ],
-        notificationCapabilities: [
-          Capability.Play,
-          Capability.Pause,
-          Capability.Stop,
-        ],
-        progressUpdateEventInterval: 1000,
-      });
-      this.isTrackPlayerInitialized = true;
-      console.log('TrackPlayer 本地初始化成功');
+      // 统一使用 TrackPlayerInitializer 中的安全初始化函数
+      const initialized = await safeInitializeTrackPlayer();
+      this.isTrackPlayerInitialized = initialized;
+      console.log(initialized ? '✅ TrackPlayer 初始化成功' : '❌ TrackPlayer 初始化失败');
+
+      // 加载用户的播放设置
+      await this.loadPlaybackContentSettings();
+      await this.loadPlaybackSpeed(); // 加载播放速度设置
+
+      // 设置播放完成事件监听
+      this.setupTrackPlayerEvents();
+
+      // 应用保存的播放速度
+      if (this.playbackSpeed !== DEFAULT_PLAYBACK_SPEED) {
+        await TrackPlayer.setRate(this.playbackSpeed);
+        console.log(`应用保存的播放速度: ${this.playbackSpeed}x`);
+      } else {
+        // 确保TrackPlayer的速度与默认速度一致
+        const currentRate = await TrackPlayer.getRate();
+        if (currentRate !== DEFAULT_PLAYBACK_SPEED) {
+          await TrackPlayer.setRate(DEFAULT_PLAYBACK_SPEED);
+          console.log(`重置播放速度为默认值: ${DEFAULT_PLAYBACK_SPEED}x`);
+        }
+      }
 
       // 加载用户的播放设置
       await this.loadPlaybackContentSettings();
@@ -200,6 +182,7 @@ class AudioManagerService {
       })
     );
 
+
     // 标记为已设置事件监听器
     this.hasSetUpEvents = true;
     console.log('TrackPlayer 事件监听器设置完成');
@@ -275,6 +258,12 @@ class AudioManagerService {
       this.cleanupTrackPlayerEvents();
       this.listeners.clear();
       this.isTrackPlayerInitialized = false;
+
+      // 清理iOS特定的音频控制器资源
+      if (Platform.OS === 'ios') {
+        await iosAudioController.cleanup();
+      }
+
       console.log('AudioManager 资源已清理');
     } catch (error) {
       console.error('清理 AudioManager 资源失败:', error);
@@ -495,11 +484,19 @@ class AudioManagerService {
             return null;
           }
 
+          // 为了在系统媒体中心正确显示播放信息，添加完整的元数据
           return {
             id: index.toString(),
             url: audioResource,
             title: this.getAudioTitle(index),
             artist: '刷题派',
+            album: '题目音频',
+            genre: 'Education',
+            date: new Date().toISOString(),
+            duration: undefined,
+            // 修复Android路径，通常资源在assets根目录
+            artwork: require('../assets/image/work.png'),
+            isLiveStream: false,
           };
         }).filter((track): track is NonNullable<typeof track> => track !== null);
 
@@ -521,9 +518,25 @@ class AudioManagerService {
       await TrackPlayer.play();
       console.log('播放命令已发送');
 
+
       // 更新播放状态
       this.playbackState = State.Playing;
       this.notifyListeners();
+
+      // 优化iOS平台上的播放信息显示（灵动岛和控制中心）
+      if (Platform.OS === 'ios') {
+        // 获取当前播放的轨道信息
+        const iosTrackInfo = {
+          title: this.getAudioTitle(this.currentAudioIndex),
+          artist: '刷题派',
+          album: '题目音频',
+          // 使用项目中存在的图片作为封面
+          artwork: require('../assets/image/work.png'),
+          // 如果有音频时长信息，可以在这里提供
+          duration: undefined
+        };
+        await iosAudioController.optimizeNowPlayingInfo(iosTrackInfo);
+      }
 
     } catch (error: any) {
       console.error('播放失败:', error);

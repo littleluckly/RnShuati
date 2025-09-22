@@ -44,35 +44,59 @@ export const initializeTrackPlayer = async (
 ): Promise<boolean> => {
   try {
     // 设置播放器
-    await TrackPlayer.setupPlayer();
-
-    // 构建能力配置
-    const capabilities: Capability[] = [];
-    if (options.enablePlay) capabilities.push(Capability.Play);
-    if (options.enablePause) capabilities.push(Capability.Pause);
-    if (options.enableStop) capabilities.push(Capability.Stop);
-    if (options.enableSeek) capabilities.push(Capability.SeekTo);
+    await TrackPlayer.setupPlayer({
+      // 添加Android特定的播放器选项
+      waitForBuffer: true,
+      maxCacheSize: 1000000,
+      minBuffer: 5,
+      maxBuffer: 20
+    });
 
     // 配置播放器选项
     await TrackPlayer.updateOptions({
-      capabilities,
+      capabilities: [
+        Capability.Play,
+        Capability.Pause,
+        Capability.Stop,
+        Capability.SkipToNext,
+        Capability.SkipToPrevious,
+        Capability.SeekTo,
+        Capability.JumpForward,  // 可选
+        Capability.JumpBackward, // 可选
+      ],
       compactCapabilities: [
         Capability.Play,
         Capability.Pause,
+        Capability.SkipToNext,
+        Capability.SkipToPrevious,
       ],
       notificationCapabilities: [
         Capability.Play,
         Capability.Pause,
         Capability.Stop,
+        Capability.SkipToNext,
+        Capability.SkipToPrevious,
+        Capability.SeekTo,
       ],
-      progressUpdateEventInterval: options.progressUpdateInterval,
-      // 后台播放配置
+      progressUpdateEventInterval: 1000,
+      color: parseInt('FF4500', 16), // 确保是有效的颜色值
+
+      // Android 特定配置
       android: {
-        // 应用被杀死时的播放行为
-        appKilledPlaybackBehavior: options.enableBackgroundPlayback
-          ? AppKilledPlaybackBehavior.ContinuePlayback
-          : AppKilledPlaybackBehavior.PausePlayback,
+        appKilledPlaybackBehavior: AppKilledPlaybackBehavior.ContinuePlayback,
+        stopForegroundGracePeriod: 30,
+        alwaysPauseOnInterruption: true,
+        // 添加以下内容确保媒体会话激活
+        shouldStartForegroundService: true, // 关键：启动前台服务
       },
+
+      // 图标资源（确保路径正确且图片存在）
+      icon: require('../assets/image/work.png'),
+      playIcon: require('../assets/image/work.png'),
+      pauseIcon: require('../assets/image/work.png'),
+      stopIcon: require('../assets/image/work.png'),
+      previousIcon: require('../assets/image/work.png'),
+      nextIcon: require('../assets/image/work.png'),
     });
 
     console.log('✅ TrackPlayer 初始化成功');
