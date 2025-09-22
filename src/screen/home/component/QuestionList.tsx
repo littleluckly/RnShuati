@@ -197,7 +197,7 @@ const OptimizedFlatList: React.FC<Props> = ({
     return (
       <View style={styles.footerContainer}>
         <ActivityIndicator size="small" color="#0066CC" />
-        <Text style={styles.footerText}>{' Loading more...'}</Text>
+        <Text style={styles.footerText}>{' 努力加载中...'}</Text>
       </View>
     );
   }, [pagination.hasNext]);
@@ -210,7 +210,7 @@ const OptimizedFlatList: React.FC<Props> = ({
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0066CC" />
-        <Text style={styles.loadingText}>Loading initial data...</Text>
+        <Text style={styles.loadingText}>{' 正在初始化数据...'}</Text>
       </View>
     );
   }
