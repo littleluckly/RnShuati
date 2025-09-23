@@ -110,11 +110,8 @@ export const useDetailScreen = (route: any) => {
 
   useEffect(() => {
     if (playbackInfo.state === State.Ended && loopMode === LoopMode.List) {
-
-      if (loopMode === LoopMode.List) {
-        // 列表循环模式，播放下一个音频
-        loopAudioManager.playNext(state.questions, playbackInfo);
-      }
+      // 列表循环模式，播放下一个音频
+      loopAudioManager.playNext(state.questions, playbackInfo);
     }
   }, [playbackInfo.state, loopMode, playbackInfo.previousItemId])
 
@@ -300,7 +297,7 @@ export const useDetailScreen = (route: any) => {
     } else if (playbackInfo.state === State.None) {
       // 如果当前是State.None状态，重新开始播放
       audioManager.startPlayback(
-        questionId, 
+        questionId,
         {
           audio_question: audioFiles.audio_question,
           audio_answer_simple: audioFiles.audio_answer_simple,
