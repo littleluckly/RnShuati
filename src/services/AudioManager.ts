@@ -412,27 +412,33 @@ class AudioManagerService {
     audio_question?: string;
     audio_answer_simple?: string;
     audio_answer_detail?: string;
-  }): Promise<void> {
+  }, isListLoopMode: boolean = false): Promise<void> {
     try {
       // 确保 TrackPlayer 已就绪
       await this.ensureTrackPlayerReady();
-      console.log('开始播放音频队列00000', itemId, audioFiles);
+
+      // 在列表循环模式下，如果音频已经在播放，不做任何操作，保持当前播放
+      if (isListLoopMode && this.playbackState === State.Playing) {
+        return;
+      }
+
       // 如果当前正在播放其他项目，先停止
-      if (this.currentItemId && this.currentItemId !== itemId) {
+      // 但是如果音频已经在播放中，即使itemId不同也不停止，以支持页面切换时的无缝播放
+      // 在列表循环模式下，不停止任何正在播放的音频
+      if (this.currentItemId && this.currentItemId !== itemId && this.playbackState !== State.Playing && !isListLoopMode) {
         await this.stopCurrent();
       }
 
       // 如果是同一个项目，根据当前状态处理
       if (this.currentItemId === itemId) {
-        if (this.playbackState === 'playing') {
+        if (this.playbackState === State.Playing) {
           await this.pauseCurrent();
           return;
-        } else if (this.playbackState === 'paused') {
+        } else if (this.playbackState === State.Paused) {
           await this.resumeCurrent();
           return;
         }
         // 如果是同一个项目但状态是 State.None，重新构建队列
-        // await this.stopCurrent();
       }
 
       // 根据用户设置构建音频队列
@@ -622,15 +628,15 @@ class AudioManagerService {
     // 在列表循环模式下，只要音频在播放中，就认为当前项目在播放
     // 这是为了确保在切换题目时，播放按钮状态能正确反映实际播放状态
     if (isListLoopMode) {
-      return this.playbackState === 'playing';
+      return this.playbackState === State.Playing;
     }
     // 非列表循环模式下，需要检查项目ID和播放状态
-    return this.currentItemId === itemId && this.playbackState === 'playing';
+    return this.currentItemId === itemId && this.playbackState === State.Playing;
   }
 
   // 检查特定项目是否暂停
   public isItemPaused(itemId: string): boolean {
-    return this.currentItemId === itemId && this.playbackState === 'paused';
+    return this.currentItemId === itemId && this.playbackState === State.Paused;
   }
 }
 

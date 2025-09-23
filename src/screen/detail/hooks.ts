@@ -299,11 +299,15 @@ export const useDetailScreen = (route: any) => {
       audioManager.resumeCurrent();
     } else if (playbackInfo.state === State.None) {
       // 如果当前是State.None状态，重新开始播放
-      audioManager.startPlayback(questionId, {
-        audio_question: audioFiles.audio_question,
-        audio_answer_simple: audioFiles.audio_answer_simple,
-        audio_answer_detail: audioFiles.audio_answer_detail,
-      });
+      audioManager.startPlayback(
+        questionId, 
+        {
+          audio_question: audioFiles.audio_question,
+          audio_answer_simple: audioFiles.audio_answer_simple,
+          audio_answer_detail: audioFiles.audio_answer_detail,
+        },
+        loopMode === LoopMode.List // 传递当前是否为列表循环模式
+      );
     }
     // }
     // 如果没有播放任何内容或播放的是其他题目，则开始播放
@@ -314,7 +318,7 @@ export const useDetailScreen = (route: any) => {
     //     audio_answer_detail: audioFiles.audio_answer_detail,
     //   });
     // }
-  }, [currentQuestion, playbackInfo]);
+  }, [currentQuestion, playbackInfo, loopMode]);
 
   // 处理设置
   const handleSettings = useCallback(() => {

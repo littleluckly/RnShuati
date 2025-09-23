@@ -63,14 +63,26 @@ const OptimizedFlatList: React.FC<Props> = ({
   }, [refreshData]);
 
   // 上拉加载更多
+  // 音频播放相关状态
+  const [playbackInfo, setPlaybackInfo] = useState<AudioPlaybackInfo>({
+    currentItemId: null,
+    previousItemId: null,
+    state: State.None,
+    currentAudioIndex: 0,
+    totalAudios: 0,
+  });
+  const [loopMode, setLoopMode] = useState<LoopMode>(LoopMode.None);
+
   const handleLoadMore = useCallback(async () => {
     await loadMore();
   }, [loadMore]);
 
-  const handleNavigateToDetail = React.useCallback(
+  const handleNavigateToDetail = useCallback(
     (id: string, index: number) => {
-      // 立即停止音频以提供即时反馈
-      audioManager.stopCurrent();
+      // 只有在非列表循环模式下才停止音频
+      if (loopMode !== LoopMode.List) {
+        audioManager.stopCurrent();
+      }
 
       // 获取当前项的ref
       const itemRef = itemRefs.current[index];
@@ -98,18 +110,8 @@ const OptimizedFlatList: React.FC<Props> = ({
         });
       }
     },
-    [navigation],
+    [navigation, loopMode],
   );
-
-  // 音频播放相关状态
-  const [playbackInfo, setPlaybackInfo] = useState<AudioPlaybackInfo>({
-    currentItemId: null,
-    previousItemId: null,
-    state: State.None,
-    currentAudioIndex: 0,
-    totalAudios: 0,
-  });
-  const [loopMode, setLoopMode] = useState<LoopMode>(LoopMode.None);
 
   // 组件加载时加载循环模式
   useEffect(() => {
@@ -136,19 +138,23 @@ const OptimizedFlatList: React.FC<Props> = ({
     };
   }, []);
 
-  const handlePlayPause = useCallback((question: Question) => {
-    const {files: audioFiles, _id} = question;
-    // console.log('Audio files available:', audioFiles);
-    // 开始播放序列：题目 → 简单答案 → 详细答案
-    // 使用统一的监听器，不再为每个题目单独添加监听器
-    audioManager.startPlayback(_id, {
-      audio_question: audioFiles.audio_question,
-      audio_answer_simple: audioFiles.audio_answer_simple,
-      audio_answer_detail: audioFiles.audio_answer_detail,
-    });
-  }, []);
+  const handlePlayPause = useCallback(
+    (question: Question) => {
+      const {files: audioFiles, _id} = question;
+      // 开始播放序列：题目 → 简单答案 → 详细答案
 
-  // 不再需要为每个题目单独清理监听器，统一的监听器在组件挂载的useEffect中已经处理了清理
+      audioManager.startPlayback(
+        _id,
+        {
+          audio_question: audioFiles.audio_question,
+          audio_answer_simple: audioFiles.audio_answer_simple,
+          audio_answer_detail: audioFiles.audio_answer_detail,
+        },
+        loopMode === LoopMode.List, // 传递当前是否为列表循环模式
+      );
+    },
+    [loopMode],
+  );
 
   // 在列表循环模式下，当音频播放结束时，自动播放下一个题目
   useEffect(() => {

@@ -50,11 +50,9 @@ class LoopAudioManager {
           audio_question: nextQuestion.files.audio_question,
           audio_answer_simple: nextQuestion.files.audio_answer_simple,
           audio_answer_detail: nextQuestion.files.audio_answer_detail,
-        });
+        }, true); // 传递当前为列表循环模式
         playbackInfo.previousItemId = playbackInfo.currentItemId; // 更新前一个音频的ID
         playbackInfo.currentItemId = nextQuestion._id;
-        // playbackInfo.currentAudioIndex = nextIndex;
-        // playbackInfo.totalAudios = questions.length;
       }
     }
   }
