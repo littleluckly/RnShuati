@@ -20,6 +20,7 @@ import {routeNameMap} from '@/navigation/constant';
 import {useQuestionContext} from '@/contexts/QuestionContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {State} from 'react-native-track-player';
+import loopAudioManager, {LoopMode} from '@/services/LoopAudioManager';
 interface Props {
   subjectId: string;
   filters?: {difficulty?: string | string[]; tags?: string[]};
@@ -101,43 +102,66 @@ const OptimizedFlatList: React.FC<Props> = ({
   );
 
   // 音频播放相关状态
-  const [playbackId, setPlaybackId] = useState('');
   const [playbackInfo, setPlaybackInfo] = useState<AudioPlaybackInfo>({
     currentItemId: null,
+    previousItemId: null,
     state: State.None,
     currentAudioIndex: 0,
     totalAudios: 0,
   });
+  const [loopMode, setLoopMode] = useState<LoopMode>(LoopMode.None);
+
+  // 组件加载时加载循环模式
+  useEffect(() => {
+    const loadLoopMode = async () => {
+      await loopAudioManager.loadLocalLoopMode();
+      setLoopMode(loopAudioManager.loopMode);
+    };
+
+    loadLoopMode();
+  }, []);
+
+  // 监听循环模式变化
+  useEffect(() => {
+    setLoopMode(loopAudioManager.loopMode);
+  }, [loopAudioManager.loopMode]);
 
   // 处理播放/暂停点击
-  const handlePlayPause = useCallback(
-    (question: Question) => {
-      const {files: audioFiles, id} = question;
-      // console.log('Audio files available:', audioFiles);
-      // 开始播放序列：题目 → 简单答案 → 详细答案
-      // todo 详细解析内容过长，默认不播放，通过个人喜好设定
-      // 每个音频播放循环次数可以通过个人喜好设定
-      // 如何支持耳机控制上一曲，下一曲
-      audioManager.addListener(id, setPlaybackInfo);
-      audioManager.startPlayback(id, {
-        audio_question: audioFiles.audio_question,
-        audio_answer_simple: audioFiles.audio_answer_simple,
-        audio_answer_detail: audioFiles.audio_answer_detail,
-      });
-      setPlaybackId(playbackId === id ? '' : id);
-    },
-    [playbackId],
-  );
-
-  // 组件卸载时清理音频监听器
+  // 组件挂载时添加统一的音频监听器
   useEffect(() => {
+    audioManager.addListener('questionListScreen', setPlaybackInfo);
+
     return () => {
-      // 组件卸载时移除所有监听器
-      if (playbackId) {
-        audioManager.removeListener(playbackId);
-      }
+      audioManager.removeListener('questionListScreen');
     };
-  }, [playbackId]);
+  }, []);
+
+  const handlePlayPause = useCallback((question: Question) => {
+    const {files: audioFiles, _id} = question;
+    // console.log('Audio files available:', audioFiles);
+    // 开始播放序列：题目 → 简单答案 → 详细答案
+    // 使用统一的监听器，不再为每个题目单独添加监听器
+    audioManager.startPlayback(_id, {
+      audio_question: audioFiles.audio_question,
+      audio_answer_simple: audioFiles.audio_answer_simple,
+      audio_answer_detail: audioFiles.audio_answer_detail,
+    });
+  }, []);
+
+  // 不再需要为每个题目单独清理监听器，统一的监听器在组件挂载的useEffect中已经处理了清理
+
+  // 在列表循环模式下，当音频播放结束时，自动播放下一个题目
+  useEffect(() => {
+    if (playbackInfo.state === State.Ended && loopMode === LoopMode.List) {
+      // 列表循环模式，播放下一个音频
+      loopAudioManager.playNext(state.questions, playbackInfo);
+    }
+  }, [
+    playbackInfo.state,
+    loopMode,
+    playbackInfo.previousItemId,
+    state.questions,
+  ]);
   // 渲染列表项
   const renderItem = useCallback(
     ({item, index}: {item: Question; index: number}) => (
@@ -173,7 +197,7 @@ const OptimizedFlatList: React.FC<Props> = ({
         </View>
       </TouchableOpacity>
     ),
-    [handleNavigateToDetail, handlePlayPause, playbackId, playbackInfo],
+    [handleNavigateToDetail, handlePlayPause, playbackInfo],
   );
 
   // 渲染底部加载更多指示器
