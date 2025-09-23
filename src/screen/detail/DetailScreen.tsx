@@ -116,9 +116,6 @@ export default function DetailScreen() {
       navigation.getParent()?.setOptions({
         tabBarStyle: {display: 'flex'},
       });
-      console.log('组件卸载时停止音频播放');
-      // 组件卸载时停止音频播放
-      audioManager.stopCurrent();
     };
   }, [navigation]);
 
@@ -200,7 +197,12 @@ export default function DetailScreen() {
   useEffect(() => {
     // 初始状态检查
     // 在列表循环模式下，传递true以启用特殊的播放状态检查逻辑
-    setIsPlaying(audioManager.isItemPlaying(currentQuestion._id, loopMode === LoopMode.List));
+    setIsPlaying(
+      audioManager.isItemPlaying(
+        currentQuestion._id,
+        loopMode === LoopMode.List,
+      ),
+    );
 
     // 添加状态变化监听器
     const handlePlaybackChange = (playbackInfo: AudioPlaybackInfo) => {
