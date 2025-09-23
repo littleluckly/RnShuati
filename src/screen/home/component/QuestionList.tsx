@@ -173,8 +173,8 @@ const OptimizedFlatList: React.FC<Props> = ({
         <TouchableOpacity
           onPress={() => handlePlayPause(item)}
           style={styles.playButton}>
-          {playbackInfo.currentItemId === item.id &&
-          playbackInfo.state === 'playing' ? (
+          {playbackInfo.currentItemId === item._id &&
+          playbackInfo.state === State.Playing ? (
             <View style={styles.playingContainer}>
               <View style={styles.playingOverlay}>
                 <Icon name="pause-circle" color="#4ECDC4" size={48} />
