@@ -21,6 +21,7 @@ interface QuestionContextState {
   filters: {
     difficulty?: string | string[];
     tags?: string[];
+    searchKeyword?: string;
   };
   loading: boolean;
   refreshing: boolean;
@@ -34,7 +35,11 @@ type QuestionContextAction =
   | {type: 'SET_SUBJECT_ID'; payload: string}
   | {
       type: 'SET_FILTERS';
-      payload: {difficulty?: string | string[]; tags?: string[]};
+      payload: {
+        difficulty?: string | string[];
+        tags?: string[];
+        searchKeyword?: string;
+      };
     }
   | {type: 'SET_LOADING'; payload: boolean}
   | {type: 'SET_REFRESHING'; payload: boolean}
@@ -56,6 +61,7 @@ interface QuestionContextType {
   updateFilters: (filters: {
     difficulty?: string | string[];
     tags?: string[];
+    searchKeyword?: string;
   }) => void;
   deleteQuestion: (questionId: string) => void; // 添加删除题目方法
 }
@@ -273,14 +279,14 @@ export const QuestionProvider = ({
 
   // 当主题ID或筛选条件变化时，重新获取数据
   useEffect(() => {
-    // Only fetch data if subjectId has actually changed
+    // 科目变化的时候，刷新数据
     if (state.subjectId && state.subjectId !== prevSubjectIdRef.current) {
       prevSubjectIdRef.current = state.subjectId;
       fetchData(1);
       return;
     }
 
-    // Only fetch data if filters have actually changed
+    // 筛选条件变化的时候，刷新数据
     if (
       JSON.stringify(state.filters) !== JSON.stringify(prevFiltersRef.current)
     ) {
@@ -289,7 +295,7 @@ export const QuestionProvider = ({
       return;
     }
 
-    // Initial fetch if we have a subjectId and no questions
+    // 当主题ID和题目列表为空时，刷新数据
     if (state.subjectId && state.questions.length === 0) {
       fetchData(1);
     }

@@ -11,12 +11,15 @@ import {Modalize} from 'react-native-modalize';
 import {Portal} from 'react-native-portalize';
 import {subjectApiService} from '@/services';
 import {useQuestionContext} from '@/contexts/QuestionContext';
+import {useNavigation} from '@react-navigation/native';
+import {routeNameMap} from '@/navigation/constant';
 
 interface QuestionFilterProps {
   subjectId: string;
 }
 
 const Filter = ({subjectId}: QuestionFilterProps) => {
+  const navigation = useNavigation();
   const {updateFilters} = useQuestionContext();
   const modalRef = useRef<Modalize>(null);
   // 筛选项
@@ -82,6 +85,9 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
         const response = await subjectApiService.getSubjectTags(subjectId);
         if (response.success && response.data) {
           setTagItems([{name: '全部', value: ''}, ...response.data]);
+        } else if (response.message === '科目不存在') {
+          // 跳转到科目选择页面
+          navigation.navigate(routeNameMap.subjectSelectionScreen);
         }
       } catch (error) {
         console.error('获取标签数据失败:', error);

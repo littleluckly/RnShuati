@@ -1,4 +1,3 @@
-import {useHeaderHeight} from '@react-navigation/elements';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import React, {useState} from 'react';
 import {
@@ -10,8 +9,10 @@ import {
   View,
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useHeaderHeight} from '@react-navigation/elements';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {RootNavigation} from './Types';
+import {useQuestionContext} from '../contexts/QuestionContext';
 
 const SearchableHeader = () => {
   const navigation = useNavigation<RootNavigation>();
@@ -20,6 +21,7 @@ const SearchableHeader = () => {
   const insets = useSafeAreaInsets(); // 获取安全区域
 
   const route = useRoute();
+  const {updateFilters} = useQuestionContext() || {};
   // 类型断言，确保route.params可以访问subjectName属性
   const params = route.params as {subjectName?: string} | undefined;
   const [isSearching, setIsSearching] = useState(false);
@@ -54,14 +56,19 @@ const SearchableHeader = () => {
     console.log('搜索内容:', query);
     // 执行搜索逻辑
     setIsSearching(false);
-    setQuery('');
-    // 可选：跳转到搜索结果页
-    // navigation.navigate('SearchResults', { query });
+    // setQuery('');
+
+    // 直接通过QuestionContext更新搜索条件，触发列表搜索
+    if (updateFilters) {
+      updateFilters({searchKeyword: query || undefined});
+    }
   };
 
   const onCancel = () => {
     setIsSearching(false);
     setQuery('');
+
+    updateFilters({searchKeyword: ''});
   };
 
   // 动态渲染 header
