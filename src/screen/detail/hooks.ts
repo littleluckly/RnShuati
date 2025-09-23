@@ -316,13 +316,6 @@ export const useDetailScreen = (route: any) => {
     // }
   }, [currentQuestion, playbackInfo]);
 
-  // 组件卸载时清理音频监听器
-  useEffect(() => {
-    return () => {
-      audioManager.removeListener('detailScreen');
-    };
-  }, []);
-
   // 处理设置
   const handleSettings = useCallback(() => {
     // 显示设置面板
