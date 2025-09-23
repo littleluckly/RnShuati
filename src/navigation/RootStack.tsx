@@ -31,7 +31,7 @@ const ProfileStack = () => {
       <Stack.Screen
         name={routeNameMap.profileScreen}
         component={ProfileScreen}
-        options={{title: '个人中心'}}
+        options={{title: '个人中心', headerShown: false}}
       />
       <Stack.Screen
         name="ApiDemo"
@@ -81,6 +81,7 @@ const RootAppNavigator: React.FC = () => {
                   getFocusedRouteNameFromRoute(route) ??
                   routeNameMap.subjectSelectionScreen;
                 return {
+                  title: '首页',
                   tabBarStyle: {
                     display:
                       routeName === routeNameMap.subjectSelectionScreen
@@ -103,6 +104,7 @@ const RootAppNavigator: React.FC = () => {
               component={ProfileStack}
               options={{
                 headerShown: false,
+                title: '个人中心',
                 tabBarIcon: ({focused}) => (
                   <LottieView
                     source={
