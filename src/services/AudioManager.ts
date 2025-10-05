@@ -155,14 +155,24 @@ class AudioManagerService {
       })
     );
 
-    // todo 事件名称已废弃，改成PlaybackActiveTrackChanged
+    // 使用新的事件名称PlaybackActiveTrackChanged替代废弃的PlaybackTrackChanged
     this.eventSubscriptions.push(
-      TrackPlayer.addEventListener(Event.PlaybackTrackChanged, async (data) => {
+      TrackPlayer.addEventListener(Event.PlaybackActiveTrackChanged, async (data) => {
         // 当前播放的音频发生变化
-        if (data.nextTrack !== null && data.nextTrack !== undefined) {
-          this.currentAudioIndex = data.nextTrack;
-          console.log(`切换到音频 ${this.currentAudioIndex + 1}/${this.audioQueue.length}`);
-          this.notifyListeners();
+        // 注意：PlaybackActiveTrackChanged事件的data.track返回的是轨道ID而不是索引
+        // 由于TrackPlayer 4.1.2版本不支持getTrackIndex方法，我们使用自定义实现获取索引
+        if (data.track !== null && data.track !== undefined) {
+          try {
+            // 获取当前播放轨道的索引 - 自定义实现
+            const index = await this.getTrackIndexFromQueue(data.track);
+            if (index !== -1) {
+              this.currentAudioIndex = index;
+              console.log(`切换到音频 ${this.currentAudioIndex + 1}/${this.audioQueue.length}`);
+              this.notifyListeners();
+            }
+          } catch (error) {
+            console.warn('获取轨道索引失败:', error);
+          }
         }
       })
     );
@@ -272,7 +282,7 @@ class AudioManagerService {
 
   // 暂停当前播放
   public async pauseCurrent(): Promise<void> {
-    if (this.playbackState === 'playing') {
+    if (this.playbackState === State.Playing) {
       try {
         if (this.isTrackPlayerInitialized) {
           await TrackPlayer.pause();
@@ -567,6 +577,47 @@ class AudioManagerService {
     setTimeout(() => {
       this.stopCurrent();
     }, 3000);
+  }
+
+  /**
+   * 自定义方法：从播放队列中获取轨道的索引
+   * 替代TrackPlayer 4.1.2版本不支持的getTrackIndex方法
+   * @param track 轨道对象或轨道ID
+   * @returns 找到的轨道索引，如果未找到则返回-1
+   */
+  private async getTrackIndexFromQueue(track: any): Promise<number> {
+    try {
+      // 获取当前播放队列
+      const queue = await TrackPlayer.getQueue();
+
+      // 确定要查找的轨道ID
+      let trackIdStr: string;
+
+      // 处理不同类型的track参数
+      if (typeof track === 'object' && track !== null && 'id' in track) {
+        // 如果track是一个对象且有id属性，使用其id
+        trackIdStr = String(track.id);
+      } else {
+        // 否则，直接将track作为ID处理
+        trackIdStr = String(track);
+      }
+
+      // 在队列中查找匹配的轨道ID
+      for (let i = 0; i < queue.length; i++) {
+        const queueTrack = queue[i];
+        // 比较轨道ID（转换为字符串进行比较）
+        if (queueTrack && String(queueTrack.id) === trackIdStr) {
+          return i;
+        }
+      }
+
+      // 未找到匹配的轨道
+      console.warn(`在队列中未找到轨道ID: ${trackIdStr}`);
+      return -1;
+    } catch (error) {
+      console.error('获取播放队列失败:', error);
+      return -1;
+    }
   }
 
   // 设置播放速度
