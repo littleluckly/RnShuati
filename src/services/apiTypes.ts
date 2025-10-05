@@ -5,6 +5,7 @@
 
 // Base API configuration
 export const API_BASE_URL = 'http://localhost:3000';
+// export const API_BASE_URL = 'https://api.shuati.app.repeat.net.cn';
 
 // Generic API response structure
 export interface ApiResponse<T> {
@@ -16,13 +17,12 @@ export interface ApiResponse<T> {
 // Subject related interfaces
 export interface SubjectTag {
   name: string;
-  value: string;
-  type?: string;
+  type: string;
 }
 
-export interface DifficultyOption {
+export interface UserTag {
   name: string;
-  value: string;
+  type: string;
 }
 
 export interface Subject {
@@ -30,20 +30,55 @@ export interface Subject {
   name: string;
   code: string;
   description: string;
-  tags: SubjectTag[];
-  userTags: SubjectTag[];
-  difficultyLevels: DifficultyOption[];
+  tags: Array<{ name: string; value: string }>;
+  userTags: UserTag[];
+  difficultyLevels: string[];
   isEnabled: boolean;
+  isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
-  questionStats?: {
-    total: number;
-    byDifficulty: {
-      easy: number;
-      medium: number;
-      hard: number;
-    };
+  questionCount: number;
+}
+
+export interface SubjectWithStats extends Subject {
+  questionCount: number;
+  difficultyCount: {
+    easy: number;
+    medium: number;
+    hard: number;
   };
+}
+
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface SubjectListResponse {
+  subjects: Subject[];
+  pagination: Pagination;
+  filters: {
+    isEnabled: boolean;
+    searchKeyword?: string;
+  };
+}
+
+export interface SubjectWithStatsListResponse {
+  subjects: SubjectWithStats[];
+  pagination: Pagination;
+  filters: {
+    isEnabled: boolean;
+    searchKeyword?: string;
+  };
+}
+
+export interface TagCount {
+  name: string;
+  count: number;
 }
 
 // Question related interfaces
@@ -87,6 +122,7 @@ export interface FilteredQuestionListConfig {
   subjectId?: string;
   difficulty?: string | string[];
   tags?: string[];
+  searchKeyword?: string; // 添加搜索关键字参数
   page?: number;
   limit?: number;
 }

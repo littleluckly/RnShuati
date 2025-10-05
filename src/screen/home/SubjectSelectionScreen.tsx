@@ -19,6 +19,7 @@ import {UserActionApiService} from '@/services/userActionApiService';
 import {Subject} from '@/services/apiTypes';
 import GlobalStyles from '@/styles/globalStyles';
 import {saveSelectedSubject} from '../../utils/userStorageUtils';
+import {subjectApiService, userActionApiService} from '@/services';
 
 // 获取屏幕宽度
 const {width} = Dimensions.get('window');
@@ -103,11 +104,12 @@ const SubjectCard = ({
             </View>
             <View style={styles.subjectInfo}>
               <Text style={styles.subjectName}>{subject.name}</Text>
-              {subject.questionStats && (
-                <Text style={styles.subjectStats}>
-                  共 {subject.questionStats.total} 题
-                </Text>
-              )}
+              {'questionCount' in subject &&
+                typeof subject.questionCount === 'number' && (
+                  <Text style={styles.subjectStats}>
+                    共 {subject.questionCount} 题
+                  </Text>
+                )}
               <Text style={styles.subjectDescription} numberOfLines={2}>
                 {subject.description}
               </Text>
@@ -130,9 +132,6 @@ export default function SubjectSelectionScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
 
-  const subjectApiService = new SubjectApiService();
-  const userActionApiService = new UserActionApiService();
-
   useEffect(() => {
     fetchSubjects();
   }, []);
@@ -141,8 +140,15 @@ export default function SubjectSelectionScreen() {
     try {
       setLoading(true);
       const response = await subjectApiService.getSubjects();
-      if (response.success && response.data) {
-        setSubjects(response.data);
+      if (response.success && response.data?.subjects) {
+        console.log(
+          'response.data.subjects',
+          response.data.subjects.map(item => ({
+            name: item.name,
+            questionCount: item.questionCount,
+          })),
+        );
+        setSubjects(response.data.subjects);
       }
     } catch (error) {
       console.error('Failed to fetch subjects:', error);
@@ -168,7 +174,7 @@ export default function SubjectSelectionScreen() {
       if (response.success) {
         // 保存用户选择的科目到本地存储
         await saveSelectedSubject(subjectId, subjectName);
-        
+
         // 导航到主屏幕
         navigation.navigate(routeNameMap.homeScreen as never);
       } else {
@@ -219,7 +225,7 @@ export default function SubjectSelectionScreen() {
           </Text>
 
           <View style={styles.subjectList}>
-            {subjects.map(subject => (
+            {subjects?.map(subject => (
               <SubjectCard
                 key={subject._id}
                 subject={subject}

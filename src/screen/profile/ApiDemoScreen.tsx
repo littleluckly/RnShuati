@@ -36,7 +36,7 @@ const ApiDemoScreen = () => {
     try {
       const response = await subjectApiService.getSubjects();
       if (response.success) {
-        setSubjects(response.data || []);
+        setSubjects(response.data?.subjects || []);
       } else {
         Alert.alert('Error', response.message);
       }
@@ -97,9 +97,9 @@ const ApiDemoScreen = () => {
                 await AsyncStorage.removeItem('anonymous_user_id');
                 await AsyncStorage.removeItem('selected_subject');
                 await AsyncStorage.removeItem('is_logged_in');
-                
+
                 Alert.alert('成功', '用户数据已清理');
-                
+
                 // 刷新用户统计数据
                 fetchUserStats();
               } catch (error) {
@@ -109,7 +109,7 @@ const ApiDemoScreen = () => {
             },
           },
         ],
-        { cancelable: true }
+        {cancelable: true},
       );
     } catch (error) {
       console.error('显示确认对话框失败:', error);
@@ -129,7 +129,7 @@ const ApiDemoScreen = () => {
         {loading ? (
           <Text>Loading...</Text>
         ) : (
-          subjects.map(subject => (
+          subjects?.map(subject => (
             <View key={subject._id} style={styles.subjectCard}>
               <Text style={styles.subjectName}>{subject.name}</Text>
               <Text style={styles.subjectCode}>{subject.code}</Text>
@@ -173,10 +173,9 @@ const ApiDemoScreen = () => {
       {/* 调试工具部分 */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>调试工具</Text>
-        <TouchableOpacity 
-          style={[styles.button, styles.dangerButton]} 
-          onPress={clearUserIdForDebug}
-        >
+        <TouchableOpacity
+          style={[styles.button, styles.dangerButton]}
+          onPress={clearUserIdForDebug}>
           <Text style={styles.buttonText}>清理用户ID（调试用）</Text>
         </TouchableOpacity>
       </View>

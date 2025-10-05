@@ -64,22 +64,8 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
     }
   };
 
-  // 获取难度选项数据
+  // 获取标签数据
   useEffect(() => {
-    const fetchDifficultyOptions = async () => {
-      try {
-        const response = await subjectApiService.getDifficultyOptions(
-          subjectId,
-        );
-        if (response.success && response.data) {
-          setDifficultyItems([{name: '全部', value: ''}, ...response.data]);
-        }
-      } catch (error) {
-        console.error('获取难度选项数据失败:', error);
-      }
-    };
-
-    // 获取标签数据
     const fetchTags = async () => {
       try {
         const response = await subjectApiService.getSubjectTags(subjectId);
@@ -87,7 +73,7 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
           setTagItems([{name: '全部', value: ''}, ...response.data]);
         } else if (response.message === '科目不存在') {
           // 跳转到科目选择页面
-          navigation.navigate(routeNameMap.subjectSelectionScreen);
+          navigation.navigate({name: routeNameMap.subjectSelectionScreen});
         }
       } catch (error) {
         console.error('获取标签数据失败:', error);
@@ -95,10 +81,19 @@ const Filter = ({subjectId}: QuestionFilterProps) => {
     };
 
     if (subjectId) {
-      fetchDifficultyOptions();
       fetchTags();
     }
   }, [subjectId]);
+
+  // 设置默认难度选项
+  useEffect(() => {
+    setDifficultyItems([
+      {name: '全部', value: ''},
+      {name: '简单', value: '简单'},
+      {name: '中等', value: '中等'},
+      {name: '困难', value: '困难'}
+    ]);
+  }, []);
 
   const openFilter = () => modalRef.current?.open();
   const closeFilter = () => modalRef.current?.close();
