@@ -429,6 +429,7 @@ class AudioManagerService {
 
       // 在列表循环模式下，如果音频已经在播放，不做任何操作，保持当前播放
       if (isListLoopMode && this.playbackState === State.Playing) {
+        await this.pauseCurrent();
         return;
       }
 

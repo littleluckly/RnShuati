@@ -141,7 +141,7 @@ const OptimizedFlatList: React.FC<Props> = ({
   const handlePlayPause = useCallback(
     (question: Question) => {
       const {files: audioFiles, _id} = question;
-      // 开始播放序列：题目 → 简单答案 → 详细答案
+      // 开始播放序列：题目 → 简单答案 → 扩展答案
 
       audioManager.startPlayback(
         _id,

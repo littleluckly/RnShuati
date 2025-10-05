@@ -87,7 +87,7 @@ export const initializeTrackPlayer = async (
         stopForegroundGracePeriod: 30,
         alwaysPauseOnInterruption: true,
         // 添加以下内容确保媒体会话激活
-        shouldStartForegroundService: true, // 关键：启动前台服务
+        // shouldStartForegroundService: true, // 关键：启动前台服务
       },
 
       // 图标资源（确保路径正确且图片存在）
