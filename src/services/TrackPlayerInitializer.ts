@@ -22,26 +22,13 @@ export interface TrackPlayerOptions {
   enableBackgroundPlayback?: boolean;
 }
 
-/**
- * 默认的 TrackPlayer 配置选项
- */
-const DEFAULT_OPTIONS: TrackPlayerOptions = {
-  enablePlay: true,
-  enablePause: true,
-  enableStop: true,
-  enableSeek: true,
-  progressUpdateInterval: 1000,
-  enableBackgroundPlayback: true,
-};
 
+let isInitialized = false;
 /**
  * 初始化 TrackPlayer 播放器
- * @param options 自定义配置选项
  * @returns Promise<boolean> 初始化是否成功
  */
-export const initializeTrackPlayer = async (
-  options: TrackPlayerOptions = DEFAULT_OPTIONS
-): Promise<boolean> => {
+export const initializeTrackPlayer = async (): Promise<boolean> => {
   try {
     // 设置播放器
     await TrackPlayer.setupPlayer({
@@ -49,7 +36,8 @@ export const initializeTrackPlayer = async (
       waitForBuffer: true,
       maxCacheSize: 1000000,
       minBuffer: 5,
-      maxBuffer: 20
+      maxBuffer: 20,
+      autoUpdateMetadata: true,
     });
 
     // 配置播放器选项
@@ -83,24 +71,15 @@ export const initializeTrackPlayer = async (
 
       // Android 特定配置
       android: {
-        appKilledPlaybackBehavior: AppKilledPlaybackBehavior.ContinuePlayback,
+        appKilledPlaybackBehavior: AppKilledPlaybackBehavior.PausePlayback,
         stopForegroundGracePeriod: 30,
         alwaysPauseOnInterruption: true,
-        // 添加以下内容确保媒体会话激活
-        // shouldStartForegroundService: true, // 关键：启动前台服务
       },
 
-      // 图标资源（确保路径正确且图片存在）
-      icon: require('../assets/image/work.png'),
-      playIcon: require('../assets/image/work.png'),
-      pauseIcon: require('../assets/image/work.png'),
-      stopIcon: require('../assets/image/work.png'),
-      previousIcon: require('../assets/image/work.png'),
-      nextIcon: require('../assets/image/work.png'),
     });
 
     console.log('✅ TrackPlayer 初始化成功');
-
+    isInitialized = true;
     // 通知 AudioManager 全局初始化已完成
     setGlobalTrackPlayerInitialized(true);
 
@@ -138,14 +117,8 @@ export const resetTrackPlayer = async (): Promise<void> => {
  * 检查 TrackPlayer 是否已初始化
  * @returns Promise<boolean>
  */
-export const isTrackPlayerInitialized = async (): Promise<boolean> => {
-  try {
-    // 尝试获取当前曲目，如果成功说明已初始化
-    await TrackPlayer.getCurrentTrack();
-    return true;
-  } catch (error) {
-    return false;
-  }
+export const isTrackPlayerInitialized = (): boolean => {
+  return isInitialized
 };
 
 /**
@@ -155,16 +128,14 @@ export const isTrackPlayerInitialized = async (): Promise<boolean> => {
 let isInitializing = false;
 let initializationPromise: Promise<boolean> | null = null;
 
-export const safeInitializeTrackPlayer = async (
-  options?: TrackPlayerOptions
-): Promise<boolean> => {
+export const safeInitializeTrackPlayer = async (): Promise<boolean> => {
   // 如果正在初始化，返回同一个 Promise
   if (isInitializing && initializationPromise) {
     return initializationPromise;
   }
 
   // 检查是否已经初始化
-  const alreadyInitialized = await isTrackPlayerInitialized();
+  const alreadyInitialized = isTrackPlayerInitialized();
   if (alreadyInitialized) {
     console.log('ℹ️ TrackPlayer 已经初始化，跳过重复初始化');
     setGlobalTrackPlayerInitialized(true);
@@ -172,13 +143,10 @@ export const safeInitializeTrackPlayer = async (
   }
 
   isInitializing = true;
-  initializationPromise = initializeTrackPlayer(options)
+  initializationPromise = initializeTrackPlayer()
     .finally(() => {
       isInitializing = false;
     });
 
   return initializationPromise;
 };
-
-// 导出默认配置
-export { DEFAULT_OPTIONS };
