@@ -17,7 +17,7 @@ class LoopAudioManager {
       this.loopMode = mode;
       await this.saveLocalLoopMode(); // 保存到本地存储
     } catch (error) {
-      console.error('Error setting loop mode:', error);
+      console.error('设置循环模式失败:', error);
     }
   }
 
@@ -28,7 +28,7 @@ class LoopAudioManager {
         this.loopMode = mode as LoopMode;
       }
     } catch (error) {
-      console.error('Error loading loop mode:', error);
+      console.error('加载循环模式失败:', error);
     }
   }
 
@@ -36,7 +36,7 @@ class LoopAudioManager {
     try {
       await AsyncStorage.setItem(LOOP_MODE_KEY, this.loopMode);
     } catch (error) {
-      console.error('Error saving loop mode:', error);
+      console.error('保存循环模式失败:', error);
     }
   }
 

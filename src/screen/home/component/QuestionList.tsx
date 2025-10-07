@@ -21,6 +21,9 @@ import {useQuestionContext} from '@/contexts/QuestionContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {State} from 'react-native-track-player';
 import loopAudioManager, {LoopMode} from '@/services/LoopAudioManager';
+import {questionApiService} from '@/services'; // 添加这行导入语句
+import RNFS from 'react-native-fs'; // 添加这行导入语句
+
 interface Props {
   subjectId: string;
   filters?: {difficulty?: string | string[]; tags?: string[]};
@@ -123,10 +126,41 @@ const OptimizedFlatList: React.FC<Props> = ({
     loadLoopMode();
   }, []);
 
+  // 添加下载状态管理
+  const [downloadingItems, setDownloadingItems] = useState<Set<string>>(new Set());
+  const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({});
+
   // 监听循环模式变化
   useEffect(() => {
     setLoopMode(loopAudioManager.loopMode);
   }, [loopAudioManager.loopMode]);
+
+  // 下载音频文件的函数
+  const downloadAudioFile = useCallback(async (fileName: string, itemId?: string): Promise<string | null> => {
+    try {
+      // 调用API服务下载音频文件，传入进度回调
+      const response = await questionApiService.downloadAudioFile(
+        fileName,
+        itemId ? (progress) => {
+          // 更新下载进度状态
+          setDownloadProgress(prev => ({
+            ...prev,
+            [itemId]: progress
+          }));
+        } : undefined
+      );
+      
+      if (response.success && response.data) {
+        return response.data; // 返回本地文件路径
+      } else {
+        console.error('下载音频文件失败:', response.message);
+        return null;
+      }
+    } catch (error) {
+      console.error('下载音频文件时发生错误:', error);
+      return null;
+    }
+  }, []);
 
   // 处理播放/暂停点击
   // 组件挂载时添加统一的音频监听器
@@ -139,21 +173,55 @@ const OptimizedFlatList: React.FC<Props> = ({
   }, []);
 
   const handlePlayPause = useCallback(
-    (question: Question) => {
+    async (question: Question) => {
       const {files: audioFiles, _id} = question;
-      // 开始播放序列：题目 → 简单答案 → 扩展答案
+      
+      // 检查是否正在下载此题目的音频
+      if (downloadingItems.has(_id)) {
+        console.log('音频正在下载中，请稍候...');
+        return;
+      }
 
-      audioManager.startPlayback(
-        _id,
-        {
-          audio_question: audioFiles.audio_question,
-          audio_answer_simple: audioFiles.audio_answer_simple,
-          audio_answer_detail: audioFiles.audio_answer_detail,
-        },
-        loopMode === LoopMode.List, // 传递当前是否为列表循环模式
-      );
+      // 设置下载状态
+      setDownloadingItems(prev => new Set(prev).add(_id));
+      
+      try {
+        // 下载音频文件
+        const [questionAudioPath, simpleAnswerPath, detailAnswerPath] = await Promise.all([
+          audioFiles.audio_question ? downloadAudioFile(audioFiles.audio_question, _id) : Promise.resolve(null),
+          audioFiles.audio_answer_simple ? downloadAudioFile(audioFiles.audio_answer_simple, _id) : Promise.resolve(null),
+          audioFiles.audio_answer_detail ? downloadAudioFile(audioFiles.audio_answer_detail, _id) : Promise.resolve(null),
+        ]);
+
+        // 清除下载状态
+        setDownloadingItems(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(_id);
+          return newSet;
+        });
+
+        // 开始播放序列：题目 → 简单答案 → 扩展答案
+        audioManager.startPlayback(
+          _id,
+          {
+            audio_question: questionAudioPath || undefined,
+            audio_answer_simple: simpleAnswerPath || undefined,
+            audio_answer_detail: detailAnswerPath || undefined,
+          },
+          loopMode === LoopMode.List, // 传递当前是否为列表循环模式
+        );
+      } catch (error) {
+        // 清除下载状态
+        setDownloadingItems(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(_id);
+          return newSet;
+        });
+        
+        console.error('处理音频播放时发生错误:', error);
+      }
     },
-    [loopMode],
+    [loopMode, downloadingItems, downloadAudioFile],
   );
 
   // 在列表循环模式下，当音频播放结束时，自动播放下一个题目
@@ -179,18 +247,34 @@ const OptimizedFlatList: React.FC<Props> = ({
         <TouchableOpacity
           onPress={() => handlePlayPause(item)}
           style={styles.playButton}>
-          {playbackInfo.currentItemId === item._id &&
-          playbackInfo.state === State.Playing ? (
+          {downloadingItems.has(item._id) ? (
+            // 下载中状态 - 显示进度指示器
+            <View style={styles.playingContainer}>
+              <View style={styles.playingOverlay}>
+                <ActivityIndicator size="large" color="#4ECDC4" />
+              </View>
+              {downloadProgress[item._id] !== undefined && (
+                <View style={styles.progressIndicator}>
+                  <Text style={styles.progressText}>
+                    {Math.round(downloadProgress[item._id])}%
+                  </Text>
+                </View>
+              )}
+            </View>
+          ) : playbackInfo.currentItemId === item._id &&
+            playbackInfo.state === State.Playing ? (
+            // 播放中状态
             <View style={styles.playingContainer}>
               <View style={styles.playingOverlay}>
                 <Icon name="pause-circle" color="#4ECDC4" size={48} />
               </View>
             </View>
           ) : (
+            // 默认状态 - 显示播放按钮
             <Icon
               name="play-circle"
               color={
-                playbackInfo.currentItemId === item.id ? '#4ECDC4' : '#d2d2d2'
+                playbackInfo.currentItemId === item._id ? '#4ECDC4' : '#d2d2d2'
               }
               size={48}
             />

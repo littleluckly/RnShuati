@@ -463,7 +463,7 @@ class AudioManagerService {
       }
 
       if (this.audioQueue.length === 0) {
-        console.warn('No audio files available for playback');
+        console.warn('没有可用的音频文件进行播放');
         return;
       }
 
@@ -495,16 +495,17 @@ class AudioManagerService {
 
         // 一次性添加所有音频到队列
         const tracks = this.audioQueue.map((file, index) => {
-          const audioResource = soundMap[file.split('.')[0]];
-          if (!audioResource) {
-            console.warn(`音频资源未找到: ${file}`);
+          // 问题所在：直接使用文件路径作为音频资源，不需要通过soundMap查找
+          // TrackPlayer可以直接使用本地文件路径进行播放
+          if (!file) {
+            console.warn(`音频文件路径无效: ${file}`);
             return null;
           }
 
           // 为了在系统媒体中心正确显示播放信息，添加完整的元数据
           return {
             id: index.toString(),
-            url: audioResource,
+            url: file, // 直接使用文件路径作为url
             title: this.getAudioTitle(index),
             artist: '刷题派',
             album: '题目音频',
