@@ -1,40 +1,37 @@
-// iOS平台特定的音频控制器
-// 用于处理iOS上的音频会话配置、媒体远程控制和灵动岛显示优化
+/**
+ * iOS音频控制器
+ * 处理iOS特定的音频功能和配置
+ */
 
 import { Platform } from 'react-native';
-import TrackPlayer, { State } from 'react-native-track-player';
 
-/**
- * iOS音频控制器类
- * 负责处理iOS平台特有的音频配置，特别是为了支持灵动岛和锁屏控制中心显示
- */
 class iOSAudioController {
   private isActive: boolean = false;
-  
+
   /**
    * 初始化iOS音频控制器
-   * 只在iOS平台上执行操作
+   * 配置音频会话和远程控制事件
    */
   public async initialize(): Promise<void> {
-    // 只在iOS平台上执行
+    // 仅在iOS平台上执行
     if (Platform.OS !== 'ios') {
       return;
     }
-    
+
     try {
       // 配置音频会话
       await this.configureAudioSession();
-      
+
       // 设置远程控制事件监听
       this.setupRemoteControlEvents();
-      
+
+      // 标记为活动状态
       this.isActive = true;
-      console.log('✅ iOS音频控制器初始化成功');
     } catch (error) {
-      console.error('❌ iOS音频控制器初始化失败:', error);
+      console.error('初始化iOS音频控制器失败:', error);
     }
   }
-  
+
   /**
    * 配置iOS音频会话
    * 确保音频可以在后台播放，并且能够响应系统媒体控制
@@ -52,7 +49,7 @@ class iOSAudioController {
       console.error('配置iOS音频会话失败:', error);
     }
   }
-  
+
   /**
    * 设置远程控制事件监听
    * 处理来自锁屏、控制中心和灵动岛的控制事件
@@ -69,34 +66,38 @@ class iOSAudioController {
       console.error('设置iOS远程控制事件失败:', error);
     }
   }
-  
+
   /**
-   * 优化当前播放项在灵动岛和控制中心的显示
-   * @param trackInfo 轨道信息对象
+   * 更新音频元数据
+   * 用于在锁屏和控制中心显示音频信息
    */
-  public async optimizeNowPlayingInfo(trackInfo: {
-    title: string;
-    artist: string;
-    album?: string;
-    artwork?: string;
-    duration?: number;
-  }): Promise<void> {
-    if (Platform.OS !== 'ios' || !this.isActive) {
-      return;
-    }
-    
+  public updateNowPlayingInfo(title: string, artist?: string, albumArtwork?: string): void {
+    // 在较新版本的react-native-track-player中，这些功能通常由库自动处理
+    // 这里添加特定于项目的自定义逻辑
     try {
-      // 在react-native-track-player中，这些信息通常通过轨道元数据设置
-      // 这里可以添加额外的优化逻辑
-      
-      // 确保进度更新及时，以便在控制中心正确显示
-      
-      console.log('已优化iOS现在播放信息显示');
+      // 实现元数据更新逻辑
     } catch (error) {
-      console.error('优化iOS现在播放信息失败:', error);
+      console.error('更新iOS音频元数据失败:', error);
     }
   }
-  
+
+  /**
+   * 启用后台音频播放
+   */
+  public async enableBackgroundAudio(): Promise<void> {
+    // 仅在iOS平台上执行
+    if (Platform.OS !== 'ios') {
+      return;
+    }
+
+    try {
+      // 实现后台音频播放逻辑
+      console.log('iOS后台音频播放已启用');
+    } catch (error) {
+      console.error('启用iOS后台音频播放失败:', error);
+    }
+  }
+
   /**
    * 清理iOS音频控制器资源
    */

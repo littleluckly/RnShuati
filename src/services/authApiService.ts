@@ -1,23 +1,23 @@
 /**
- * Authentication API Service for the Quiz Application
- * Provides methods to handle user authentication, registration and password management
+ * 刷题应用认证API服务
+ * 提供用户认证、注册和密码管理相关方法
  */
 
 import { BaseApiService } from './baseApiService';
 import { ApiResponse, LoginRequest, LoginResponse, LogoutRequest, RegisterRequest, RegisterResponse, UserInfoResponse, ForgotPasswordRequest, ResetPasswordRequest } from './apiTypes';
 
 /**
- * Authentication API Service Class
- * Handles user authentication, registration and password management functionality
+ * 认证API服务类
+ * 处理用户认证、注册和密码管理功能
  */
 export class AuthApiService extends BaseApiService {
   /**
-   * User login
-   * Authenticates a user with username/email and password
-   * @param identifier User's username or email
-   * @param password User's password
-   * @param isEmail Whether the identifier is an email (default: false)
-   * @returns Promise with login response data or error message
+   * 用户登录
+   * 使用用户名/邮箱和密码认证用户
+   * @param identifier 用户的用户名或邮箱
+   * @param password 用户的密码
+   * @param isEmail 标识符是否为邮箱（默认为false）
+   * @returns 包含登录响应数据或错误消息的Promise
    */
   async login(
     identifier: string,
@@ -35,11 +35,11 @@ export class AuthApiService extends BaseApiService {
   }
 
   /**
-   * User logout
-   * Clears user authentication information
-   * @param userId User's unique identifier
-   * @param token User's authentication token
-   * @returns Promise with logout result
+   * 用户登出
+   * 清除用户认证信息
+   * @param userId 用户的唯一标识符
+   * @param token 用户的认证令牌
+   * @returns 包含登出结果的Promise
    */
   async logout(userId: string, token: string): Promise<ApiResponse<null>> {
     const requestBody: LogoutRequest = {
@@ -54,10 +54,10 @@ export class AuthApiService extends BaseApiService {
   }
 
   /**
-   * Get user information
-   * Retrieves current user information and verifies login status
-   * @param token User's authentication token
-   * @returns Promise with user information or error message
+   * 获取用户信息
+   * 检索当前用户信息并验证登录状态
+   * @param token 用户的认证令牌
+   * @returns 包含用户信息或错误消息的Promise
    */
   async getUserInfo(token: string): Promise<ApiResponse<UserInfoResponse>> {
     // 使用请求头方式传递token，这是推荐的安全做法
@@ -71,12 +71,12 @@ export class AuthApiService extends BaseApiService {
   }
 
   /**
-   * User registration
-   * Creates a new user account
-   * @param username New user's username
-   * @param password New user's password
-   * @param email Optional email address
-   * @returns Promise with registration result
+   * 用户注册
+   * 创建新用户账户
+   * @param username 新用户的用户名
+   * @param password 新用户的密码
+   * @param email 可选的邮箱地址
+   * @returns 包含注册结果的Promise
    */
   async register(
     username: string,
@@ -95,10 +95,10 @@ export class AuthApiService extends BaseApiService {
   }
 
   /**
-   * Forgot password
-   * Sends password reset link to user's email
-   * @param email User's registered email address
-   * @returns Promise with operation result
+   * 忘记密码
+   * 向用户邮箱发送密码重置链接
+   * @param email 用户注册的邮箱地址
+   * @returns 包含操作结果的Promise
    */
   async forgotPassword(email: string): Promise<ApiResponse<null>> {
     const requestBody: ForgotPasswordRequest = { email };
@@ -110,12 +110,12 @@ export class AuthApiService extends BaseApiService {
   }
 
   /**
-   * Reset password
-   * Sets a new password for the user using verification code
-   * @param email User's registered email address
-   * @param verificationCode Verification code from email
-   * @param newPassword New password
-   * @returns Promise with operation result
+   * 重置密码
+   * 使用验证码为用户设置新密码
+   * @param email 用户注册的邮箱地址
+   * @param verificationCode 邮箱中的验证码
+   * @param newPassword 新密码
+   * @returns 包含操作结果的Promise
    */
   async resetPassword(
     email: string,
@@ -134,9 +134,9 @@ export class AuthApiService extends BaseApiService {
   }
 
   /**
-   * Get current authenticated user information
-   * @param token User's authentication token
-   * @returns Promise with user information or error message
+   * 获取当前已认证用户信息
+   * @param token 用户的认证令牌
+   * @returns 包含用户信息或错误消息的Promise
    */
   async getCurrentUser(token: string): Promise<ApiResponse<LoginResponse>> {
     return this.fetchApi<LoginResponse>('/user-actions/current-user', {

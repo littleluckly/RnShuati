@@ -1,13 +1,13 @@
 /**
- * Base API Service for the Quiz Application
- * Provides generic fetch method with error handling
+ * 刷题应用基础API服务
+ * 提供带错误处理的通用fetch方法
  */
 
 import { Alert } from 'react-native';
 import { API_BASE_URL, ApiResponse } from './apiTypes';
 
 /**
- * API Service Base Class
+ * API服务基类
  */
 export class BaseApiService {
   protected baseUrl: string;
@@ -17,7 +17,7 @@ export class BaseApiService {
   }
 
   /**
-   * Generic fetch method with error handling
+   * 带错误处理的通用fetch方法
    */
   protected async fetchApi<T>(
     endpoint: string,
@@ -41,11 +41,11 @@ export class BaseApiService {
       }
       return result;
     } catch (error) {
-      console.error(`API(${this.baseUrl}${endpoint}) request failed:${error}`);
+      console.error(`API(${this.baseUrl}${endpoint}) 请求失败:${error}`);
       return {
         success: false,
         data: null,
-        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        message: error instanceof Error ? error.message : '发生未知错误',
       };
     }
   }
