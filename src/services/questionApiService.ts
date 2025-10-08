@@ -138,7 +138,20 @@ export class QuestionApiService extends BaseApiService {
             progressDivider: 1,
             progress: (res) => {
               if (onProgress) {
-                const progress = Math.round((res.bytesWritten / res.contentLength) * 100);
+                console.log('res.bytesWritten ', res.bytesWritten);
+                console.log('res.contentLength ', res.contentLength);
+                // 解决contentLength为-1的问题：
+                // 1. 当contentLength有效时，使用实际进度
+                // 2. 当contentLength无效时，使用一个模拟的进度（直到下载完成）
+                let progress = 0;
+                if (res.contentLength && res.contentLength > 0) {
+                  progress = Math.round((res.bytesWritten / res.contentLength) * 100);
+                } else if (res.bytesWritten > 0) {
+                  // 当contentLength不可用时，显示一个动态的进度条
+                  // 这种情况下，我们无法知道实际的总大小，所以显示一个递增但不完成的进度
+                  // 当下载完成时会被设置为100%
+                  progress = Math.min(95, Math.round((res.bytesWritten / 1000000) * 10));
+                }
                 onProgress(progress);
               }
             },
@@ -146,6 +159,11 @@ export class QuestionApiService extends BaseApiService {
 
           downloadResult = await download.promise;
           console.log(`下载尝试 ${retryCount + 1} 结果:`, downloadResult);
+
+          // 下载完成后，确保进度显示为100%
+          if (onProgress && downloadResult?.statusCode === 200) {
+            onProgress(100);
+          }
 
           // 如果成功或遇到非5xx错误，退出循环
           if (downloadResult.statusCode === 200 || downloadResult.statusCode < 500) {

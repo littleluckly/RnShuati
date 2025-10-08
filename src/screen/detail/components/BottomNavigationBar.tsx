@@ -20,6 +20,9 @@ interface BottomNavigationBarProps {
   totalQuestions: number;
   handlePlayPause: () => void;
   isPlaying: boolean;
+  downloadingItems: Set<string>;
+  downloadProgress: Record<string, number>;
+  questionId: string;
 }
 
 export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({
@@ -33,6 +36,9 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({
   totalQuestions,
   handlePlayPause,
   isPlaying,
+  downloadingItems,
+  downloadProgress,
+  questionId,
 }) => {
   const isFirstQuestion = currentIndex === 0;
   const isLastQuestion = currentIndex === totalQuestions - 1;
@@ -57,6 +63,9 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({
         navTranslateYBottom={navTranslateYBottom}
         handlePlayPause={handlePlayPause}
         isPlaying={isPlaying}
+        downloadingItems={downloadingItems}
+        downloadProgress={downloadProgress}
+        questionId={questionId}
       />
 
       {/* 底部导航栏 */}

@@ -48,6 +48,8 @@ export default function DetailScreen() {
     playbackSpeed,
     playbackContentSettings,
     loopMode,
+    downloadingItems,
+    downloadProgress,
 
     // Functions
     animateNav,
@@ -141,7 +143,7 @@ export default function DetailScreen() {
       !isAutoLoading
     ) {
       // 计算剩余题目数量：当前已加载的题目数量 - 当前索引
-      const remainingQuestions =
+      const remainingQuestions = 
         questionState.questions.length - (currentIndex + 1);
       // 如果剩余题目数量少于5题，触发加载更多
       if (remainingQuestions < 5) {
@@ -303,6 +305,9 @@ export default function DetailScreen() {
         totalQuestions={state.questions.length}
         handlePlayPause={handlePlayPause}
         isPlaying={isPlaying}
+        downloadingItems={downloadingItems}
+        downloadProgress={downloadProgress}
+        questionId={currentQuestion._id}
       />
 
       {/* 设置面板 */}

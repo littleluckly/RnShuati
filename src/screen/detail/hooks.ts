@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { HomeStackNavigation } from '@/navigation/Types';
@@ -13,6 +13,7 @@ import {
   setSkipOnboarding,
 } from '@/utils/onboardingUtils';
 import { State } from 'react-native-track-player';
+import { questionApiService } from '@/services'; // 添加这行导入语句
 
 const { width } = Dimensions.get('window');
 
@@ -59,11 +60,15 @@ export const useDetailScreen = (route: any) => {
   // 音频播放状态
   const [playbackInfo, setPlaybackInfo] = useState<AudioPlaybackInfo>({
     currentItemId: null,
+    previousItemId: null,
     state: State.None,
     currentAudioIndex: 0,
     totalAudios: 0,
-    previousItemId: null,
   });
+
+  // 添加下载状态管理
+  const [downloadingItems, setDownloadingItems] = useState<Set<string>>(new Set());
+  const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({});
 
   // 引用组件
   const contentScrollViewRef = useRef(null);
@@ -78,6 +83,21 @@ export const useDetailScreen = (route: any) => {
 
     checkOnboarding();
   }, []);
+
+  // 组件挂载时加载循环模式
+  useEffect(() => {
+    const loadLoopMode = async () => {
+      await loopAudioManager.loadLocalLoopMode();
+      setLoopMode(loopAudioManager.loopMode);
+    };
+
+    loadLoopMode();
+  }, []);
+
+  // 监听循环模式变化
+  useEffect(() => {
+    setLoopMode(loopAudioManager.loopMode);
+  }, [loopAudioManager.loopMode]);
 
   // 组件挂载时添加音频监听器
   useEffect(() => {
@@ -282,40 +302,92 @@ export const useDetailScreen = (route: any) => {
     [navigation, animateDirectory, animateNav],
   );
 
+  // 下载音频文件的函数
+  const downloadAudioFile = useCallback(async (fileName: string, itemId?: string): Promise<string | null> => {
+    try {
+      // 调用API服务下载音频文件，传入进度回调
+      const response = await questionApiService.downloadAudioFile(
+        fileName,
+        itemId ? (progress) => {
+          // 更新下载进度状态
+          setDownloadProgress(prev => ({
+            ...prev,
+            [itemId]: progress
+          }));
+        } : undefined
+      );
+
+      if (response.success && response.data) {
+        return response.data; // 返回本地文件路径
+      } else {
+        console.error('下载音频文件失败:', response.message);
+        return null;
+      }
+    } catch (error) {
+      console.error('下载音频文件时发生错误:', error);
+      return null;
+    }
+  }, []);
+
   // 处理播放/暂停
-  const handlePlayPause = useCallback(() => {
+  const handlePlayPause = useCallback(async () => {
     if (!currentQuestion) return;
 
     const { files: audioFiles, _id: questionId } = currentQuestion;
 
+    // 如果当前正在下载此题目的音频
+    if (downloadingItems.has(questionId)) {
+      console.log('音频正在下载中，请稍候...');
+      return;
+    }
+
     // 如果当前正在播放此题目，则暂停/恢复
-    // if (playbackInfo.currentItemId === questionId) {
     if (playbackInfo.state === State.Playing) {
       audioManager.pauseCurrent();
     } else if (playbackInfo.state === State.Paused) {
       audioManager.resumeCurrent();
     } else if (playbackInfo.state === State.None) {
-      // 如果当前是State.None状态，重新开始播放
-      audioManager.startPlayback(
-        questionId,
-        {
-          audio_question: audioFiles.audio_question,
-          audio_answer_simple: audioFiles.audio_answer_simple,
-          audio_answer_detail: audioFiles.audio_answer_detail,
-        },
-        loopMode === LoopMode.List // 传递当前是否为列表循环模式
-      );
+      // 下载并开始播放
+      // 设置下载状态
+      setDownloadingItems(prev => new Set(prev).add(questionId));
+
+      try {
+        // 下载音频文件
+        const [questionAudioPath, simpleAnswerPath, detailAnswerPath] = await Promise.all([
+          audioFiles.audio_question ? downloadAudioFile(audioFiles.audio_question, questionId) : Promise.resolve(null),
+          audioFiles.audio_answer_simple ? downloadAudioFile(audioFiles.audio_answer_simple, questionId) : Promise.resolve(null),
+          audioFiles.audio_answer_detail ? downloadAudioFile(audioFiles.audio_answer_detail, questionId) : Promise.resolve(null),
+        ]);
+
+        // 清除下载状态
+        setDownloadingItems(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(questionId);
+          return newSet;
+        });
+
+        // 开始播放序列：题目 → 简单答案 → 扩展答案
+        audioManager.startPlayback(
+          questionId,
+          {
+            audio_question: questionAudioPath || undefined,
+            audio_answer_simple: simpleAnswerPath || undefined,
+            audio_answer_detail: detailAnswerPath || undefined,
+          },
+          loopMode === LoopMode.List // 传递当前是否为列表循环模式
+        );
+      } catch (error) {
+        // 清除下载状态
+        setDownloadingItems(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(questionId);
+          return newSet;
+        });
+
+        console.error('处理音频播放时发生错误:', error);
+      }
     }
-    // }
-    // 如果没有播放任何内容或播放的是其他题目，则开始播放
-    // else {
-    //   audioManager.startPlayback(questionId, {
-    //     audio_question: audioFiles.audio_question,
-    //     audio_answer_simple: audioFiles.audio_answer_simple,
-    //     audio_answer_detail: audioFiles.audio_answer_detail,
-    //   });
-    // }
-  }, [currentQuestion, playbackInfo, loopMode]);
+  }, [currentQuestion, playbackInfo, loopMode, downloadingItems, downloadAudioFile]);
 
   // 处理设置
   const handleSettings = useCallback(() => {
@@ -489,6 +561,8 @@ export const useDetailScreen = (route: any) => {
     playbackSpeed,
     playbackContentSettings,
     loopMode,
+    downloadingItems,
+    downloadProgress,
 
     // Functions
     animateNav,

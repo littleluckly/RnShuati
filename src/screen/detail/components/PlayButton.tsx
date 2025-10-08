@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from 'react';
-import {TouchableOpacity, Text, View, SafeAreaView, Platform} from 'react-native';
+import {TouchableOpacity, Text, View, SafeAreaView, Platform, ActivityIndicator} from 'react-native';
 import Animated, {
   useAnimatedStyle,
   SharedValue,
@@ -20,6 +20,9 @@ interface PlayButtonProps {
   navTranslateYBottom: SharedValue<number>;
   handlePlayPause: () => void;
   isPlaying: boolean;
+  downloadingItems: Set<string>;
+  downloadProgress: Record<string, number>;
+  questionId: string;
 }
 
 // 音频波形动画组件
@@ -102,7 +105,7 @@ const AudioWaveform: React.FC<{isPlaying: boolean}> = ({isPlaying}) => {
   };
 
   // 根据播放状态控制动画
-  useEffect(() => {
+  React.useEffect(() => {
     if (isPlaying) {
       startWaveformAnimation();
     } else {
@@ -141,14 +144,44 @@ const AudioWaveform: React.FC<{isPlaying: boolean}> = ({isPlaying}) => {
   );
 };
 
+// 下载进度动画组件
+const DownloadProgressAnimation: React.FC<{progress: number}> = ({progress}) => {
+  // 创建进度动画值
+  const progressAnimated = useSharedValue(0);
+  
+  // 更新进度动画
+  React.useEffect(() => {
+    progressAnimated.value = withTiming(progress, {duration: 300, easing: Easing.ease});
+  }, [progress]);
+
+  // 创建进度条的动画样式
+  const progressBarStyle = useAnimatedStyle(() => {
+    return {
+      width: `${progressAnimated.value}%`,
+      height: '100%',
+      backgroundColor: '#4ECDC4',
+      borderRadius: 2,
+    };
+  });
+
+  return (
+    <View style={styles.downloadProgressContainer}>
+      <Animated.View style={[styles.downloadProgressBar, progressBarStyle]} />
+    </View>
+  );
+};
+
 export const PlayButton: React.FC<PlayButtonProps> = ({
   navOpacity,
   navTranslateYBottom,
   handlePlayPause,
   isPlaying,
+  downloadingItems,
+  downloadProgress,
+  questionId,
 }) => {
-  const [bottomInset, setBottomInset] = useState(0);
-  const safeAreaRef = useRef<View>(null);
+  const [bottomInset, setBottomInset] = React.useState(0);
+  const safeAreaRef = React.useRef<View>(null);
   // 按钮按下状态动画
   const scale = useSharedValue(1);
   // 拖动位置共享值
@@ -253,6 +286,10 @@ export const PlayButton: React.FC<PlayButtonProps> = ({
     elevation: 8,
   };
 
+  // 检查当前是否正在下载此题目的音频
+  const isDownloading = downloadingItems.has(questionId);
+  const currentProgress = downloadProgress[questionId] || 0;
+
   return (
     <>
       {/* 隐藏的SafeAreaView用于获取安全区域尺寸 */}
@@ -268,13 +305,27 @@ export const PlayButton: React.FC<PlayButtonProps> = ({
         >
           <Animated.View>
             <TouchableOpacity 
-              style={[styles.playButton, platformButtonStyle, isPlaying && styles.playingButton]} 
+              style={[
+                styles.playButton, 
+                platformButtonStyle, 
+                isPlaying && styles.playingButton,
+                isDownloading && styles.downloadingButton
+              ]} 
               onPress={handlePlayPause}
               onPressIn={handlePressIn}
               onPressOut={handlePressOut}
               activeOpacity={0.8}
             >
-              {isPlaying ? (
+              {isDownloading ? (
+                // 下载中状态 - 显示进度指示器和ActivityIndicator
+                <View style={styles.downloadingContainer}>
+                  <ActivityIndicator size="small" color="#fff" />
+                  <View style={styles.downloadProgressWrapper}>
+                    <DownloadProgressAnimation progress={currentProgress} />
+                    <Text style={styles.downloadProgressText}>{Math.round(currentProgress)}%</Text>
+                  </View>
+                </View>
+              ) : isPlaying ? (
                 // 播放时显示波形动画
                 <AudioWaveform isPlaying={isPlaying} />
               ) : (

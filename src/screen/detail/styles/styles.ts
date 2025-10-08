@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -125,6 +125,10 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 8,
   },
+  // 下载状态下的按钮样式
+  downloadingButton: {
+    backgroundColor: '#4ECDC4', // 下载时使用青色
+  },
   playButtonText: {
     color: '#fff',
     fontSize: 18,
@@ -137,6 +141,45 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // 下载中容器样式
+  downloadingContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 8,
+  },
+  // 下载进度包装器
+  downloadProgressWrapper: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    right: 4,
+    height: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // 下载进度容器
+  downloadProgressContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  // 下载进度条
+  downloadProgressBar: {
+    borderRadius: 4,
+  },
+  // 下载进度文本
+  downloadProgressText: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: 'bold',
+    zIndex: 1,
   },
   // 目录抽屉样式
   directoryContainer: {
