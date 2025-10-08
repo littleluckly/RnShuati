@@ -138,8 +138,6 @@ export class QuestionApiService extends BaseApiService {
             progressDivider: 1,
             progress: (res) => {
               if (onProgress) {
-                console.log('res.bytesWritten ', res.bytesWritten);
-                console.log('res.contentLength ', res.contentLength);
                 // 解决contentLength为-1的问题：
                 // 1. 当contentLength有效时，使用实际进度
                 // 2. 当contentLength无效时，使用一个模拟的进度（直到下载完成）
