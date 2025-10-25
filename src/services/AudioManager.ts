@@ -422,7 +422,7 @@ class AudioManagerService {
     audio_question?: string;
     audio_answer_simple?: string;
     audio_answer_detail?: string;
-  }, isListLoopMode: boolean = false): Promise<void> {
+  }, isListLoopMode: boolean = false, audioName?: string): Promise<void> {
     try {
       // 确保 TrackPlayer 已就绪
       await this.ensureTrackPlayerReady();
@@ -468,8 +468,8 @@ class AudioManagerService {
       }
 
       this.currentItemId = itemId;
-      this.currentAudioIndex = 0;
-      await this.playCurrentAudioWithTrackPlayer();
+    this.currentAudioIndex = 0;
+    await this.playCurrentAudioWithTrackPlayer(audioName);
     } catch (error: any) {
       console.error('开始播放失败:', error);
       this.handlePlaybackError();
@@ -477,7 +477,7 @@ class AudioManagerService {
   }
 
   // 使用 TrackPlayer 播放当前音频
-  private async playCurrentAudioWithTrackPlayer(): Promise<void> {
+  private async playCurrentAudioWithTrackPlayer(audioName?: string): Promise<void> {
     if (this.currentAudioIndex >= this.audioQueue.length) {
       // 播放完成
       await this.stopCurrent();
@@ -506,7 +506,7 @@ class AudioManagerService {
           return {
             id: index.toString(),
             url: file, // 直接使用文件路径作为url
-            title: this.getAudioTitle(index),
+            title: audioName || '题目音频',
             artist: '刷题派',
             album: '题目音频',
             genre: 'Education',
@@ -545,7 +545,7 @@ class AudioManagerService {
       if (Platform.OS === 'ios') {
         // 获取当前播放的轨道信息
         const iosTrackInfo = {
-          title: this.getAudioTitle(this.currentAudioIndex),
+          title: audioName || '题目音频',
           artist: '刷题派',
           album: '题目音频',
           // 使用项目中存在的图片作为封面
@@ -553,7 +553,7 @@ class AudioManagerService {
           // 如果有音频时长信息，可以在这里提供
           duration: undefined
         };
-        await iosAudioController.optimizeNowPlayingInfo(iosTrackInfo);
+        await iosAudioController.updateNowPlayingInfo(iosTrackInfo);
       }
 
     } catch (error: any) {
@@ -563,10 +563,7 @@ class AudioManagerService {
   }
 
   // 获取音频标题
-  private getAudioTitle(index: number): string {
-    const titles = ['题目', '精简答案', '扩展答案'];
-    return titles[index] || '音频';
-  }
+  // 移除了getAudioTitle方法，现在直接使用传入的audioName参数
 
 
 

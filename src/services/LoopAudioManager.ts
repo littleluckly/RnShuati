@@ -67,7 +67,7 @@ class LoopAudioManager {
             audio_question: questionAudioPath || undefined,
             audio_answer_simple: simpleAnswerPath || undefined,
             audio_answer_detail: detailAnswerPath || undefined,
-          }, true); // 传递当前为列表循环模式
+          }, true, nextQuestion.question_markdown); // 传递当前为列表循环模式和问题文本
           
           playbackInfo.previousItemId = playbackInfo.currentItemId; // 更新前一个音频的ID
           playbackInfo.currentItemId = nextQuestion._id;
@@ -78,7 +78,7 @@ class LoopAudioManager {
             audio_question: nextQuestion.files.audio_question,
             audio_answer_simple: nextQuestion.files.audio_answer_simple,
             audio_answer_detail: nextQuestion.files.audio_answer_detail,
-          }, true);
+          }, true, nextQuestion.question_markdown);
         }
       }
     }

@@ -209,6 +209,7 @@ const OptimizedFlatList: React.FC<Props> = ({
             audio_answer_detail: detailAnswerPath || undefined,
           },
           loopMode === LoopMode.List, // 传递当前是否为列表循环模式
+          question.question_markdown // 传入问题文本作为音频名称
         );
       } catch (error) {
         // 清除下载状态
