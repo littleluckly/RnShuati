@@ -9,13 +9,14 @@ import {
   NavigationContainer,
 } from '@react-navigation/native';
 
-import ProfileScreen from '@/screen/profile/ProfileScreen';
+import ProfileScreen from '../screen/profile/ProfileScreen';
 import HomeStack from './HomeStack';
 import LottieView from 'lottie-react-native';
 import {routeNameMap} from './constant';
 import {Host} from 'react-native-portalize';
-import ApiDemoScreen from '@/screen/profile/ApiDemoScreen';
-import PlaybackSettingsScreen from '@/screen/profile/PlaybackSettingsScreen';
+import ApiDemoScreen from '../screen/profile/ApiDemoScreen';
+import PlaybackSettingsScreen from '../screen/profile/PlaybackSettingsScreen';
+import MyDownloadsScreen from '../screen/profile/MyDownloadsScreen';
 import {QuestionProvider} from '@/contexts/QuestionContext';
 import LoginScreen from '@/screen/auth/LoginScreen';
 import RegisterScreen from '@/screen/auth/RegisterScreen';
@@ -42,6 +43,11 @@ const ProfileStack = () => {
         name={routeNameMap.playbackSettingsScreen}
         component={PlaybackSettingsScreen}
         options={{title: '播放设置'}}
+      />
+      <Stack.Screen
+        name="MyDownloads"
+        component={MyDownloadsScreen}
+        options={{title: '我的下载'}}
       />
       {/* 个人中心页面可以导航到登录页 */}
       <Stack.Screen

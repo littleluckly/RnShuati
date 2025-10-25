@@ -6,9 +6,9 @@ import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Alert} from 'react-native';
 import {Button} from 'react-native-paper';
 import {useNavigation} from '@react-navigation/native';
-import {resetOnboarding} from '@/utils/onboardingUtils'; // 导入重置新手引导的工具
-import {useAuthContext} from '@/contexts/AuthContext'; // 导入认证上下文
-import {routeNameMap} from '@/navigation/constant'; // 导入路由名称映射
+import {resetOnboarding} from '../../utils/onboardingUtils'; // 导入重置新手引导的工具
+import {useAuthContext} from '../../contexts/AuthContext'; // 导入认证上下文
+import {routeNameMap} from '../../navigation/constant'; // 导入路由名称映射
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -45,6 +45,12 @@ export default function ProfileScreen() {
   const navigateToPlaybackSettings = () => {
     // @ts-ignore
     navigation.navigate('PlaybackSettings');
+  };
+
+  // 导航到我的下载页面
+  const navigateToMyDownloads = () => {
+    // @ts-ignore
+    navigation.navigate('MyDownloads');
   };
 
   return (
@@ -168,6 +174,20 @@ export default function ProfileScreen() {
           style={{marginRight: 6}}
         />
         <Text style={{flex: 1}}>播放设置</Text>
+        <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
+      </TouchableOpacity>
+
+      {/* 我的下载选项 */}
+      <TouchableOpacity
+        style={styles.setItem}
+        onPress={navigateToMyDownloads}>
+        <Ionicons
+          name="download-outline"
+          size={24}
+          color="#2ecc71"
+          style={{marginRight: 6}}
+        />
+        <Text style={{flex: 1}}>我的下载</Text>
         <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
       </TouchableOpacity>
       {/* 新增重置新手引导选项 */}

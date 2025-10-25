@@ -110,9 +110,17 @@ export class QuestionApiService extends BaseApiService {
       // 构建下载URL
       const downloadUrl = `${this.baseUrl}/questions/audio/download/${fileName}`;
       console.log('下载URL:', downloadUrl);
-      // 创建本地文件路径
-      const localFilePath = `${RNFS.DocumentDirectoryPath}/audio_${fileName}`;
+      // 创建本地文件路径，使用统一的audios文件夹
+      const audiosDir = `${RNFS.DocumentDirectoryPath}/audios`;
+      const localFilePath = `${audiosDir}/${fileName}`;
       console.log('本地文件路径:', localFilePath);
+      
+      // 确保audios目录存在
+      const dirExists = await RNFS.exists(audiosDir);
+      if (!dirExists) {
+        await RNFS.mkdir(audiosDir);
+        console.log('创建audios目录成功');
+      }
 
       // 自定义请求头，模仿Postman的请求头
       const headers = {
