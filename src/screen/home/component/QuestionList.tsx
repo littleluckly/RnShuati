@@ -10,7 +10,10 @@ import {
   TouchableOpacity,
   Image,
   Platform,
+  Alert,
+  Linking,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from '@react-native-vector-icons/material-design-icons';
 import {Question} from '@/services/apiTypes';
 import {audioManager, AudioPlaybackInfo} from '@/services/AudioManager';
@@ -23,6 +26,17 @@ import {State} from 'react-native-track-player';
 import loopAudioManager, {LoopMode} from '@/services/LoopAudioManager';
 import {questionApiService} from '@/services'; // 添加这行导入语句
 import RNFS from 'react-native-fs'; // 添加这行导入语句
+import {
+  check,
+  request,
+  PERMISSIONS,
+  RESULTS,
+  Permission,
+} from 'react-native-permissions'; // 导入权限相关函数
+
+// 手动定义 POST_NOTIFICATIONS
+const POST_NOTIFICATIONS = 'android.permission.POST_NOTIFICATIONS';
+const NOTIFICATIONS = 'ios.permission.NOTIFICATIONS';
 
 interface Props {
   subjectId: string;
@@ -127,8 +141,12 @@ const OptimizedFlatList: React.FC<Props> = ({
   }, []);
 
   // 添加下载状态管理
-  const [downloadingItems, setDownloadingItems] = useState<Set<string>>(new Set());
-  const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({});
+  const [downloadingItems, setDownloadingItems] = useState<Set<string>>(
+    new Set(),
+  );
+  const [downloadProgress, setDownloadProgress] = useState<
+    Record<string, number>
+  >({});
 
   // 监听循环模式变化
   useEffect(() => {
@@ -136,31 +154,60 @@ const OptimizedFlatList: React.FC<Props> = ({
   }, [loopAudioManager.loopMode]);
 
   // 下载音频文件的函数
-  const downloadAudioFile = useCallback(async (fileName: string, itemId?: string): Promise<string | null> => {
-    try {
-      // 调用API服务下载音频文件，传入进度回调
-      const response = await questionApiService.downloadAudioFile(
-        fileName,
-        itemId ? (progress) => {
-          // 更新下载进度状态
-          setDownloadProgress(prev => ({
-            ...prev,
-            [itemId]: progress
-          }));
-        } : undefined
-      );
-      
-      if (response.success && response.data) {
-        return response.data; // 返回本地文件路径
-      } else {
-        console.error('下载音频文件失败:', response.message);
+  const downloadAudioFile = useCallback(
+    async (fileName: string, itemId?: string): Promise<string | null> => {
+      try {
+        // 调用API服务下载音频文件，传入进度回调
+        const response = await questionApiService.downloadAudioFile(
+          fileName,
+          itemId
+            ? progress => {
+                // 更新下载进度状态
+                setDownloadProgress(prev => ({
+                  ...prev,
+                  [itemId]: progress,
+                }));
+              }
+            : undefined,
+        );
+
+        if (response.success && response.data) {
+          return response.data; // 返回本地文件路径
+        } else {
+          console.error('下载音频文件失败:', response.message);
+          return null;
+        }
+      } catch (error) {
+        console.error('下载音频文件时发生错误:', error);
         return null;
       }
+    },
+    [],
+  );
+
+  // 检查今天是否已经提示过通知权限
+  const checkIfPromptedToday = async (): Promise<boolean> => {
+    try {
+      const today = new Date().toDateString(); // 获取今天的日期字符串
+      const lastPromptDate = await AsyncStorage.getItem(
+        'notification_prompt_date',
+      );
+      return lastPromptDate === today;
     } catch (error) {
-      console.error('下载音频文件时发生错误:', error);
-      return null;
+      console.error('检查提示日期时发生错误:', error);
+      return false;
     }
-  }, []);
+  };
+
+  // 保存今天已提示过通知权限
+  const savePromptedToday = async (): Promise<void> => {
+    try {
+      const today = new Date().toDateString(); // 获取今天的日期字符串
+      await AsyncStorage.setItem('notification_prompt_date', today);
+    } catch (error) {
+      console.error('保存提示日期时发生错误:', error);
+    }
+  };
 
   // 处理播放/暂停点击
   // 组件挂载时添加统一的音频监听器
@@ -172,10 +219,65 @@ const OptimizedFlatList: React.FC<Props> = ({
     };
   }, []);
 
+  // 处理播放/暂停点击
   const handlePlayPause = useCallback(
     async (question: Question) => {
+      // 检查通知权限但不阻止播放
+      let result: string = RESULTS.DENIED;
+
+      // iOS：无需请求权限即可显示播放控件
+      // Android 13 也无需请求权限。 对应的 API Level 是 33。
+      if (
+        Platform.OS === 'ios' ||
+        (Platform.OS === 'android' && Platform.Version < 33)
+      ) {
+        result = RESULTS.GRANTED;
+      } else {
+        // 检查当前权限状态
+        result = await check(POST_NOTIFICATIONS as Permission);
+      }
+
+      // 如果没有权限，检查今天是否已经提示过
+      if (result !== RESULTS.GRANTED) {
+        const hasPromptedToday = await checkIfPromptedToday();
+
+        // 只有今天没有提示过才显示权限提示
+        if (!hasPromptedToday) {
+          Alert.alert(
+            '开启通知权限',
+            '开启通知权限可以在通知栏中切换播放、查看播放信息，获得更好的使用体验',
+            [
+              {
+                text: '今日不再提示',
+                style: 'cancel',
+                onPress: async () => {
+                  // 用户点击"今日不再提示"，保存今天的日期
+                  await savePromptedToday();
+                },
+              },
+              {
+                text: '去开启',
+                onPress: async () => {
+                  // 用户点击"去开启"后，调用系统权限授权弹窗
+                  const requestResult = await request(permission);
+
+                  // 如果权限被永久拒绝，提示用户去设置中手动开启
+                  if (requestResult === RESULTS.BLOCKED) {
+                    Alert.alert(
+                      '如果后续需要在通知栏显示播放信息',
+                      '请在系统设置中-通知中手动开启通知权限',
+                      [{text: '我知道了', style: 'cancel'}],
+                    );
+                  }
+                },
+              },
+            ],
+          );
+        }
+      }
+
       const {files: audioFiles, _id} = question;
-      
+
       // 检查是否正在下载此题目的音频
       if (downloadingItems.has(_id)) {
         console.log('音频正在下载中，请稍候...');
@@ -184,14 +286,21 @@ const OptimizedFlatList: React.FC<Props> = ({
 
       // 设置下载状态
       setDownloadingItems(prev => new Set(prev).add(_id));
-      
+
       try {
         // 下载音频文件
-        const [questionAudioPath, simpleAnswerPath, detailAnswerPath] = await Promise.all([
-          audioFiles.audio_question ? downloadAudioFile(audioFiles.audio_question, _id) : Promise.resolve(null),
-          audioFiles.audio_answer_simple ? downloadAudioFile(audioFiles.audio_answer_simple, _id) : Promise.resolve(null),
-          audioFiles.audio_answer_detail ? downloadAudioFile(audioFiles.audio_answer_detail, _id) : Promise.resolve(null),
-        ]);
+        const [questionAudioPath, simpleAnswerPath, detailAnswerPath] =
+          await Promise.all([
+            audioFiles.audio_question
+              ? downloadAudioFile(audioFiles.audio_question, _id)
+              : Promise.resolve(null),
+            audioFiles.audio_answer_simple
+              ? downloadAudioFile(audioFiles.audio_answer_simple, _id)
+              : Promise.resolve(null),
+            audioFiles.audio_answer_detail
+              ? downloadAudioFile(audioFiles.audio_answer_detail, _id)
+              : Promise.resolve(null),
+          ]);
 
         // 清除下载状态
         setDownloadingItems(prev => {
@@ -209,7 +318,7 @@ const OptimizedFlatList: React.FC<Props> = ({
             audio_answer_detail: detailAnswerPath || undefined,
           },
           loopMode === LoopMode.List, // 传递当前是否为列表循环模式
-          question.question_markdown // 传入问题文本作为音频名称
+          question.question_markdown, // 传入问题文本作为音频名称
         );
       } catch (error) {
         // 清除下载状态
@@ -218,11 +327,17 @@ const OptimizedFlatList: React.FC<Props> = ({
           newSet.delete(_id);
           return newSet;
         });
-        
+
         console.error('处理音频播放时发生错误:', error);
       }
     },
-    [loopMode, downloadingItems, downloadAudioFile],
+    [
+      loopMode,
+      downloadingItems,
+      downloadAudioFile,
+      checkIfPromptedToday,
+      savePromptedToday,
+    ],
   );
 
   // 在列表循环模式下，当音频播放结束时，自动播放下一个题目
