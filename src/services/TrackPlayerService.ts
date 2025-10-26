@@ -13,7 +13,7 @@ export default async function playbackService() {
     // 根据需要处理播放状态变化
     switch (event.state) {
       case State.Playing:
-        console.log('[播放服务] 开始播放');
+        console.log('[播放服务] 开始播放--正在播放');
         break;
       case State.Paused:
         console.log('[播放服务] 暂停播放');
@@ -54,6 +54,38 @@ export default async function playbackService() {
   TrackPlayer.addEventListener(Event.PlaybackProgressUpdated, (progress) => {
     // 可以在这里更新UI或执行其他进度相关操作
     // 注意：过于频繁的更新可能会影响性能
+  });
+
+  // 监听远程控制事件（通知栏按钮点击）
+  TrackPlayer.addEventListener(Event.RemotePlay, () => {
+    console.log('[播放服务] 远程控制：播放');
+    TrackPlayer.play();
+  });
+
+  TrackPlayer.addEventListener(Event.RemotePause, () => {
+    console.log('[播放服务] 远程控制：暂停');
+    TrackPlayer.pause();
+  });
+
+  TrackPlayer.addEventListener(Event.RemoteStop, () => {
+    console.log('[播放服务] 远程控制：停止');
+    TrackPlayer.stop();
+  });
+
+  TrackPlayer.addEventListener(Event.RemoteNext, () => {
+    console.log('[播放服务] 远程控制：下一曲');
+    TrackPlayer.skipToNext();
+  });
+
+  TrackPlayer.addEventListener(Event.RemotePrevious, () => {
+    console.log('[播放服务] 远程控制：上一曲');
+    TrackPlayer.skipToPrevious();
+  });
+
+  // 监听跳转事件
+  TrackPlayer.addEventListener(Event.RemoteSeek, (event) => {
+    console.log(`[播放服务] 远程控制：跳转到 ${event.position} 秒`);
+    TrackPlayer.seekTo(event.position);
   });
 
   // 服务启动时的日志
