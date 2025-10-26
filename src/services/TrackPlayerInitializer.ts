@@ -45,12 +45,12 @@ export const initializeTrackPlayer = async (): Promise<boolean> => {
       capabilities: [
         Capability.Play,
         Capability.Pause,
-        Capability.Stop,
+        // Capability.Stop,
         Capability.SkipToNext,
         Capability.SkipToPrevious,
-        Capability.SeekTo,
-        Capability.JumpForward,  // 可选
-        Capability.JumpBackward, // 可选
+        // Capability.SeekTo,
+        // Capability.JumpForward,  // 可选
+        // Capability.JumpBackward, // 可选
       ],
       compactCapabilities: [
         Capability.Play,
@@ -61,10 +61,10 @@ export const initializeTrackPlayer = async (): Promise<boolean> => {
       notificationCapabilities: [
         Capability.Play,
         Capability.Pause,
-        Capability.Stop,
+        // Capability.Stop,
         Capability.SkipToNext,
         Capability.SkipToPrevious,
-        Capability.SeekTo,
+        // Capability.SeekTo,
       ],
       progressUpdateEventInterval: 1000,
       color: parseInt('FF4500', 16), // 确保是有效的颜色值
