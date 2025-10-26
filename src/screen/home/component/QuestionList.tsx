@@ -36,7 +36,6 @@ import {
 
 // 手动定义 POST_NOTIFICATIONS
 const POST_NOTIFICATIONS = 'android.permission.POST_NOTIFICATIONS';
-const NOTIFICATIONS = 'ios.permission.NOTIFICATIONS';
 
 interface Props {
   subjectId: string;
@@ -259,7 +258,7 @@ const OptimizedFlatList: React.FC<Props> = ({
                 text: '去开启',
                 onPress: async () => {
                   // 用户点击"去开启"后，调用系统权限授权弹窗
-                  const requestResult = await request(permission);
+                  const requestResult = await request(POST_NOTIFICATIONS);
 
                   // 如果权限被永久拒绝，提示用户去设置中手动开启
                   if (requestResult === RESULTS.BLOCKED) {
