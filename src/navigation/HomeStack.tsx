@@ -7,7 +7,7 @@ import {
 import HomeWithHeader from '@/screen/home/HomeWithHeader';
 import DetailScreen from '@/screen/detail';
 import {routeNameMap} from './constant';
-import SubjectSelectionScreen from '@/screen/home/SubjectSelectionScreen';
+import SubjectSelectionScreen from '@/screen/home/subject-selection-screen/SubjectSelectionScreen';
 import {Button, TextInput, ActivityIndicator} from 'react-native';
 import SearchableHeader from './SearchableHeader';
 import {QuestionProvider} from '@/contexts/QuestionContext';

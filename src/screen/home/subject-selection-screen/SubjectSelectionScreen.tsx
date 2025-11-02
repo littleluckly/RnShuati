@@ -18,7 +18,7 @@ import {SubjectApiService} from '@/services/subjectApiService';
 import {UserActionApiService} from '@/services/userActionApiService';
 import {Subject} from '@/services/apiTypes';
 import GlobalStyles from '@/styles/globalStyles';
-import {saveSelectedSubject} from '../../utils/userStorageUtils';
+import {saveSelectedSubject} from '../../../utils/userStorageUtils';
 import {subjectApiService, userActionApiService} from '@/services';
 
 // 获取屏幕宽度
