@@ -33,6 +33,7 @@ import {
   RESULTS,
   Permission,
 } from 'react-native-permissions'; // 导入权限相关函数
+//import {useEffect, useRef, useState, useCallback} from 'react';
 
 // 手动定义 POST_NOTIFICATIONS
 const POST_NOTIFICATIONS = 'android.permission.POST_NOTIFICATIONS';
@@ -217,6 +218,26 @@ const OptimizedFlatList: React.FC<Props> = ({
       audioManager.removeListener('questionListScreen');
     };
   }, []);
+
+  // 注册预加载回调函数到 LoopAudioManager
+  useEffect(() => {
+    // 定义预加载回调函数
+    const preloadCallback = async () => {
+      // 只有在有更多数据可加载且不在加载过程中时才执行预加载
+      if (pagination.hasNext && !loading) {
+        console.log('执行预加载更多题目');
+        await loadMore();
+      }
+    };
+
+    // 注册回调函数
+    loopAudioManager.setPreloadCallback(preloadCallback);
+
+    // 清理函数：组件卸载时清除回调函数
+    return () => {
+      loopAudioManager.clearPreloadCallback();
+    };
+  }, [pagination.hasNext, loading, loadMore]);
 
   // 处理播放/暂停点击
   const handlePlayPause = useCallback(

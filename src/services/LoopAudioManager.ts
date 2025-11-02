@@ -11,8 +11,13 @@ export enum LoopMode {
 
 const LOOP_MODE_KEY = 'loopMode';
 
+// 定义预加载回调函数类型
+export type PreloadCallback = () => Promise<void>;
+
 class LoopAudioManager {
   loopMode: LoopMode = LoopMode.None;
+  // 预加载回调函数，用于与外部组件解耦
+  private preloadCallback: PreloadCallback | null = null;
   async setLoopMode(mode: LoopMode): Promise<void> {
     try {
       this.loopMode = mode;
@@ -45,6 +50,16 @@ class LoopAudioManager {
     if (this.loopMode === LoopMode.List) {
       const currentIndex = questions.findIndex(q => q._id === playbackInfo.previousItemId);
       if (currentIndex !== -1) {
+        // 检查是否接近列表末尾（倒数第3个），如果是则触发预加载
+        if (currentIndex >= questions.length - 3 && this.preloadCallback) {
+          try {
+            console.log('接近列表末尾，触发预加载更多题目');
+            await this.preloadCallback();
+          } catch (error) {
+            console.error('预加载题目失败:', error);
+          }
+        }
+        
         const nextIndex = (currentIndex + 1) % questions.length;
         const nextQuestion = questions[nextIndex];
         
@@ -104,6 +119,21 @@ class LoopAudioManager {
       console.error('下载音频文件时发生错误:', error);
       return null;
     }
+  }
+
+  /**
+   * 设置预加载回调函数
+   * @param callback 预加载回调函数
+   */
+  setPreloadCallback(callback: PreloadCallback | null): void {
+    this.preloadCallback = callback;
+  }
+
+  /**
+   * 清除预加载回调函数
+   */
+  clearPreloadCallback(): void {
+    this.preloadCallback = null;
   }
 }
 
