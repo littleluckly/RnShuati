@@ -20,6 +20,7 @@ import {Subject} from '@/services/apiTypes';
 import GlobalStyles from '@/styles/globalStyles';
 import {saveSelectedSubject} from '../../../utils/userStorageUtils';
 import {subjectApiService, userActionApiService} from '@/services';
+import SubjectCard from './SubjectCard';
 
 // 获取屏幕宽度
 const {width} = Dimensions.get('window');
@@ -63,67 +64,6 @@ const theme = {
     secondary: '#666666',
     disabled: '#999999',
   },
-};
-
-// 科目卡片组件 - 使用React Native内置动画系统
-interface SubjectCardProps {
-  subject: Subject;
-  isSelected: boolean;
-  onPress: () => void;
-  disabled: boolean;
-}
-
-const SubjectCard = ({
-  subject,
-  isSelected,
-  onPress,
-  disabled,
-}: SubjectCardProps) => {
-  // 根据科目ID生成不同的背景颜色
-  const getSubjectColor = (id: string) => {
-    const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#1A535C', '#FF9F1C'];
-    const index = id.charCodeAt(0) % colors.length;
-    return colors[index];
-  };
-
-  return (
-    <TouchableOpacity activeOpacity={0.7} onPress={onPress} disabled={disabled}>
-      <Card
-        style={[styles.subjectCard, isSelected && styles.selectedSubjectCard]}
-        elevation={isSelected ? 5 : 3}>
-        <Card.Content>
-          <View style={styles.subjectCardContent}>
-            <View
-              style={[
-                styles.subjectIcon,
-                {backgroundColor: getSubjectColor(subject._id)},
-              ]}>
-              <Text style={styles.subjectIconText}>
-                {subject.name.charAt(0)}
-              </Text>
-            </View>
-            <View style={styles.subjectInfo}>
-              <Text style={styles.subjectName}>{subject.name}</Text>
-              {'questionCount' in subject &&
-                typeof subject.questionCount === 'number' && (
-                  <Text style={styles.subjectStats}>
-                    共 {subject.questionCount} 题
-                  </Text>
-                )}
-              <Text style={styles.subjectDescription} numberOfLines={2}>
-                {subject.description}
-              </Text>
-            </View>
-            {isSelected && (
-              <View style={styles.checkmark}>
-                <Text style={styles.checkmarkText}>✓</Text>
-              </View>
-            )}
-          </View>
-        </Card.Content>
-      </Card>
-    </TouchableOpacity>
-  );
 };
 
 export default function SubjectSelectionScreen() {
@@ -205,7 +145,7 @@ export default function SubjectSelectionScreen() {
         {/* 顶部横幅 */}
         <View style={styles.heroSection}>
           <Image
-            source={require('../../assets/image/work.png')}
+            source={require('../../../assets/image/work.png')}
             style={[
               {
                 width: width,
@@ -357,63 +297,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
   },
-  subjectCard: {
-    borderRadius: 16,
-    backgroundColor: theme.surface,
-  },
-  subjectCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  selectedSubjectCard: {
-    borderWidth: 2,
-    borderColor: theme.primary,
-  },
-  subjectIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  subjectIconText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  subjectInfo: {
-    flex: 1,
-  },
-  subjectName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.text.primary,
-    marginBottom: 4,
-  },
-  subjectStats: {
-    fontSize: 14,
-    color: theme.text.secondary,
-    marginBottom: 4,
-  },
-  subjectDescription: {
-    fontSize: 14,
-    color: theme.text.disabled,
-  },
-  checkmark: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: theme.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkmarkText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+
   emptyState: {
     flex: 1,
     justifyContent: 'center',
