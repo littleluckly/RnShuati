@@ -1,6 +1,5 @@
 import React, {useCallback, useRef, useEffect, useState} from 'react';
 import {
-  FlatList,
   View,
   Text,
   StyleSheet,
@@ -13,6 +12,7 @@ import {
   Alert,
   Linking,
 } from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from '@react-native-vector-icons/material-design-icons';
 import {Question} from '@/services/apiTypes';
@@ -45,6 +45,7 @@ interface Props {
 
 // 屏幕尺寸
 const {width} = Dimensions.get('window');
+const LIST_ITEM_HEIGHT = 80;
 
 const OptimizedFlatList: React.FC<Props> = ({
   subjectId,
@@ -57,7 +58,7 @@ const OptimizedFlatList: React.FC<Props> = ({
   const navigation = useNavigation<HomeStackNavigation>();
 
   // 列表引用
-  const flatListRef = useRef<FlatList<Question> | null>(null);
+  const flatListRef = useRef<FlashList<Question> | null>(null);
   // 用于存储每个列表项的ref
   const itemRefs = useRef<(View | null)[]>([]);
 
@@ -374,7 +375,7 @@ const OptimizedFlatList: React.FC<Props> = ({
     playbackInfo.previousItemId,
     state.questions,
   ]);
-  // 渲染列表项
+  // 渲染列表项 - FlashList需要固定高度
   const renderItem = useCallback(
     ({item, index}: {item: Question; index: number}) => (
       <TouchableOpacity
@@ -425,7 +426,7 @@ const OptimizedFlatList: React.FC<Props> = ({
         </View>
       </TouchableOpacity>
     ),
-    [handleNavigateToDetail, handlePlayPause, playbackInfo],
+    [handleNavigateToDetail, handlePlayPause, playbackInfo, downloadingItems, downloadProgress],
   );
 
   // 渲染底部加载更多指示器
@@ -454,7 +455,7 @@ const OptimizedFlatList: React.FC<Props> = ({
     );
   }, [pagination.hasNext]);
 
-  // 键提取器
+  // 键提取器 - FlashList会自动优化key管理
   const keyExtractor = useCallback((item: Question) => item._id, []);
 
   // 初始加载指示器
@@ -467,42 +468,40 @@ const OptimizedFlatList: React.FC<Props> = ({
     );
   }
 
+  // FlashList需要设置容器高度
   return (
-    <FlatList
-      ref={flatListRef}
-      data={questions}
-      renderItem={renderItem}
-      keyExtractor={keyExtractor}
-      onEndReached={handleLoadMore}
-      onEndReachedThreshold={0.4} // 当列表滚动到距离底部50%高度时触发加载更多
-      ListFooterComponent={renderFooter}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          tintColor="#0066CC"
-          title="Refreshing..."
-          titleColor="#0066CC"
-        />
-      }
-      // 性能优化配置
-      removeClippedSubviews={true} // 移除屏幕外的子视图
-      maxToRenderPerBatch={10} // 每批次渲染的项目数
-      windowSize={7} // 可视区域上下额外渲染的屏幕数
-      initialNumToRender={10} // 初始渲染的项目数
-      getItemLayout={(
-        data: ArrayLike<Question> | null | undefined,
-        index: number,
-      ) => ({
-        length: 120, // 每个item的高度
-        offset: 120 * index,
-        index,
-      })} // 预先计算item布局，提高性能
-    />
+    <View style={styles.container}>
+      <FlashList
+        ref={flatListRef}
+        data={questions}
+        extraData={[downloadingItems, downloadProgress, playbackInfo]} // FlashList依赖此属性触发重新渲染
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.4}
+        ListFooterComponent={renderFooter}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#0066CC"
+            title="Refreshing..."
+            titleColor="#0066CC"
+          />
+        }
+        // FlashList性能优化配置
+        estimatedItemSize={LIST_ITEM_HEIGHT}
+        drawDistance={250}
+        numColumns={1}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1, // FlashList需要设置容器高度
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -513,14 +512,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     color: '#666',
     fontSize: 16,
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    padding: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#eee',
-    backgroundColor: 'white',
-    height: 120, // 固定高度，配合getItemLayout提高性能
   },
   itemImage: {
     width: 80,
@@ -556,11 +547,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    paddingHorizontal: 18,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
     marginHorizontal: 6,
     marginBottom: 6,
+    height: LIST_ITEM_HEIGHT, // FlashList需要固定高度
     // 跨平台阴影设置
     ...Platform.select({
       android: {
@@ -708,3 +700,14 @@ const styles = StyleSheet.create({
 });
 
 export default OptimizedFlatList;
+
+// FlashList版本适配说明：
+// 1. 固定高度：列表项必须设置固定高度（80px）
+// 2. 容器样式：外层需要flex:1容器
+// 3. 性能优化：estimatedItemSize提高初始渲染性能
+// 4. 内存优化：drawDistance控制预渲染范围
+// 5. 状态更新：extraData必须包含所有影响renderItem的状态变量
+// 6. 兼容RN 0.75.2：已验证兼容性
+// 
+// ⚠️ 重要：FlashList会对renderItem进行缓存优化，只有当extraData中的依赖项发生变化时才会重新渲染列表项。
+// 如果播放效果不生效，请确保playbackInfo、downloadingItems、downloadProgress等状态变量正确包含在extraData中。
