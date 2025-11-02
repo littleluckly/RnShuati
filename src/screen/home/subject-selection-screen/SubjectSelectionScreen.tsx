@@ -1,6 +1,6 @@
 import {routeNameMap} from '@/navigation/constant';
-import {useNavigation} from '@react-navigation/native';
-import React, {useEffect, useState} from 'react';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import React, {useEffect, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -61,6 +61,13 @@ export default function SubjectSelectionScreen() {
     fetchSubjects();
   }, []);
 
+  // 当页面获得焦点时重置选中的科目状态
+  useFocusEffect(
+    useCallback(() => {
+      setSelectedSubject(null);
+    }, [])
+  );
+
   const fetchSubjects = async () => {
     try {
       setLoading(true);
@@ -88,6 +95,7 @@ export default function SubjectSelectionScreen() {
     subjectName: string,
   ) => {
     try {
+      console.log(1);
       // 设置选中状态以显示视觉反馈
       setSelectedSubject(subjectId);
 
