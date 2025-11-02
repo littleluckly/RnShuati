@@ -279,7 +279,9 @@ const OptimizedFlatList: React.FC<Props> = ({
                 text: '去开启',
                 onPress: async () => {
                   // 用户点击"去开启"后，调用系统权限授权弹窗
-                  const requestResult = await request(POST_NOTIFICATIONS);
+                  const requestResult = await request(
+                    POST_NOTIFICATIONS as Permission,
+                  );
 
                   // 如果权限被永久拒绝，提示用户去设置中手动开启
                   if (requestResult === RESULTS.BLOCKED) {
