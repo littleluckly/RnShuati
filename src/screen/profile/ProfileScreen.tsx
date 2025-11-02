@@ -171,7 +171,12 @@ export default function ProfileScreen() {
           color="#34495e"
           style={{marginRight: 6}}
         />
-        <Text style={{flex: 1}}>设置</Text>
+        <View style={{flex: 1}}>
+          <Text>设置</Text>
+          <Text style={{fontSize: 12, color: '#666', marginTop: 2}}>
+            音频播放设置、科目选择、通知设置等
+          </Text>
+        </View>
         <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
       </TouchableOpacity>
 
