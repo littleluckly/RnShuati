@@ -41,27 +41,16 @@ export default function ProfileScreen() {
     );
   };
 
-  // 导航到播放设置页面
-  const navigateToPlaybackSettings = () => {
-    // @ts-ignore
-    navigation.navigate('PlaybackSettings');
-  };
-
   // 导航到我的下载页面
   const navigateToMyDownloads = () => {
     // @ts-ignore
     navigation.navigate('MyDownloads');
   };
 
-  // 导航到科目选择页面
-  const navigateToSubjectSelection = () => {
-    // 使用reset方法重置导航堆栈并切换到HomeTab的SubjectSelectionScreen
-    navigation.reset({
-      index: 0,
-      routes: [
-        { name: routeNameMap.homeTab, params: { screen: routeNameMap.subjectSelectionScreen } }
-      ],
-    });
+  // 导航到设置页面
+  const navigateToSettings = () => {
+    // @ts-ignore
+    navigation.navigate('Settings');
   };
 
   return (
@@ -174,24 +163,20 @@ export default function ProfileScreen() {
         <Text style={{flex: 1}}>我的编辑</Text>
         <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
       </View>
-      {/* 播放设置选项 */}
-      <TouchableOpacity
-        style={styles.setItem}
-        onPress={navigateToPlaybackSettings}>
+      {/* 设置选项 */}
+      <TouchableOpacity style={styles.setItem} onPress={navigateToSettings}>
         <Ionicons
-          name="volume-high-outline"
+          name="settings-outline"
           size={24}
-          color="#3498db"
+          color="#34495e"
           style={{marginRight: 6}}
         />
-        <Text style={{flex: 1}}>播放设置</Text>
+        <Text style={{flex: 1}}>设置</Text>
         <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
       </TouchableOpacity>
 
       {/* 我的下载选项 */}
-      <TouchableOpacity
-        style={styles.setItem}
-        onPress={navigateToMyDownloads}>
+      <TouchableOpacity style={styles.setItem} onPress={navigateToMyDownloads}>
         <Ionicons
           name="download-outline"
           size={24}
@@ -199,20 +184,6 @@ export default function ProfileScreen() {
           style={{marginRight: 6}}
         />
         <Text style={{flex: 1}}>我的下载</Text>
-        <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
-      </TouchableOpacity>
-
-      {/* 切换科目选项 */}
-      <TouchableOpacity
-        style={styles.setItem}
-        onPress={navigateToSubjectSelection}>
-        <Ionicons
-          name="library-outline"
-          size={24}
-          color="#9b59b6"
-          style={{marginRight: 6}}
-        />
-        <Text style={{flex: 1}}>切换科目</Text>
         <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
       </TouchableOpacity>
       {/* 新增重置新手引导选项 */}

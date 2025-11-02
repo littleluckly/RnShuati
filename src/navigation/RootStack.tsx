@@ -17,6 +17,7 @@ import {Host} from 'react-native-portalize';
 import ApiDemoScreen from '../screen/profile/ApiDemoScreen';
 import PlaybackSettingsScreen from '../screen/profile/PlaybackSettingsScreen';
 import MyDownloadsScreen from '../screen/profile/MyDownloadsScreen';
+import SettingsScreen from '../screen/profile/SettingsScreen';
 import {QuestionProvider} from '@/contexts/QuestionContext';
 import LoginScreen from '@/screen/auth/LoginScreen';
 import RegisterScreen from '@/screen/auth/RegisterScreen';
@@ -48,6 +49,11 @@ const ProfileStack = () => {
         name="MyDownloads"
         component={MyDownloadsScreen}
         options={{title: '我的下载'}}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{title: '设置'}}
       />
       {/* 个人中心页面可以导航到登录页 */}
       <Stack.Screen
