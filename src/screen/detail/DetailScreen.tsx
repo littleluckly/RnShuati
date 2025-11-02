@@ -3,7 +3,7 @@ import {View, StatusBar, BackHandler, Text, Platform} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useRoute, useNavigation} from '@react-navigation/native';
 import OnboardingOverlay from '@/components/OnboardingOverlay';
-import {useDetailScreen} from './hooks';
+import {useDetailScreen} from './hooks/useDetail';
 import {TopNavigationBar} from './components/TopNavigationBar';
 import {BottomNavigationBar} from './components/BottomNavigationBar';
 import {DirectoryDrawer} from './components/DirectoryDrawer';
@@ -143,7 +143,7 @@ export default function DetailScreen() {
       !isAutoLoading
     ) {
       // 计算剩余题目数量：当前已加载的题目数量 - 当前索引
-      const remainingQuestions = 
+      const remainingQuestions =
         questionState.questions.length - (currentIndex + 1);
       // 如果剩余题目数量少于5题，触发加载更多
       if (remainingQuestions < 5) {
