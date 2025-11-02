@@ -53,6 +53,17 @@ export default function ProfileScreen() {
     navigation.navigate('MyDownloads');
   };
 
+  // 导航到科目选择页面
+  const navigateToSubjectSelection = () => {
+    // 使用reset方法重置导航堆栈并切换到HomeTab的SubjectSelectionScreen
+    navigation.reset({
+      index: 0,
+      routes: [
+        { name: routeNameMap.homeTab, params: { screen: routeNameMap.subjectSelectionScreen } }
+      ],
+    });
+  };
+
   return (
     <View style={{flex: 1, backgroundColor: '#f5f5f5'}}>
       <View
@@ -188,6 +199,20 @@ export default function ProfileScreen() {
           style={{marginRight: 6}}
         />
         <Text style={{flex: 1}}>我的下载</Text>
+        <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
+      </TouchableOpacity>
+
+      {/* 切换科目选项 */}
+      <TouchableOpacity
+        style={styles.setItem}
+        onPress={navigateToSubjectSelection}>
+        <Ionicons
+          name="library-outline"
+          size={24}
+          color="#9b59b6"
+          style={{marginRight: 6}}
+        />
+        <Text style={{flex: 1}}>切换科目</Text>
         <Ionicons name="chevron-forward-outline" size={24}></Ionicons>
       </TouchableOpacity>
       {/* 新增重置新手引导选项 */}
