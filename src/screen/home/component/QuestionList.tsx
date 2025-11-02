@@ -333,14 +333,14 @@ const OptimizedFlatList: React.FC<Props> = ({
         });
 
         // 开始播放序列：题目 → 简单答案 → 扩展答案
-        audioManager.startPlayback(
+        // 使用专门的列表项播放方法，确保点击其他项时能正确切换播放
+        audioManager.handleListItemPlay(
           _id,
           {
             audio_question: questionAudioPath || undefined,
             audio_answer_simple: simpleAnswerPath || undefined,
             audio_answer_detail: detailAnswerPath || undefined,
           },
-          loopMode === LoopMode.List, // 传递当前是否为列表循环模式
           question.question_markdown, // 传入问题文本作为音频名称
         );
       } catch (error) {
