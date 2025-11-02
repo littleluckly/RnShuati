@@ -417,7 +417,55 @@ class AudioManagerService {
     }
   }
 
-  // 开始播放音频队列
+  /**
+   * 处理列表项点击播放 - 专门用于列表场景
+   * 
+   * 解耦设计说明：
+   * - 这个方法专门处理用户在列表中点击播放按钮的场景
+   * - 它确保当用户点击不同列表项时，能正确停止当前播放并开始新播放
+   * - 与通用的startPlayback方法保持解耦，职责清晰
+   * 
+   * @param itemId - 题目ID
+   * @param audioFiles - 音频文件路径对象
+   * @param audioName - 音频名称（可选）
+   */
+  public async handleListItemPlay(itemId: string, audioFiles: {
+    audio_question?: string;
+    audio_answer_simple?: string;
+    audio_answer_detail?: string;
+  }, audioName?: string): Promise<void> {
+    try {
+      // 确保 TrackPlayer 已就绪
+      await this.ensureTrackPlayerReady();
+
+      // 如果当前正在播放其他项目，先停止当前播放
+      // 这个逻辑确保点击新项时能切换到新播放
+      if (this.currentItemId && this.currentItemId !== itemId) {
+        await this.stopCurrent();
+      }
+
+      // 调用通用的播放逻辑，传入列表循环模式标识
+      await this.startPlayback(itemId, audioFiles, true, audioName);
+    } catch (error) {
+      console.error('处理列表项播放失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 开始播放音频队列 - 通用播放方法
+   * 
+   * 职责说明：
+   * - 这是通用的播放方法，处理各种播放场景
+   * - 在列表循环模式下，点击正在播放的项会暂停播放
+   * - 对于相同项目的重复点击，根据当前状态进行播放/暂停切换
+   * - 不同项目之间的切换由调用方负责处理（如handleListItemPlay）
+   * 
+   * @param itemId - 题目ID
+   * @param audioFiles - 音频文件路径对象
+   * @param isListLoopMode - 是否为列表循环模式
+   * @param audioName - 音频名称（可选）
+   */
   public async startPlayback(itemId: string, audioFiles: {
     audio_question?: string;
     audio_answer_simple?: string;
@@ -427,17 +475,28 @@ class AudioManagerService {
       // 确保 TrackPlayer 已就绪
       await this.ensureTrackPlayerReady();
 
-      // 在列表循环模式下，如果音频已经在播放，不做任何操作，保持当前播放
-      if (isListLoopMode && this.playbackState === State.Playing) {
-        await this.pauseCurrent();
-        return;
+      // 如果当前正在播放其他项目，先停止当前播放
+      // 这个逻辑适用于所有模式，确保点击新项时能切换到新播放
+      if (this.currentItemId && this.currentItemId !== itemId) {
+        await this.stopCurrent();
       }
 
-      // 如果当前正在播放其他项目，先停止
-      // 但是如果音频已经在播放中，即使itemId不同也不停止，以支持页面切换时的无缝播放
-      // 在列表循环模式下，不停止任何正在播放的音频
-      if (this.currentItemId && this.currentItemId !== itemId && this.playbackState !== State.Playing && !isListLoopMode) {
-        await this.stopCurrent();
+      // 如果是同一个项目，根据当前状态处理
+      if (this.currentItemId === itemId) {
+        if (this.playbackState === State.Playing) {
+          // 列表循环模式下，点击正在播放的项应该暂停
+          if (isListLoopMode) {
+            await this.pauseCurrent();
+            return;
+          }
+          // 非列表循环模式下，点击正在播放的项也暂停
+          await this.pauseCurrent();
+          return;
+        } else if (this.playbackState === State.Paused) {
+          await this.resumeCurrent();
+          return;
+        }
+        // 如果是同一个项目但状态是 State.None，重新构建队列
       }
 
       // 如果是同一个项目，根据当前状态处理
