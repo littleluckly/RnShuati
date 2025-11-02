@@ -21,6 +21,7 @@ import GlobalStyles from '@/styles/globalStyles';
 import {saveSelectedSubject} from '../../../utils/userStorageUtils';
 import {subjectApiService, userActionApiService} from '@/services';
 import SubjectCard from './SubjectCard';
+import {theme} from './constant';
 
 // 获取屏幕宽度
 const {width} = Dimensions.get('window');
@@ -49,22 +50,6 @@ const appFeatures = [
     color: '#FFE66D',
   },
 ];
-
-// 主题配色方案
-const theme = {
-  primary: '#6200EE',
-  primaryLight: '#9747FF',
-  primaryDark: '#3700B3',
-  secondary: '#03DAC6',
-  background: '#F5F7FA',
-  surface: '#FFFFFF',
-  error: '#CF6679',
-  text: {
-    primary: '#333333',
-    secondary: '#666666',
-    disabled: '#999999',
-  },
-};
 
 export default function SubjectSelectionScreen() {
   const navigation = useNavigation();
