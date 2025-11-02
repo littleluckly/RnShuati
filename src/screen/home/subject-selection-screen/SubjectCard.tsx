@@ -1,6 +1,7 @@
 import {TouchableOpacity, View, Text, StyleSheet} from 'react-native';
 import {Card} from 'react-native-paper';
 import {SubjectCardProps} from './types';
+import {theme} from './constant';
 
 const SubjectCard = ({
   subject,
@@ -55,21 +56,6 @@ const SubjectCard = ({
   );
 };
 
-// 主题配色方案
-const theme = {
-  primary: '#6200EE',
-  primaryLight: '#9747FF',
-  primaryDark: '#3700B3',
-  secondary: '#03DAC6',
-  background: '#F5F7FA',
-  surface: '#FFFFFF',
-  error: '#CF6679',
-  text: {
-    primary: '#333333',
-    secondary: '#666666',
-    disabled: '#999999',
-  },
-};
 const styles = StyleSheet.create({
   subjectCard: {
     borderRadius: 16,
