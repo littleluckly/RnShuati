@@ -45,12 +45,10 @@ export const initializeTrackPlayer = async (): Promise<boolean> => {
       capabilities: [
         Capability.Play,
         Capability.Pause,
-        // Capability.Stop,
         Capability.SkipToNext,
         Capability.SkipToPrevious,
-        // Capability.SeekTo,
-        // Capability.JumpForward,  // 可选
-        // Capability.JumpBackward, // 可选
+        Capability.Stop,
+        Capability.SeekTo,
       ],
       compactCapabilities: [
         Capability.Play,
@@ -61,10 +59,8 @@ export const initializeTrackPlayer = async (): Promise<boolean> => {
       notificationCapabilities: [
         Capability.Play,
         Capability.Pause,
-        // Capability.Stop,
         Capability.SkipToNext,
         Capability.SkipToPrevious,
-        // Capability.SeekTo,
       ],
       progressUpdateEventInterval: 1000,
       color: parseInt('FF4500', 16), // 确保是有效的颜色值
@@ -74,6 +70,8 @@ export const initializeTrackPlayer = async (): Promise<boolean> => {
         appKilledPlaybackBehavior: AppKilledPlaybackBehavior.PausePlayback,
         stopForegroundGracePeriod: 30,
         alwaysPauseOnInterruption: true,
+        // 添加Android特定的通知栏控制配置
+        showNotification: true,
       },
 
     });
